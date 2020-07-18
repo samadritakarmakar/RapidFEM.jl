@@ -1,1 +1,1 @@
-include("../RapidFEM.jl")
+using RapidFEM
