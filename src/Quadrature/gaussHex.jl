@@ -1,4 +1,4 @@
-include("gaussLine.jl")
+include("gaussQuad.jl")
 function getQuadratureHex(order::Int64)
     w_base::Array{Float64,1}, ip_base::Array{Float64,1} = getQuadratureLine(order)
     ip_length::Int64 = length(w_base)

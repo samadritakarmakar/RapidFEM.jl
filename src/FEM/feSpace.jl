@@ -6,8 +6,8 @@ function createFeSpace()::Dict{Tuple{DataType, Int64}, Array{ShapeFunction}}
     return feSpace
 end
 
-function feSpace!(FeSpace::Dict{Tuple{DataType, Int64}, Array{ShapeFunction}}, attribute::Tuple{Int64, Int64}, elementNo::Int64, mesh::Mesh, elementFunction::Function)::Array{ShapeFunction}
-    element::AbstractElement = mesh.Elements[attribute][elementNo]
+function feSpace!(FeSpace::Dict{Tuple{DataType, Int64}, Array{ShapeFunction}}, element::AbstractElement, mesh::Mesh, elementFunction::Function)::Array{ShapeFunction}
+    #element::AbstractElement = mesh.Elements[attribute][elementNo]
     shapeFunctionAtIp = Array{ShapeFunction}(undef, 1)
     typeOfElement::DataType = typeof(element)
     if (typeOfElement, element.order) ∉ keys(FeSpace)
@@ -48,22 +48,23 @@ function getFunction_∂ξ_∂x(element::TetElement)::Function
     return get_∂ξ_∂x_TriTet
 end
 
-function get_dΩ_Nomalized(∂x_∂ξ::Array{Float64})::Float64
-    return abs(det(∂x_∂ξ))
+function get_dΩ_Nomalized(∂x_∂ξ::Array{Float64}, ipData::IpPoint)::Float64
+    return ipData.w*abs(det(∂x_∂ξ))
 end
 
-function get_dΩ_Tri(∂x_∂ξ::Array{Float64})::Float64
+function get_dΩ_Tri(∂x_∂ξ::Array{Float64}, ipData::IpPoint)::Float64
+
     ∂x_∂ξ_temp = Array{Float64,2}(undef, size(∂x_∂ξ,1)+1,size(∂x_∂ξ,2))
     ∂x_∂ξ_temp[1,:] = ones(1,size(∂x_∂ξ,2))
     ∂x_∂ξ_temp[2:end,:] = ∂x_∂ξ
-    return abs(0.5*det(∂x_∂ξ_temp))
+    return ipData.w*abs(0.5*det(∂x_∂ξ_temp))
 end
 
-function get_dΩ_Tet(∂x_∂ξ::Array{Float64})::Float64
+function get_dΩ_Tet(∂x_∂ξ::Array{Float64}, ipData::IpPoint)::Float64
     ∂x_∂ξ_temp = Array{Float64,2}(undef, size(∂x_∂ξ,1)+1,size(∂x_∂ξ,2))
     ∂x_∂ξ_temp[1,:] = ones(1,size(∂x_∂ξ,2))
     ∂x_∂ξ_temp[2:end,:] = ∂x_∂ξ
-    return abs((1.0/6.0)*det(∂x_∂ξ_temp))
+    return ipData.w*abs((1.0/6.0)*det(∂x_∂ξ_temp))
 end
 
 function getFunction_dΩ(element::T)::Function where {T<:AbstractElement}

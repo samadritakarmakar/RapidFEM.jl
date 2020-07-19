@@ -5,7 +5,7 @@ include("../Mesh/mesh.jl")
 using ForwardDiff
 
 struct IpPoint
-    w::Array{Float64}
+    w::Float64
     ip::Array{Float64}
 end
 
@@ -25,12 +25,12 @@ end
 
 function calculateShapeFunctions(element::T, elementFunction::Function, meshSoftware::String)::Array{ShapeFunction} where {T<:AbstractElement}
     w::Array{Float64}, ip::Array{Float64} = getQuadrature(element)
-    ipData::IpPoint = IpPoint(w, ip)
     shapeFunctionAtIp::Array{ShapeFunction} = []
     N::Function = elementFunction(element, meshSoftware)
     for ipNo ∈ 1:length(w)
         ϕ = N(ip[ipNo,:])
         x = ip[ipNo,:]
+        ipData::IpPoint = IpPoint(w[ipNo], x)
         ∂ϕ_∂ξ::Array{Float64,2} =convert(Array{Float64,2}, ForwardDiff.jacobian(N, x))
         #∂²ϕ_∂ξ² = ForwardDiff.hessian(N, x)
         ∂²ϕ_∂ξ²::Array{Float64,3} =convert(Array{Float64,3}, vector_hessian(N, x, length(ϕ)))

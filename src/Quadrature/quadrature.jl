@@ -1,9 +1,7 @@
-include("gaussLine.jl")
 include("gaussTri.jl")
-include("gaussQuad.jl")
 include("gaussTet.jl")
 include("gaussHex.jl")
-include("../FEM/elements.jl")
+#include("../FEM/elements.jl")
 
 function getQuadrature(element::LineElement)
     return getQuadratureLine(element.order)

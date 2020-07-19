@@ -36,9 +36,11 @@ function getNoOfElements(ElementsArray::Array{Any,1})
     return length(ElementsArray)
 end
 
-function getCoordArray(mesh::Mesh, attribute::Tuple{Int64, Int64}, elementNo::Int64)::Array{Float64,2} 
-    nodeTags::Array{Int64} = mesh.Elements[attribute][elementNo].nodeTags
-    noOfElementNodes::Int64 = mesh.Elements[attribute][elementNo].noOfElementNodes
+function getCoordArray(mesh::Mesh,element::AbstractElement)::Array{Float64,2}
+    #nodeTags::Array{Int64} = mesh.Elements[attribute][elementNo].nodeTags
+    #noOfElementNodes::Int64 = mesh.Elements[attribute][elementNo].noOfElementNodes
+    nodeTags::Array{Int64} = element.nodeTags
+    noOfElementNodes::Int64 = element.noOfElementNodes
     CoordArray::Array{Float64,2} = Array{Float64}(undef, 3, noOfElementNodes)
     for elmntNodeNum::Int64 ∈ 1:noOfElementNodes
         CoordArray[:,elmntNodeNum] = mesh.Nodes[nodeTags[elmntNodeNum]]

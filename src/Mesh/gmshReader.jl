@@ -1,4 +1,4 @@
-include("../FEM/elements.jl")
+#include("../FEM/elements.jl")
 
 function check4seperator(readPosition::Int64, meshData::String,
     Separator::Array{Char} = [' ', '\n'])
