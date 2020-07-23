@@ -78,3 +78,31 @@ end
 function getFunction_dΩ(element::TetElement)::Function
     return get_dΩ_Tet
 end
+
+function get_dS_Tri(∂x_∂ξ::Array{Float64}, ipData::IpPoint)::Float64
+    return ipData.w*0.5*norm(cross(∂x_∂ξ[:,1],∂x_∂ξ[:,2]))
+end
+
+function get_dS_Normalized(∂x_∂ξ::Array{Float64}, ipData::IpPoint)::Float64
+    return ipData.w*norm(cross(∂x_∂ξ[:,1],∂x_∂ξ[:,2]))
+end
+
+function get_dL(∂x_∂ξ::Array{Float64}, ipData::IpPoint)::Float64
+    return ipData.w*norm(∂x_∂ξ[:,1])
+end
+
+function getFunction_dS(element::TriElement)::Function
+    return get_dS_Tri
+end
+
+function getFunction_dS(element::QuadElement)::Function
+    return get_dS_Normalized
+end
+
+function getFunction_dS(element::LineElement)::Function
+    return get_dL
+end
+
+function getFunction_dL(element::LineElement)::Function
+    return get_dL
+end
