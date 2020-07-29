@@ -4,5 +4,8 @@ authors = ["sam "]
 version = "0.1.0"
 
 [deps]
+FEMSparse = "dcdf9ed5-39e7-592a-90de-966c054b7718"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+WriteVTK = "64499a7a-5c06-52f2-abe2-ccb03c286192"

@@ -1,4 +1,6 @@
 include("../ShapeFunctions/shapeFunction.jl")
+include("boundaryCondition.jl")
+include("assembly.jl")
 using LinearAlgebra
 
 function createFeSpace()::Dict{Tuple{DataType, Int64}, Array{ShapeFunction}}
