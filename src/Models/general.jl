@@ -45,14 +45,14 @@ function localSource(sourceFunc::Function, problemDim::Int64, element::AbstractE
 end
 
 function localNeumann(neumannFunc::Function, problemDim::Int64, element::AbstractElement, shapeFunction::Array{ShapeFunction}, coordArray::Array{Float64,2})
-    ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
+    #∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
     dSFunc::Function = getFunction_dS(element)
     noOfIpPoints::Int64 = length(shapeFunction)
     noOfNodes::Int64 = size(shapeFunction[1].∂ϕ_∂ξ,1)
     Nm::Vector = zeros(noOfNodes*problemDim)
     for ipNo ∈ 1:noOfIpPoints
         ∂x_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
-        ∂ξ_dx::Array{Float64,2} = ∂ξ_∂xFunc(∂x_∂ξ)
+        #∂ξ_dx::Array{Float64,2} = ∂ξ_∂xFunc(∂x_∂ξ)
         dS::Float64 = dSFunc(∂x_∂ξ, shapeFunction[ipNo].ipData)
         ϕ::Array{Float64,1} = shapeFunction[ipNo].ϕ
         x::Array{Float64,1} = getInterpolated_x(coordArray, ϕ)

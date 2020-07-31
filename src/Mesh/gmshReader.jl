@@ -108,7 +108,7 @@ function getElementTypeProperty(gmshElmentType::Int64)
     elementType[21] = "Tri"
     elementType[3] = "Quad"
     elementType[10] = "Quad"
-    elementType[16] = "Quad"
+    elementType[36] = "Quad"
     elementType[5] = "Hex"
     elementType[12] = "Hex"
     elementType[92] = "Hex"
@@ -132,7 +132,7 @@ function getElementTypeProperty(gmshElmentType::Int64)
     order[26] = 3
     order[29] = 3
     order[92] = 3
-    order[16] = 3
+    order[36] = 3
     dim::Dict{Int64, Any} = Dict()
     dim[15] = 0
     dim[1] = 1
@@ -143,7 +143,7 @@ function getElementTypeProperty(gmshElmentType::Int64)
     dim[21] = 2
     dim[3] = 2
     dim[10] = 2
-    dim[16] = 2
+    dim[36] = 2
     dim[5] = 3
     dim[12] = 3
     dim[92] = 3
@@ -160,7 +160,7 @@ function getElementTypeProperty(gmshElmentType::Int64)
     noOfElmntNodes[21] = 10
     noOfElmntNodes[3] = 4
     noOfElmntNodes[10] = 9
-    noOfElmntNodes[16] = 16
+    noOfElmntNodes[36] = 16
     noOfElmntNodes[5] = 8
     noOfElmntNodes[12] = 27
     noOfElmntNodes[92] = 64

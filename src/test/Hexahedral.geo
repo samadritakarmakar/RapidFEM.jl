@@ -59,10 +59,8 @@ Surface Loop(1) = {2, 3, 4, 5, 1, 6};
 Volume(1) = {1};
 Transfinite Volume {1} = {1,2,3,4,6,7,8,5};
 //+
-Physical Curve("locked") = {4};
-//+
-Physical Curve("lockedxy") = {7};
-//+
 Physical Surface("ForceSurf") = {4};
 //+
 Physical Surface("lockedsurf") = {2};
+//+
+Physical Volume("othr") = {1};

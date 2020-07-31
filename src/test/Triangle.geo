@@ -19,8 +19,8 @@ Characteristic Length {1} = 2;
 //+
 Characteristic Length {3, 2, 1} = 3;
 //+
-Physical Curve("line1") = {1};
+Physical Curve("lock") = {3};
 //+
-Physical Curve("line2") = {2};
+Physical Curve("force") = {2};
 //+
-Physical Curve("line3") = {3};
+Physical Surface("surf") = {1};

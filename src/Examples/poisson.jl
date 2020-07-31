@@ -9,7 +9,13 @@ function addCell!(cells::Array{MeshCell,1}, element::TriElement)
 end
 
 function addCell!(cells::Array{MeshCell,1}, element::QuadElement)
-    push!(cells, MeshCell(VTKCellTypes.VTK_LAGRANGE_QUADRILATERAL, element.nodeTags))
+    nodeTagsArray::Array{Int64} = Array{Int64,1}(undef, element.noOfElementNodes)
+    if (element.order ==1 || element.order ==2)
+        nodeTagsArray = element.nodeTags
+    elseif element.order == 3
+        nodeTagsArray = [element.nodeTags[1:8]..., element.nodeTags[10:-1:9]..., element.nodeTags[12:-1:11]..., element.nodeTags[13:14]..., element.nodeTags[16:-1:15]...]
+    end
+    push!(cells, MeshCell(VTKCellTypes.VTK_LAGRANGE_QUADRILATERAL, nodeTagsArray))
 end
 
 function addCell!(cells::Array{MeshCell,1}, element::TetElement)
@@ -25,7 +31,17 @@ function addCell!(cells::Array{MeshCell,1}, element::TetElement)
 end
 
 function addCell!(cells::Array{MeshCell,1}, element::HexElement)
-    push!(cells, MeshCell(VTKCellTypes.VTK_LAGRANGE_HEXAHEDRON, element.nodeTags))
+    nodeTagsArray::Array{Int64} = Array{Int64,1}(undef, element.noOfElementNodes)
+    if element.order ==1
+        nodeTagsArray = element.nodeTags[1:8]
+    elseif element.order == 2
+        vtkTag::Int64 = 1
+        for tag ∈ [collect(1:9)..., 12, 14, 10, 17, 19, 20, 18, 11, 13, 16, 15, 23, 24, 22, 25, 21, 26, 27]
+            nodeTagsArray[vtkTag] = element.nodeTags[tag]
+            vtkTag +=1
+        end
+    end
+    push!(cells, MeshCell(VTKCellTypes.VTK_LAGRANGE_HEXAHEDRON, nodeTagsArray))
 end
 
 function WriteToVTK(x::Vector, fieldName::String, mesh::Mesh, attributeArray::Array{Tuple{Int64, Int64},1}, problemDim::Int64)
@@ -50,17 +66,19 @@ function WriteToVTK(x::Vector, fieldName::String, mesh::Mesh, attributeArray::Ar
 end
 
 function poissonEquation()
-    mesh::Mesh = RapidFEM.readMesh("../test/Tetrahedral.msh")
+    mesh::Mesh = RapidFEM.readMesh("../test/Hexahedral.msh")
     FeSpace = RapidFEM.createFeSpace()
-    problemDim::Int64 = 3
+    problemDim::Int64 = 1
     volAttrib::Tuple{Int64, Int64} = (3,3)
     neumAttrib::Tuple{Int64, Int64} = (2,1)
     dirchAttrib::Tuple{Int64, Int64} = (2,2)
-    K::SparseMatrixCSC = RapidFEM.assembleMatrix(volAttrib, FeSpace, mesh, RapidFEM.local_lagrange_K, problemDim)
+    activeDimensions::Array{Int64,1} = [1, 1, 1]
+    println(mesh.Elements[3,3][1].nodeTags)
+    K::SparseMatrixCSC = RapidFEM.assembleMatrix(volAttrib, FeSpace, mesh, RapidFEM.local_lagrange_K, problemDim, activeDimensions)
     source(x) = [0.0, 0.0, 0.0]
-    f::Vector = RapidFEM.assembleVector(source, volAttrib, FeSpace, mesh, RapidFEM.localSource, problemDim)
+    f::Vector = RapidFEM.assembleVector(source, volAttrib, FeSpace, mesh, RapidFEM.localSource, problemDim, activeDimensions)
     neumann(x) = [0.0, 0.1, 0.0]
-    f += RapidFEM.assembleVector(neumann, neumAttrib, FeSpace, mesh, RapidFEM.localNeumann, problemDim)
+    f += RapidFEM.assembleVector(neumann, neumAttrib, FeSpace, mesh, RapidFEM.localNeumann, problemDim, activeDimensions)
     DirichletFunction(x) = zeros(problemDim)
     RapidFEM.applyDirichletBC!(K, f, DirichletFunction, dirchAttrib, mesh, problemDim)
     x::Vector = K\f
