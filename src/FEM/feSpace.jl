@@ -10,7 +10,6 @@ end
 
 function feSpace!(FeSpace::Dict{Tuple{DataType, Int64}, Array{ShapeFunction}}, element::AbstractElement, mesh::Mesh, elementFunction::Function)::Array{ShapeFunction}
     #element::AbstractElement = mesh.Elements[attribute][elementNo]
-    shapeFunctionAtIp = Array{ShapeFunction}(undef, 1)
     typeOfElement::DataType = typeof(element)
     if (typeOfElement, element.order) ∉ keys(FeSpace)
         FeSpace[typeOfElement, element.order] = calculateShapeFunctions(element, elementFunction, mesh.meshSoftware)
