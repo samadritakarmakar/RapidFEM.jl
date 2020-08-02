@@ -41,7 +41,6 @@ function addCell!(cells::Array{MeshCell,1}, element::HexElement)
             vtkTag +=1
         end
     elseif element.order == 3
-        #[collect(1:10)..., 15, 16, 20, 19, 11, 12, 25, 26, 29, 30, 32, 31, 27, 28, 13, 14, 17, 18, 23, 24, 21, 22, 37, 38, 40, 39, 50, 49, 51, 52, 41, 44, 42, 43, 45, 46, 48, 47, 33, 36, 34, 35, 53, 54, 56, 55, 57, 58, 60, 59, 61, 62, 64, 63]
         for tag ∈ [collect(1:10)..., 15, 16, 20, 19, 11, 12, 25, 26, 29, 30, 32, 31, 27, 28, 13, 14, 17, 18, 23, 24, 21, 22, 41, 44, 42, 43, 45, 46, 48, 47, 37, 38, 40, 39, 50, 49, 51, 52, 33, 36, 34, 35, 53, 54, 56, 55, 57, 58, 60, 59, 61, 62, 64, 63]
             nodeTagsArray[vtkTag] = element.nodeTags[tag]
             vtkTag +=1
@@ -89,4 +88,5 @@ function poissonEquation()
     RapidFEM.applyDirichletBC!(K, f, DirichletFunction, dirchAttrib, mesh, problemDim)
     x::Vector = K\f
     WriteToVTK(x, "field",mesh, [volAttrib], problemDim)
+    return FeSpace
 end
