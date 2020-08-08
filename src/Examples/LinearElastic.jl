@@ -5,8 +5,8 @@ function LinearElastic()
     FeSpace = RapidFEM.createFeSpace()
     problemDim::Int64 = 3
     volAttrib::Tuple{Int64, Int64} = (3,4)
-    neumAttrib::Tuple{Int64, Int64} = (2,1)
-    dirchAttrib::Tuple{Int64, Int64} = (2,2)
+    neumAttrib::Tuple{Int64, Int64} = (2,2) #Force
+    dirchAttrib::Tuple{Int64, Int64} = (2,1) #Lock
     activeDimensions::Array{Int64,1} = [1, 1, 1]
     E::Float64 = 200e3 #MPa
     ν::Float64 = 0.3
