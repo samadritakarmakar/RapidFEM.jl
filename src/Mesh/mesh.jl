@@ -32,8 +32,8 @@ function readMesh(meshFileName::String)
     return mesh
 end
 
-function getNoOfElements(ElementsArray::Array{Any,1})
-    return length(ElementsArray)
+function getNoOfElements( mesh::Mesh, attribute::Tuple{Int64, Int64})
+    return length(mesh.Elements[attribute])
 end
 
 function getCoordArray(mesh::Mesh,element::AbstractElement)::Array{Float64,2}

@@ -1,6 +1,6 @@
 using RapidFEM, SparseArrays, WriteVTK
 
-function poissonEquation()
+function LinearElastic()
     mesh::Mesh = RapidFEM.readMesh("../test/Bar.msh")
     FeSpace = RapidFEM.createFeSpace()
     problemDim::Int64 = 3
@@ -8,18 +8,19 @@ function poissonEquation()
     neumAttrib::Tuple{Int64, Int64} = (2,1)
     dirchAttrib::Tuple{Int64, Int64} = (2,2)
     activeDimensions::Array{Int64,1} = [1, 1, 1]
-    #println(mesh.Elements[3,3][1].nodeTags)
-    parameterFunction(x) = [1.0, 1.0, 1.0]
-    K::SparseMatrixCSC = RapidFEM.assembleMatrix(parameterFunction, volAttrib, FeSpace, mesh, RapidFEM.local_lagrange_K, problemDim, activeDimensions)
+    E::Float64 = 200e3 #MPa
+    ν::Float64 = 0.3
+    tensorMap::Dict{Int64, Int64} = RapidFEM.getTensorMapping()
+    C::Array{Float64,2} = RapidFEM.createVoigtElasticTensor(E, ν)
+    K::SparseMatrixCSC = RapidFEM.assembleMatrix((tensorMap, C), volAttrib, FeSpace, mesh, RapidFEM.local_∇v_C_∇u, problemDim, activeDimensions)
     source(x) = [0.0, 0.0, 0.0]
     f::Vector = RapidFEM.assembleVector(source, volAttrib, FeSpace, mesh, RapidFEM.localSource, problemDim, activeDimensions)
-    neumann(x) = [0.0, 0.1, 0.0]
+    neumann(x) = [0.0, 0.0, -0.3333333333]
     f += RapidFEM.assembleVector(neumann, neumAttrib, FeSpace, mesh, RapidFEM.localNeumann, problemDim, activeDimensions)
     DirichletFunction(x) = zeros(problemDim)
     RapidFEM.applyDirichletBC!(K, f, DirichletFunction, dirchAttrib, mesh, problemDim)
     x::Vector = K\f
-    println("Size of K :", size(K))
-    vtkfile = RapidFEM.InitializeVTK(x, "field",mesh, [volAttrib], problemDim)
+    vtkfile = RapidFEM.InitializeVTK(x, "LinearElastic",mesh, [volAttrib], problemDim)
     vtkfile["Displacement"] = x
     RapidFEM.vtkSave(vtkfile)
     return nothing

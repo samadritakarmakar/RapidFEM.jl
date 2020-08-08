@@ -3,18 +3,18 @@ include("boundaryCondition.jl")
 include("assembly.jl")
 using LinearAlgebra
 
-function createFeSpace()::Dict{Tuple{DataType, Int64}, Array{ShapeFunction}}
-    feSpace = Dict{Tuple{DataType, Int64}, Array{ShapeFunction}}()
+function createFeSpace()::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}}
+    feSpace = Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}}()
     return feSpace
 end
 
-function feSpace!(FeSpace::Dict{Tuple{DataType, Int64}, Array{ShapeFunction}}, element::AbstractElement, mesh::Mesh, elementFunction::Function)::Array{ShapeFunction}
+function feSpace!(FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}}, element::AbstractElement, mesh::Mesh, elementFunction::Function)::Array{ShapeFunction}
     #element::AbstractElement = mesh.Elements[attribute][elementNo]
     typeOfElement::DataType = typeof(element)
-    if (typeOfElement, element.order) ∉ keys(FeSpace)
-        FeSpace[typeOfElement, element.order] = calculateShapeFunctions(element, elementFunction, mesh.meshSoftware)
+    if (typeOfElement, element.order, elementFunction) ∉ keys(FeSpace)
+        FeSpace[typeOfElement, element.order, elementFunction] = calculateShapeFunctions(element, elementFunction, mesh.meshSoftware)
     end
-    return FeSpace[typeOfElement, element.order]
+    return FeSpace[typeOfElement, element.order, elementFunction]
 end
 
 function getInterpolated_x(CoordArray::Array{Float64,2}, ϕ::Array{Float64,1})::Array{Float64,1}
@@ -58,14 +58,16 @@ function get_dΩ_Tri(∂x_∂ξ::Array{Float64}, ipData::IpPoint)::Float64
     ∂x_∂ξ_temp = Array{Float64,2}(undef, size(∂x_∂ξ,1)+1,size(∂x_∂ξ,2))
     ∂x_∂ξ_temp[1,:] = ones(1,size(∂x_∂ξ,2))
     ∂x_∂ξ_temp[2:end,:] = ∂x_∂ξ
-    return ipData.w*abs(0.5*det(∂x_∂ξ_temp))
+    #return ipData.w*abs(0.5*det(∂x_∂ξ_temp))
+    return ipData.w*abs(det(∂x_∂ξ_temp))
 end
 
 function get_dΩ_Tet(∂x_∂ξ::Array{Float64}, ipData::IpPoint)::Float64
     ∂x_∂ξ_temp = Array{Float64,2}(undef, size(∂x_∂ξ,1)+1,size(∂x_∂ξ,2))
     ∂x_∂ξ_temp[1,:] = ones(1,size(∂x_∂ξ,2))
     ∂x_∂ξ_temp[2:end,:] = ∂x_∂ξ
-    return ipData.w*abs((1.0/6.0)*det(∂x_∂ξ_temp))
+    #return ipData.w*abs((1.0/6.0)*det(∂x_∂ξ_temp))
+    return ipData.w*abs(det(∂x_∂ξ_temp))
 end
 
 function getFunction_dΩ(element::T)::Function where {T<:AbstractElement}
@@ -81,7 +83,10 @@ function getFunction_dΩ(element::TetElement)::Function
 end
 
 function get_dS_Tri(∂x_∂ξ::Array{Float64}, ipData::IpPoint)::Float64
-    return ipData.w*0.5*norm(cross(∂x_∂ξ[:,1],∂x_∂ξ[:,2]))
+    #return ipData.w*0.5*norm(cross(∂x_∂ξ[:,1],∂x_∂ξ[:,2]))
+    crossProd::Array{Float64,1} = cross(∂x_∂ξ[:,2]-∂x_∂ξ[:,1],∂x_∂ξ[:,3]-∂x_∂ξ[:,1])
+    return ipData.w*norm(crossProd)
+
 end
 
 function get_dS_Normalized(∂x_∂ξ::Array{Float64}, ipData::IpPoint)::Float64
