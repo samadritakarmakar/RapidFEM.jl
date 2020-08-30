@@ -66,3 +66,36 @@ function local_∇v_C_∇u(tensorMapN_ElasticTensor::Tuple{Dict{Int64, Int64}, A
     end
     return K
 end
+
+function gaussianStress(tensorMapN_ElasticTensor::Tuple{Dict{Int64, Int64}, Array{Float64, 2}}, solAtNodes::Array{Float64,1}, problemDim::Int64,
+    element::AbstractElement, shapeFunction::Array{ShapeFunction}, coordArray::Array{Float64,2})::Array{Array{Float64,1},1}
+    mapDict::Dict{Int64, Int64} = tensorMapN_ElasticTensor[1]
+    C::Array{Float64, 2} = tensorMapN_ElasticTensor[2]
+    StressDim::Int64 = size(C,1)
+    ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
+    noOfIpPoints::Int64 = length(shapeFunction)
+    noOfNodes::Int64 = size(shapeFunction[1].∂ϕ_∂ξ,1)
+    σ_g::Array{Array{Float64,1},1} = Array{Array{Float64,1},1}(undef, noOfIpPoints)
+    for ipNo::Int64 ∈ 1:noOfIpPoints
+        σ_g[ipNo] = zeros(StressDim)
+        ∂x_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
+        ∂ξ_dx::Array{Float64,2} = ∂ξ_∂xFunc(∂x_∂ξ)
+        ∂ϕ_∂x::Array{Float64} = shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dx
+        for b::Int64 ∈ 1:noOfNodes
+            for l::Int64 ∈ 1:problemDim
+                for k::Int64 ∈ 1:l
+                    kl::Int64 = RapidFEM.getVoigtIndex(mapDict, k, l)
+                    c2::Float64 = (k==l) ? 0.5 : 1.0
+                    for j::Int64 ∈ 1:problemDim
+                        for i::Int64 ∈ 1:j
+                            ij::Int64 = RapidFEM.getVoigtIndex(mapDict, i, j)
+                            σ_g[ipNo][ij] += c2*C[ij,kl]*∂ϕ_∂x[b,l]*solAtNodes[problemDim*(b-1)+k]
+                            σ_g[ipNo][ij] += c2*C[ij,kl]*∂ϕ_∂x[b,k]*solAtNodes[problemDim*(b-1)+l]
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return σ_g
+end

@@ -1,0 +1,22 @@
+$MeshFormat
+2.2 0 8
+$EndMeshFormat
+$PhysicalNames
+3
+0 1 "FrstPt"
+0 2 "SncdPt"
+1 3 "Line"
+$EndPhysicalNames
+$Nodes
+4
+1 -1 0 0
+2 1 0 0
+3 -0.3333333333351426 0 0
+4 0.3333333333315034 0 0
+$EndNodes
+$Elements
+3
+1 15 2 1 1 1
+2 15 2 2 2 2
+3 26 2 3 1 1 2 3 4
+$EndElements

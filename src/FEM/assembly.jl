@@ -21,6 +21,9 @@ function assembleMatrix(parameterFunction::T, attribute::Tuple{Int64, Int64}, Fe
     RangeDict = createDimRange()
     dimRange::StepRange{Int64,Int64} = getRange(RangeDict, activeDimensions)
     #K_local::Array{Float64,2} = Array{Float64,2}(undef, 0, 0)
+    vNodes2::Array{Int64,1} = [mesh.noOfNodes*problemDim]
+    K_local2::Array{Float64,2} = zeros(1,1)
+    FEMSparse.assemble_local_matrix!(K_COO, vNodes2, vNodes2, K_local2)
     for elementNo ∈ 1:length(mesh.Elements[attribute])
         element::AbstractElement = mesh.Elements[attribute][elementNo]
         coordArrayTemp::Array{Float64,2} = getCoordArray(mesh, element)
@@ -30,9 +33,6 @@ function assembleMatrix(parameterFunction::T, attribute::Tuple{Int64, Int64}, Fe
         vNodes::Array{Int64} = getVectorNodes(element, problemDim)
         FEMSparse.assemble_local_matrix!(K_COO, vNodes, vNodes, K_local)
     end
-    vNodes2::Array{Int64,1} = [mesh.noOfNodes*problemDim]
-    K_local2::Array{Float64,2} = zeros(1,1)
-    FEMSparse.assemble_local_matrix!(K_COO, vNodes2, vNodes2, K_local2)
     return SparseArrays.SparseMatrixCSC(K_COO)
 end
 

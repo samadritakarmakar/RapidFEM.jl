@@ -21,9 +21,9 @@ export getQuadrature
 export IpPoint, ShapeFunction, calculateShapeFunctions
 #From Models
 #general
-export local_lagrange_K, localSource, localNeumann, localScalar, localScalarNeumann
+export local_lagrange_K, localSource, localNeumann, localScalar, localScalarNeumann, InvDistInterpolation, voigtToTensor
 #linearElasticity
-export local_∇v_C_∇u, createVoigtElasticTensor, getTensorMapping
+export local_∇v_C_∇u, createVoigtElasticTensor, getTensorMapping, gaussianStress
 #From WriteToVTK
 export InitializeVTK, vtkSave
 
