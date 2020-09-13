@@ -18,7 +18,8 @@ function getQuadrature(element::TriElement)
 end
 
 function getQuadrature(element::QuadElement)
-    return getQuadratureQuad(element.order)
+    order::Int64 = 2*element.order
+    return getQuadratureQuad(order)
 end
 
 function getQuadrature(element::TetElement)
@@ -32,5 +33,6 @@ function getQuadrature(element::TetElement)
 end
 
 function getQuadrature(element::HexElement)
-    return getQuadratureHex(element.order)
+    order::Int64 = 3*element.order
+    return getQuadratureHex(order)
 end

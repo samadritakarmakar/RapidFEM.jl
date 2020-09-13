@@ -1,7 +1,7 @@
 using RapidFEM, SparseArrays, WriteVTK, FEMSparse
 
 function poissonEquation()
-    mesh::Mesh = RapidFEM.readMesh("../test/OneElmntMsh/HexahedralOrder1.msh")
+    mesh::Mesh = RapidFEM.readMesh("../test/OneElmntMsh/TetrahedralOrder3.msh")
     FeSpace = RapidFEM.createFeSpace()
     problemDim::Int64 = 1
     volAttrib::Tuple{Int64, Int64} = (3,3)
@@ -24,5 +24,5 @@ function poissonEquation()
     vtkfile = RapidFEM.InitializeVTK(x, "poisson",mesh, [volAttrib],problemDim)
     vtkfile["Displacement"] = x
     RapidFEM.vtkSave(vtkfile)
-    return FeSpace, K_local
+    return nothing
 end

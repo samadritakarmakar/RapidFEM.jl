@@ -26,5 +26,4 @@ export local_lagrange_K, localSource, localNeumann, localScalar, localScalarNeum
 export local_∇v_C_∇u, createVoigtElasticTensor, getTensorMapping, gaussianStress
 #From WriteToVTK
 export InitializeVTK, vtkSave
-
 end # module

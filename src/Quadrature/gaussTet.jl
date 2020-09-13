@@ -31,7 +31,7 @@ function getQuadratureTet(order::Int)
               b a b w
               b b a w
               b b b w]
-    elseif n == 3
+    elseif n == 100  #Disabled negetive weight quadratures
         a1 = 1. / 4.
         a2 = 1. / 2.
         b2 = 1. / 6.
@@ -42,7 +42,7 @@ function getQuadratureTet(order::Int)
               b2 a2 b2 w2
               b2 b2 a2 w2
               b2 b2 b2 w2]
-    elseif n == 4
+    elseif n == 3
         a1 = 1. / 4.;
         w1 = -74. / 5625.;
 
