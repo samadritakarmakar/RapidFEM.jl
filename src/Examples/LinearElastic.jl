@@ -1,10 +1,11 @@
 using RapidFEM, SparseArrays, WriteVTK, LinearAlgebra
+LinearAlgebra.BLAS.set_num_threads(Threads.nthreads())
 
 function LinearElastic()
-    mesh::Mesh = RapidFEM.readMesh("../test/Bar.msh")
+    mesh::Mesh = RapidFEM.readMesh("../test/BarHex.msh")
     FeSpace = RapidFEM.createFeSpace()
     problemDim::Int64 = 3
-    volAttrib::Tuple{Int64, Int64} = (3,4)
+    volAttrib::Tuple{Int64, Int64} = (3,3)
     neumAttrib::Tuple{Int64, Int64} = (2,2) #Force
     dirchAttrib::Tuple{Int64, Int64} = (2,1) #Lock
     activeDimensions::Array{Int64,1} = [1, 1, 1]

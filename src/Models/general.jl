@@ -194,7 +194,8 @@ function InvDistInterpolation(postProcessFunction::Function, sol::Array{Float64,
         coordArray::Array{Float64,2} = coordArrayTemp[dimRange,:]
         shapeFunction::Array{ShapeFunction,1} = feSpace!(FeSpace, element, mesh, lagrange)
         InvDists::Array{Array{Float64,1},1} = findInvDistances(coordArray, shapeFunction, pow)
-        f_g::Array{Array{Float64,1},1} = postProcessFunction(parametersData, solAtNodes, problemDim, element, shapeFunction, coordArray)
+        f_g::Array{Array{Float64,1},1} = postProcessFunction(parametersData,
+        solAtNodes, problemDim, element, shapeFunction, coordArray)
         noOfElementNodes::Int64 = element.noOfElementNodes
         fDim = length(f_g[1])
         vectorFNodes::Array{Int64,1} = RapidFEM.getVectorNodes(element, fDim)
