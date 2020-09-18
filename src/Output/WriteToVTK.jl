@@ -8,33 +8,38 @@ function getNodeTagArray(element::AbstractElement, tagArray::Array{Int64,1})::Ar
     return nodeTagsArray
 end
 
-function addCell!(cells::Array{MeshCell,1}, element::LineElement, tagArray::Array{Int64,1})
+function addCell!(cells::Array{MeshCell,1}, element::LineElement, tagArray::Array{Int64,1}, elementNo::Int64)
     nodeTagsArray::Array{Int64} = getNodeTagArray(element, tagArray)
-    push!(cells, MeshCell(VTKCellTypes.VTK_LAGRANGE_CURVE, element.nodeTags))
+    #push!(cells, MeshCell(VTKCellTypes.VTK_LAGRANGE_CURVE, element.nodeTags))
+    cells[elementNo] = MeshCell(VTKCellTypes.VTK_LAGRANGE_CURVE, nodeTagsArray)
     return nothing
 end
 
-function addCell!(cells::Array{MeshCell,1}, element::TriElement, tagArray::Array{Int64,1})
+function addCell!(cells::Array{MeshCell,1}, element::TriElement, tagArray::Array{Int64,1}, elementNo::Int64)
     nodeTagsArray::Array{Int64} = getNodeTagArray(element, tagArray)
-    push!(cells, MeshCell(VTKCellTypes.VTK_LAGRANGE_TRIANGLE, element.nodeTags))
+    #push!(cells, MeshCell(VTKCellTypes.VTK_LAGRANGE_TRIANGLE, element.nodeTags))
+    cells[elementNo] = MeshCell(VTKCellTypes.VTK_LAGRANGE_TRIANGLE, element.nodeTags, nodeTagsArray)
     return nothing
 end
 
-function addCell!(cells::Array{MeshCell,1}, element::QuadElement, tagArray::Array{Int64,1})
+function addCell!(cells::Array{MeshCell,1}, element::QuadElement, tagArray::Array{Int64,1}, elementNo::Int64)
     nodeTagsArray::Array{Int64} = getNodeTagArray(element, tagArray)
-    push!(cells, MeshCell(VTKCellTypes.VTK_LAGRANGE_QUADRILATERAL, nodeTagsArray))
+    #push!(cells, MeshCell(VTKCellTypes.VTK_LAGRANGE_QUADRILATERAL, nodeTagsArray))
+    cells[elementNo] = MeshCell(VTKCellTypes.VTK_LAGRANGE_QUADRILATERAL, nodeTagsArray)
     return nothing
 end
 
-function addCell!(cells::Array{MeshCell,1}, element::TetElement, tagArray::Array{Int64,1})
+function addCell!(cells::Array{MeshCell,1}, element::TetElement, tagArray::Array{Int64,1}, elementNo::Int64)
     nodeTagsArray::Array{Int64} = getNodeTagArray(element, tagArray)
-    push!(cells, MeshCell(VTKCellTypes.VTK_LAGRANGE_TETRAHEDRON, nodeTagsArray))
+    #push!(cells, MeshCell(VTKCellTypes.VTK_LAGRANGE_TETRAHEDRON, nodeTagsArray))
+    cells[elementNo] = MeshCell(VTKCellTypes.VTK_LAGRANGE_TETRAHEDRON, nodeTagsArray)
     return nothing
 end
 
-function addCell!(cells::Array{MeshCell,1}, element::HexElement, tagArray::Array{Int64,1})
+function addCell!(cells::Array{MeshCell,1}, element::HexElement, tagArray::Array{Int64,1}, elementNo::Int64)
     nodeTagsArray::Array{Int64} = getNodeTagArray(element, tagArray)
-    push!(cells, MeshCell(VTKCellTypes.VTK_LAGRANGE_HEXAHEDRON, nodeTagsArray))
+    #push!(cells, MeshCell(VTKCellTypes.VTK_LAGRANGE_HEXAHEDRON, nodeTagsArray))
+    cells[elementNo] = MeshCell(VTKCellTypes.VTK_LAGRANGE_HEXAHEDRON, nodeTagsArray)
     return nothing
 end
 
@@ -59,20 +64,35 @@ function getNodeTagDict()::Dict{Tuple{DataType, Int64, String}, Array{Int64}}
 end
 
 function InitializeVTK(x::Vector, fileName::String, mesh::Mesh, attributeArray::Array{Tuple{Int64, Int64},1}, problemDim::Int64)::WriteVTK.DatasetFile
-    cells::Array{MeshCell,1} = []
-     nodeTagDict::Dict{Tuple{DataType, Int64, String}, Array{Int64}} = getNodeTagDict()
+    startElementNo::Array{Int64,1} = Array{Int64,1}(undef, length(attributeArray)+1)
+    endElementNo::Array{Int64,1} = Array{Int64,1}(undef, length(attributeArray))
+    attributeNo::Int64 = 1
+    startElementNo[1] = 1
     for attribute ∈ attributeArray
-        for element ∈ mesh.Elements[attribute...]
+        startElementNo[attributeNo+1] = length(mesh.Elements[attribute...]) + 1
+        endElementNo[attributeNo] = length(mesh.Elements[attribute...])
+        attributeNo += 1
+    end
+    #cells::Array{MeshCell,1} = []
+    cells::Array{MeshCell,1} = Array{MeshCell,1}(undef, sum(endElementNo))
+     nodeTagDict::Dict{Tuple{DataType, Int64, String}, Array{Int64}} = getNodeTagDict()
+     elementNo::Int64 = 1
+     attributeNo = 1
+    for attribute ∈ attributeArray
+        Threads.@threads for elementNo ∈ startElementNo[attributeNo]:endElementNo[attributeNo]
+            element::AbstractElement = mesh.Elements[attribute...][elementNo]
             tagArray::Array{Int64,1} = nodeTagDict[typeof(element), element.order, mesh.meshSoftware]
-            addCell!(cells, element, tagArray)
+            addCell!(cells, element, tagArray, elementNo)
+            elementNo += 1
         end
+        attributeNo += 1
     end
     Nodes::Dict{Any,Any} = mesh.Nodes
     pointData::Array{Float64, 2} = Array{Float64, 2}(undef, 3, mesh.noOfNodes)
-    for nodeNo ∈ 1:mesh.noOfNodes
+    Threads.@threads for nodeNo ∈ 1:mesh.noOfNodes
         #pointData[nodeNo, 1] = 3
         #for dim ∈ 1:problemDim
-            pointData[1:3, nodeNo] = Nodes[nodeNo]'
+        pointData[1:3, nodeNo] = Nodes[nodeNo]'
         #end
     end
     #return cells, pointData
