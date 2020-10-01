@@ -26,8 +26,11 @@ function LinearElastic2Material()
     DirichletFunction(x) = zeros(problemDim)
     RapidFEM.applyDirichletBC!(K, f, DirichletFunction, dirchAttrib, mesh, problemDim)
     x::Vector = K\f
-    vtkfile = RapidFEM.InitializeVTK(x, "LinearElastic2Material",mesh, [volAttrib1, volAttrib2], problemDim)
-    vtkfile["Displacement"] = x
-    RapidFEM.vtkSave(vtkfile)
+    σTemp1::Array{Float64,1} = RapidFEM.InvDistInterpolation(RapidFEM.gaussianStress, x, (tensorMap, C1),  FeSpace, mesh,  volAttrib1, problemDim, activeDimensions)
+    σTemp2::Array{Float64,1} = RapidFEM.InvDistInterpolation(RapidFEM.gaussianStress, x, (tensorMap, C2),  FeSpace, mesh,  volAttrib2, problemDim, activeDimensions)
+    σ::Array{Float64,1} = RapidFEM.voigtToTensor((σTemp1+σTemp2)/2.0, mesh)
+    vtkMeshData::VTKMeshData = RapidFEM.InitializeVTK(x, "LinearElastic2Material", mesh, [volAttrib1, volAttrib2], problemDim)
+    RapidFEM.vtkDataAdd(vtkMeshData, (x, σ), ("Displacement", "Stress"))
+    RapidFEM.vtkSave(vtkMeshData)
     return nothing
 end

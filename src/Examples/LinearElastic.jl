@@ -2,10 +2,10 @@ using RapidFEM, SparseArrays, WriteVTK, LinearAlgebra
 LinearAlgebra.BLAS.set_num_threads(Threads.nthreads())
 
 function LinearElastic()
-    mesh::Mesh = RapidFEM.readMesh("../test/BarHex.msh")
+    mesh::Mesh = RapidFEM.readMesh("../test/Bar.msh")
     FeSpace = RapidFEM.createFeSpace()
     problemDim::Int64 = 3
-    volAttrib::Tuple{Int64, Int64} = (3,3)
+    volAttrib::Tuple{Int64, Int64} = (3,4)
     neumAttrib::Tuple{Int64, Int64} = (2,2) #Force
     dirchAttrib::Tuple{Int64, Int64} = (2,1) #Lock
     activeDimensions::Array{Int64,1} = [1, 1, 1]
@@ -21,11 +21,10 @@ function LinearElastic()
     DirichletFunction(x) = zeros(problemDim)
     RapidFEM.applyDirichletBC!(K, f, DirichletFunction, dirchAttrib, mesh, problemDim)
     x::Vector = K\f
-    vtkfile = RapidFEM.InitializeVTK(x, "LinearElastic",mesh, [volAttrib], problemDim)
-    vtkfile["Displacement"] = x
     σTemp::Array{Float64,1} = RapidFEM.InvDistInterpolation(RapidFEM.gaussianStress, x, (tensorMap, C),  FeSpace, mesh,  volAttrib, problemDim, activeDimensions)
     σ::Array{Float64,1} = RapidFEM.voigtToTensor(σTemp, mesh)
-    vtkfile["Stress"] = σ
-    RapidFEM.vtkSave(vtkfile)
+    vtkMeshData::VTKMeshData = RapidFEM.InitializeVTK(x, "LinearElastic",mesh, [volAttrib], problemDim)
+    RapidFEM.vtkDataAdd(vtkMeshData, (x,σ), ("Displacement", "Stress"))
+    RapidFEM.vtkSave(vtkMeshData)
     return nothing
 end

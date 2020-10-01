@@ -1,3 +1,11 @@
+mutable struct VTKMeshData
+    fileName::String
+    mesh::Mesh
+    pointData::Array{Float64, 2}
+    cells::Array{MeshCell,1}
+    vtkCollectionFile::WriteVTK.CollectionFile
+end
+
 function getNodeTagArray(element::AbstractElement, tagArray::Array{Int64,1})::Array{Int64}
     nodeTagsArray::Array{Int64} = Array{Int64,1}(undef, element.noOfElementNodes)
     vtkTag::Int64 = 1
@@ -63,46 +71,68 @@ function getNodeTagDict()::Dict{Tuple{DataType, Int64, String}, Array{Int64}}
     return nodeTagDict
 end
 
-function InitializeVTK(x::Vector, fileName::String, mesh::Mesh, attributeArray::Array{Tuple{Int64, Int64},1}, problemDim::Int64)::WriteVTK.DatasetFile
-    startElementNo::Array{Int64,1} = Array{Int64,1}(undef, length(attributeArray)+1)
+function createFileNameTree(filename::String, step::Int64=1)
+    mkpath(filename*"/Data")
+    filename *= "/Data/Data"*string(step)
+    return filename
+end
+
+function InitializeVTK_Collection(fileName::String)::WriteVTK.CollectionFile
+    return WriteVTK.paraview_collection(fileName)
+end
+
+function InitializeVTK(x::Vector, fileName::String, mesh::Mesh, attributeArray::Array{Tuple{Int64, Int64},1}, problemDim::Int64)::VTKMeshData
     endElementNo::Array{Int64,1} = Array{Int64,1}(undef, length(attributeArray))
     attributeNo::Int64 = 1
-    startElementNo[1] = 1
+
+    lastElement::Int64 = 0
     for attribute ∈ attributeArray
-        startElementNo[attributeNo+1] = length(mesh.Elements[attribute...]) + 1
         endElementNo[attributeNo] = length(mesh.Elements[attribute...])
         attributeNo += 1
     end
-    #cells::Array{MeshCell,1} = []
     cells::Array{MeshCell,1} = Array{MeshCell,1}(undef, sum(endElementNo))
      nodeTagDict::Dict{Tuple{DataType, Int64, String}, Array{Int64}} = getNodeTagDict()
      elementNo::Int64 = 1
      attributeNo = 1
     for attribute ∈ attributeArray
-        Threads.@threads for elementNo ∈ startElementNo[attributeNo]:endElementNo[attributeNo]
+        Threads.@threads for elementNo ∈ 1:endElementNo[attributeNo]
             element::AbstractElement = mesh.Elements[attribute...][elementNo]
             tagArray::Array{Int64,1} = nodeTagDict[typeof(element), element.order, mesh.meshSoftware]
-            addCell!(cells, element, tagArray, elementNo)
-            elementNo += 1
+            addCell!(cells, element, tagArray, lastElement+elementNo)
         end
+        lastElement = endElementNo[attributeNo]
         attributeNo += 1
     end
     Nodes::Dict{Any,Any} = mesh.Nodes
-    pointData::Array{Float64, 2} = Array{Float64, 2}(undef, 3, mesh.noOfNodes)
-    Threads.@threads for nodeNo ∈ 1:mesh.noOfNodes
-        #pointData[nodeNo, 1] = 3
-        #for dim ∈ 1:problemDim
+    noOfNodes::Int64 = mesh.noOfNodes
+    pointData::Array{Float64, 2} = Array{Float64, 2}(undef, 3, noOfNodes)
+    Threads.@threads for nodeNo ∈ 1:noOfNodes
         pointData[1:3, nodeNo] = Nodes[nodeNo]'
-        #end
     end
-    #return cells, pointData
-    vtkfile::WriteVTK.DatasetFile = WriteVTK.vtk_grid(fileName, pointData, cells)
-    return vtkfile
-    #=vtkfile[fieldName] = x
-    outfiles = WriteVTK.vtk_save(vtkfile)=#
+    return VTKMeshData(fileName, mesh, pointData, cells, InitializeVTK_Collection(fileName*"/"*fileName))
 end
 
-function vtkSave(vtkfile::WriteVTK.DatasetFile)
+function createVTKFile(vtkMeshData::VTKMeshData, step::Int64=1)
+    fileName::String = createFileNameTree(vtkMeshData.fileName, step)
+    vtkfile::WriteVTK.DatasetFile = WriteVTK.vtk_grid(fileName, vtkMeshData.pointData, vtkMeshData.cells)
+    return vtkfile
+end
+
+function vtkSave(vtkMeshData::VTKMeshData)
+    vtkSave(vtkMeshData.vtkCollectionFile)
+end
+
+function vtkSave(vtkfile::T) where T
     WriteVTK.vtk_save(vtkfile)
+    return nothing
+end
+
+function vtkDataAdd(vtkMeshData::VTKMeshData, dataTuple::T1, dataNameTuple::T2, step::Int64=1) where {T1, T2}
+    @assert (length(dataTuple) == length(dataNameTuple)) "The dataTuple and dataNameTuple lengths must match."
+    vtkFile::WriteVTK.DatasetFile = createVTKFile(vtkMeshData, step)
+    for i ∈ 1:length(dataNameTuple)
+        vtkFile[dataNameTuple[i]] = dataTuple[i]
+    end
+    vtkMeshData.vtkCollectionFile[step] = vtkFile
     return nothing
 end

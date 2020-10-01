@@ -10,7 +10,7 @@ function poissonEquation()
     activeDimensions::Array{Int64,1} = [1, 1, 1]
     parameterFunction(x) = [1.0]#, 1.0, 1.0]
     K::SparseMatrixCSC = RapidFEM.assembleMatrix(parameterFunction, volAttrib,
-    FeSpace, mesh, RapidFEM.local_lagrange_K, problemDim, activeDimensions)
+    FeSpace, mesh, RapidFEM.local_∇v_∇u, problemDim, activeDimensions)
     source(x) = [0.0]#, 0.0, 0.0]
     f::Vector = RapidFEM.assembleVector(source, volAttrib,
     FeSpace, mesh, RapidFEM.localSource, problemDim, activeDimensions)
@@ -21,8 +21,8 @@ function poissonEquation()
     RapidFEM.applyDirichletBC!(K, f, DirichletFunction, dirchAttrib,
     mesh, problemDim)
     x::Vector = K\f
-    vtkfile = RapidFEM.InitializeVTK(x, "poisson",mesh, [volAttrib],problemDim)
-    vtkfile["Displacement"] = x
-    RapidFEM.vtkSave(vtkfile)
+    vtkMeshData::VTKMeshData = RapidFEM.InitializeVTK(x, "poisson",mesh, [volAttrib],problemDim)
+    RapidFEM.vtkDataAdd(vtkMeshData, (x,), ("Field",))
+    RapidFEM.vtkSave(vtkMeshData)
     return nothing
 end

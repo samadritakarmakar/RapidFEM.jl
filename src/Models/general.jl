@@ -1,4 +1,4 @@
-function local_lagrange_K(parameterFunction::Function, problemDim::Int64, element::AbstractElement, shapeFunction::Array{ShapeFunction}, coordArray::Array{Float64,2})::Array{Float64,2}
+function local_∇v_∇u(parameterFunction::Function, problemDim::Int64, element::AbstractElement, shapeFunction::Array{ShapeFunction}, coordArray::Array{Float64,2})::Array{Float64,2}
     ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
     dΩFunc::Function = getFunction_dΩ(element)
     noOfIpPoints::Int64 = length(shapeFunction)
