@@ -1,5 +1,6 @@
 using RapidFEM, SparseArrays, WriteVTK
 
+
 function LinearElastic2Material()
     mesh::Mesh = RapidFEM.readMesh("../test/Bar2.msh")
     FeSpace = RapidFEM.createFeSpace()
@@ -11,7 +12,7 @@ function LinearElastic2Material()
     activeDimensions::Array{Int64,1} = [1, 1, 1]
     E1::Float64 = 200e3 #MPa
     ν1::Float64 = 0.3
-    E2::Float64 = 1000e3 #MPa
+    E2::Float64 = 300e3 #MPa
     ν2::Float64 = 0.3
     tensorMap::Dict{Int64, Int64} = RapidFEM.getTensorMapping()
     C1::Array{Float64,2} = RapidFEM.createVoigtElasticTensor(E1, ν1)
@@ -26,9 +27,8 @@ function LinearElastic2Material()
     DirichletFunction(x) = zeros(problemDim)
     RapidFEM.applyDirichletBC!(K, f, DirichletFunction, dirchAttrib, mesh, problemDim)
     x::Vector = K\f
-    σTemp1::Array{Float64,1} = RapidFEM.InvDistInterpolation(RapidFEM.gaussianStress, x, (tensorMap, C1),  FeSpace, mesh,  volAttrib1, problemDim, activeDimensions)
-    σTemp2::Array{Float64,1} = RapidFEM.InvDistInterpolation(RapidFEM.gaussianStress, x, (tensorMap, C2),  FeSpace, mesh,  volAttrib2, problemDim, activeDimensions)
-    σ::Array{Float64,1} = RapidFEM.voigtToTensor((σTemp1+σTemp2)/2.0, mesh)
+    σTemp::Array{Float64,1} = RapidFEM.InvDistInterpolation([RapidFEM.gaussianStress, RapidFEM.gaussianStress], x, [(tensorMap, C1), (tensorMap, C1)],  FeSpace, mesh,  [volAttrib1, volAttrib2], problemDim, activeDimensions)
+    σ::Array{Float64,1} = RapidFEM.voigtToTensor(σTemp, mesh)
     vtkMeshData::VTKMeshData = RapidFEM.InitializeVTK(x, "LinearElastic2Material", mesh, [volAttrib1, volAttrib2], problemDim)
     RapidFEM.vtkDataAdd(vtkMeshData, (x, σ), ("Displacement", "Stress"))
     RapidFEM.vtkSave(vtkMeshData)
