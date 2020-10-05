@@ -1,5 +1,6 @@
 include("gmshReader.jl")
-
+"""Mesh struct keeps the data regarding the mesh and
+it's properties."""
 mutable struct Mesh
     noOfAttrib::Int64
     attributes::Array{Tuple{Int64, Int64},1}
@@ -11,6 +12,12 @@ mutable struct Mesh
     meshSoftware::String
 end
 
+"""The readMesh function is responsible to read the mesh and store the data in
+a mesh struct type. It has been designed to be versatile to read different kinds
+mesh files but as of now it only support Gmsh ASCII files of version 2.02
+
+    mesh::Mesh = readMesh("../test/Bar.msh")
+"""
 function readMesh(meshFileName::String)
     attributes::Array{Tuple{Int64, Int64},1} = []
     AttributeName::Dict{Any,Any} = Dict()
@@ -32,10 +39,25 @@ function readMesh(meshFileName::String)
     return mesh
 end
 
+"""This function returns the number of elements of a certain set of elements
+for a given atttribute.
+
+    noOfElements::Int64 = getNoOfElements(mesh, attribute)
+"""
 function getNoOfElements( mesh::Mesh, attribute::Tuple{Int64, Int64})
     return length(mesh.Elements[attribute])
 end
 
+"""This function extracts the Coordinate array for a certain element.
+As an example, the output for a 1st order element would look like the
+following:
+
+[x₁, x₂, x₃;
+y₁, y₂, y₃;
+z₁, z₂, z₃;]
+
+    coordArray::Array{Float64,2} = getCoordArray(mesh, element)
+"""
 function getCoordArray(mesh::Mesh,element::AbstractElement)::Array{Float64,2}
     #nodeTags::Array{Int64} = mesh.Elements[attribute][elementNo].nodeTags
     #noOfElementNodes::Int64 = mesh.Elements[attribute][elementNo].noOfElementNodes

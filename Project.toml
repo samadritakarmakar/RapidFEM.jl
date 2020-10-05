@@ -4,6 +4,7 @@ authors = ["sam "]
 version = "0.1.0"
 
 [deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 FEMSparse = "dcdf9ed5-39e7-592a-90de-966c054b7718"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 IterativeSolvers = "42fd0dbc-a981-5370-80f2-aaf504508153"

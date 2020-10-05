@@ -16,7 +16,17 @@ function getRange(RangeDict::Dict{Array{Int64,1}, StepRange{Int64,Int64}}, activ
     return RangeDict[activeDimensions]
 end
 
-function assembleMatrix(parameterFunction::T, attribute::Tuple{Int64, Int64}, FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}}, mesh::Mesh, localMatrixFunc::Function, problemDim::Int64, activeDimensions::Array{Int64,1}=[1, 1, 1])::SparseMatrixCSC where T
+"""Responsible for assembling of FEM Matrices. paramerterFunction could
+be anything depending on what you would like to send to the local matrix
+assembler. The below example is similar to used in: src/Examples/poisson.jl
+
+    K::SparseMatrixCSC = assembleMatrix(parameterFunction, volAttrib, FeSpace, mesh, RapidFEM.local_∇v_λ_∇u, problemDim, activeDimensions)
+"""
+function assembleMatrix(parameterFunction::T, attribute::Tuple{Int64, Int64},
+    FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}},
+    mesh::Mesh,  localMatrixFunc::Function, problemDim::Int64,
+    activeDimensions::Array{Int64,1}=[1, 1, 1])::SparseMatrixCSC where T
+
     numOfThreads::Int64 = Threads.nthreads()    #Total number of threads running
     #An array of SparseMatrixCOO is used to addup matrices of in each thread
     K_COO::Array{SparseMatrixCOO, 1} = Array{SparseMatrixCOO, 1}(undef, numOfThreads)
@@ -60,7 +70,17 @@ function assembleMatrix(parameterFunction::T, attribute::Tuple{Int64, Int64}, Fe
     return SparseArrays.SparseMatrixCSC(K_COO[1])
 end
 
-function assembleVector(problemfunction::T, attribute::Tuple{Int64, Int64}, FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}}, mesh::Mesh, localVectorFunc::Function, problemDim::Int64, activeDimensions::Array{Int64,1}=[1, 1, 1])::Vector where T
+"""Responsible for assembling of FEM Vectors. problemfunction could
+be anything depending on what you would like to send to the local matrix
+assembler. The below example is similar to used in: src/Examples/poisson.jl
+
+    f::Vector = RapidFEM.assembleVector(problemfunction, volAttrib, FeSpace, mesh, RapidFEM.localSource, problemDim, activeDimensions)
+    """
+function assembleVector(problemfunction::T, attribute::Tuple{Int64, Int64},
+    FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}},
+    mesh::Mesh, localVectorFunc::Function, problemDim::Int64,
+    activeDimensions::Array{Int64,1}=[1, 1, 1])::Vector where T
+
     numOfThreads::Int64 = Threads.nthreads()    #Total number of threads running
     f::Array{Vector,1} = Array{Vector,1}(undef, numOfThreads)
     Threads.@threads for thread ∈ 1:numOfThreads
@@ -92,8 +112,19 @@ function assembleVector(problemfunction::T, attribute::Tuple{Int64, Int64}, FeSp
     return f[1]
 end
 
+"""Responsible for assembling of FEM Scalars. The kind of things that you
+may use this function for are, parameters important for the mathematical model.
+Examples of such parameters are area of the element, it's center of garvity, moment of Interia etc.
+problemfunction could be anything depending  on what you would like to send to the local matrix
+assembler.
 
-function assembleScalar(problemfunction::T, attribute::Tuple{Int64, Int64}, FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}}, mesh::Mesh, localVectorFunc::Function, problemDim::Int64, activeDimensions::Array{Int64,1}=[1, 1, 1])::Vector where T
+    v::Array{Float64,1} = RapidFEM.assembleScalar(problemfunction, volAttrib, FeSpace, mesh, RapidFEM.localScalar, problemDim, activeDimensions)
+"""
+function assembleScalar(problemfunction::T, attribute::Tuple{Int64, Int64},
+    FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}},
+    mesh::Mesh, localVectorFunc::Function, problemDim::Int64,
+    activeDimensions::Array{Int64,1}=[1, 1, 1])::Vector where T
+
     noOfElements::Int64 = getNoOfElements(mesh, attribute)
     f::Vector = zeros(noOfElements*problemDim)
     RangeDict = createDimRange()

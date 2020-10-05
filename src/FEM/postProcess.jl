@@ -66,6 +66,14 @@ function getSolAtElement(sol::Array{Float64,1}, element::AbstractElement, proble
     return solAtNodes
 end
 
+
+"""This function is used to for post processing, meaning for obtaining additional data from the solution
+obtained. One such use is to find the stress from the generated displacement data from the solution.
+
+See src/Examples/LinearElastic2Material.jl example.
+
+        σTemp::Array{Float64,1} = RapidFEM.InvDistInterpolation([RapidFEM.gaussianStress, RapidFEM.gaussianStress], x, [(tensorMap, C1), (tensorMap, C1)],  FeSpace, mesh,  [volAttrib1, volAttrib2], problemDim, activeDimensions)
+"""
 function InvDistInterpolation(postProcessFunctionArray::Array{func, 1}, sol::Array{Float64,1},
     parametersDataArray::Array{T, 1},  FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}},
     mesh::Mesh,  attributeArray::Array{Tuple{Int64, Int64},1}, problemDim::Int64,
@@ -111,6 +119,15 @@ function InvDistInterpolation(postProcessFunctionArray::Array{func, 1}, sol::Arr
     return f
 end
 
+"""In continnumm mechanics many terms are symmetric in nature. Such as Cauchy Stresses
+These terms are calculated in their voigt notations. This function transforms those
+terms back to tensor notations for representation in VTK files. As of now only 3x3 2nd order
+tensors are supported.
+
+See src/Examples/LinearElastic2Material.jl example.
+
+    σ::Array{Float64,1} = RapidFEM.voigtToTensor(σTemp, mesh)
+"""
 function voigtToTensor(sol::Array{Float64,1}, mesh::Mesh)::Array{Float64,1}
     noOfNodes::Int64 = mesh.noOfNodes
     I::Array{Int64,1} = collect(1:9)

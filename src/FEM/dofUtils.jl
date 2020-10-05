@@ -1,7 +1,18 @@
+"""This function returns the node tags for the given element.
+
+    nodes::Array{Int64} = getNodes(element)
+"""
 function getNodes(element::AbstractElement)::Array{Int64}
     return element.nodeTags
 end
 
+"""This function returns the vector nodes or the vector degrees of freedom for the
+given element. This data is important in determining the postion of the data in the
+global stiffness matrix and vector.
+
+    vNodes::Array{Int64} = getVectorNodes(nodes, problemDim)
+    vNodes::Array{Int64} = getVectorNodes(element, problemDim)
+"""
 function getVectorNodes(nodes::Array{Int64}, problemDim::Int64)::Array{Int64}
     vectorNodes::Array{Int64} = Array{Int64}(undef, length(nodes)*problemDim)
     for i ∈ 1:length(nodes)

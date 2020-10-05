@@ -4,12 +4,30 @@ include("../Mesh/mesh.jl")
 
 using ForwardDiff
 
+"""This is a struct that contains the weights and the integration points.
+You would find this being used as a part of array of the ShapeFunction type
+array in which the data can typically be accessed in the below way:
+
+    shapeFunction[ipNo].ipData.w
+    shapeFunction[ipNo].ipData.ip
+
+where ipNo is the integartion point number.
+"""
 struct IpPoint
     w::Float64
     ip::Array{Float64}
 end
 
+"""This is a struct that contains the shape functions, its gradients and its hessian.
+You would find this being used as a part of array of the ShapeFunction type
+array in which the data can typically be accessed in the below way:
 
+    shapeFunction[ipNo].ϕ
+    shapeFunction[ipNo].∂ϕ_∂ξ
+    shapeFunction[ipNo].∂²ϕ_∂ξ²
+
+where ipNo is the integartion point number.
+"""
 struct ShapeFunction
     ϕ::Array{Float64,1}
     ∂ϕ_∂ξ::Array{Float64,2}
@@ -23,6 +41,11 @@ function vector_hessian(f::Function, x::Array{Float64,1}, length_f::Int64)::Arra
     return reshape(out, length_f, n, n)
 end
 
+"""This function is responsible for calculation of the shape function array, its gradients and
+the hessians at all the given integration points for that order of the element.
+
+    calculateShapeFunctions(element, elementFunction, meshSoftware)
+"""
 function calculateShapeFunctions(element::T, elementFunction::Function, meshSoftware::String)::Array{ShapeFunction} where {T<:AbstractElement}
     w::Array{Float64}, ip::Array{Float64} = getQuadrature(element)
     shapeFunctionAtIp::Array{ShapeFunction} = []

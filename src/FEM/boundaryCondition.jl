@@ -21,7 +21,15 @@ function getUniqueNodes(attribute::Tuple{Int64, Int64}, mesh::Mesh)::Array{Int64
     return NodeList
 end
 
-function applyDirichletBC!(A::SparseMatrixCSC, b::Vector, DirichletFunction::Function, attribute::Tuple{Int64, Int64}, mesh::Mesh, problemDim::Int64)
+"""Applies Dirichlet Boundary condition on the given Stiffness matrix 'A' and
+vector 'b' as per the given DirichletFunction which is depedent on the position, x
+
+    applyDirichletBC!(A, b, DirichletFunction, attribute, mesh, problemDim)
+"""
+function applyDirichletBC!(A::SparseMatrixCSC, b::Vector,
+    DirichletFunction::Function, attribute::Tuple{Int64, Int64}, mesh::Mesh,
+    problemDim::Int64)
+
     nodes::Array{Int64} = getUniqueNodes(attribute, mesh)
     vNodes::Array{Int64} = getVectorNodes(nodes, problemDim)
     for nodeNo ∈ 1:length(nodes)

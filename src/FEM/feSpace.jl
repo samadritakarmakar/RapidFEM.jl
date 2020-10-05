@@ -1,13 +1,22 @@
-include("../ShapeFunctions/shapeFunction.jl")
-include("boundaryCondition.jl")
-include("assembly.jl")
-using LinearAlgebra
+#using LinearAlgebra
+"""This function creates a Dict of ShapeFunctions arrays. Since the library
+uses isoparametric elements, the shape functions for a certain element are
+calculated just once and used all over the domain. The returned Dict variable
+keeps a list of the shape functions used in the whole domian. A new Dict variable
+may be generated in the below manner:
 
+    FeSpace = RapidFEM.createFeSpace()
+"""
 function createFeSpace()::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}}
     feSpace = Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}}()
     return feSpace
 end
 
+"""This function checks for the given element if the shape function has already been generated.
+If not generated, the a new set of shape functions are generated and returned to the FeSpace variable
+
+    shapeFunction::Array{ShapeFunction,1} = feSpace!(FeSpaceThreaded[currentThread], element, mesh, lagrange)
+"""
 function feSpace!(FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}}, element::AbstractElement, mesh::Mesh, elementFunction::Function)::Array{ShapeFunction}
     #element::AbstractElement = mesh.Elements[attribute][elementNo]
     typeOfElement::DataType = typeof(element)
@@ -17,10 +26,21 @@ function feSpace!(FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction
     return FeSpace[typeOfElement, element.order, elementFunction]
 end
 
+"""This function return an interpolated value of the position x, a set of shape function
+values for certain set of integration points.
+
+    x::Array{Float64, 1} = getInterpolated_x(coordArray, shapeFunction[ipNo].ϕ)
+"""
 function getInterpolated_x(CoordArray::Array{Float64,2}, ϕ::Array{Float64,1})::Array{Float64,1}
     return CoordArray*ϕ
 end
 
+"""As the function name suggests, it returns the value of ∂x_∂ξ
+
+    ∂x_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
+
+where ipNo is the integartion point number.
+"""
 function get_∂x_∂ξ(CoordArray::Array{Float64,2}, ∂ϕ_∂ξ::Array{Float64})::Array{Float64}
     return CoordArray*∂ϕ_∂ξ
 end
@@ -37,6 +57,11 @@ function get_∂ξ_∂x_TriTet(∂x_∂ξ::Array{Float64})::Array{Float64}
     return ∂x_∂ξ_temp\∂1_∂x__∂x_∂x
 end
 
+"""This function returns the appropriate function to be used with the passed
+on element to calculate ∂ξ_∂x
+
+    ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
+"""
 function getFunction_∂ξ_∂x(element::T)::Function where {T<:AbstractElement}
     return get_∂ξ_∂x_Normalized
 end
@@ -70,6 +95,11 @@ function get_dΩ_Tet(∂x_∂ξ::Array{Float64}, ipData::IpPoint)::Float64
     return ipData.w*abs(det(∂x_∂ξ_temp))
 end
 
+"""This function return the appropriate function to be used to calculate
+the dΩ for the given element
+
+    dΩFunc::Function = getFunction_dΩ(element)
+"""
 function getFunction_dΩ(element::T)::Function where {T<:AbstractElement}
     return get_dΩ_Nomalized
 end
@@ -97,6 +127,10 @@ function get_dL(∂x_∂ξ::Array{Float64}, ipData::IpPoint)::Float64
     return ipData.w*norm(∂x_∂ξ[:,1])
 end
 
+"""This function returns the dS for integrating over the neumann boundary
+
+    dSFunc::Function = getFunction_dS(element)
+"""
 function getFunction_dS(element::TriElement)::Function
     return get_dS_Tri
 end
@@ -108,7 +142,10 @@ end
 function getFunction_dS(element::LineElement)::Function
     return get_dL
 end
+"""This function returns the dL for integrating over a line in the boundary
 
+    dLFunc::Function = getFunction_dL(element)
+"""
 function getFunction_dL(element::LineElement)::Function
     return get_dL
 end

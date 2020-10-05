@@ -10,7 +10,7 @@ function poissonEquation()
     activeDimensions::Array{Int64,1} = [1, 1, 1]
     parameterFunction(x) = [1.0]#, 1.0, 1.0]
     K::SparseMatrixCSC = RapidFEM.assembleMatrix(parameterFunction, volAttrib,
-    FeSpace, mesh, RapidFEM.local_∇v_∇u, problemDim, activeDimensions)
+    FeSpace, mesh, RapidFEM.local_∇v_λ_∇u, problemDim, activeDimensions)
     source(x) = [0.0]#, 0.0, 0.0]
     f::Vector = RapidFEM.assembleVector(source, volAttrib,
     FeSpace, mesh, RapidFEM.localSource, problemDim, activeDimensions)

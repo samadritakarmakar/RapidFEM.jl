@@ -127,12 +127,12 @@ function vtkSave(vtkfile::T) where T
     return nothing
 end
 
-function vtkDataAdd(vtkMeshData::VTKMeshData, dataTuple::T1, dataNameTuple::T2, step::Int64=1) where {T1, T2}
+function vtkDataAdd(vtkMeshData::VTKMeshData, dataTuple::T1, dataNameTuple::T2, time::Float64 = 0.0, step::Int64=1) where {T1, T2}
     @assert (length(dataTuple) == length(dataNameTuple)) "The dataTuple and dataNameTuple lengths must match."
     vtkFile::WriteVTK.DatasetFile = createVTKFile(vtkMeshData, step)
     for i ∈ 1:length(dataNameTuple)
         vtkFile[dataNameTuple[i]] = dataTuple[i]
     end
-    vtkMeshData.vtkCollectionFile[step] = vtkFile
+    vtkMeshData.vtkCollectionFile[time] = vtkFile
     return nothing
 end

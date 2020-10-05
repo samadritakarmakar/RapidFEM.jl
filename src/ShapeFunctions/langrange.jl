@@ -6,7 +6,11 @@ include("lagrangeHex.jl")
 #include("../FEM/elements.jl")
 
 
-
+"""This function returns the kind of function to be used to generate the
+shape function values for the given element. It also differentiates as per the
+order of the element and the meshing software used. It is assumed that the meshing
+software used is the same for meshing all over the domain.
+"""
 function lagrange(element::LineElement, meshSoftware::String)
     if(element.order == 1 && meshSoftware == "gmsh")
         N = lagrangeLineOrder1_gmsh
