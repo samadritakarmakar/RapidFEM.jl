@@ -1,13 +1,13 @@
 """Vector type variant of the convection equation. Here the velocity function, λ, can be made dependent on the position, x
 
-    local_v_λ_∇u_Vector(velocityFunction, problemDim, element, shapeFunction, coordArray)
+    local_v_λ_∇u_Vector!(K::Array{Float64,2}, velocityFunction, problemDim, element, shapeFunction, coordArray)
 """
-function local_v_λ_∇u_Vector(velocityFunction::Function, problemDim::Int64, element::AbstractElement, shapeFunction::Array{ShapeFunction}, coordArray::Array{Float64,2})::Array{Float64,2}
+function local_v_λ_∇u_Vector!(K::Array{Float64,2}, velocityFunction::Function, problemDim::Int64, element::AbstractElement, shapeFunction::Array{ShapeFunction}, coordArray::Array{Float64,2})
     ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
     dΩFunc::Function = getFunction_dΩ(element)
     noOfIpPoints::Int64 = length(shapeFunction)
     noOfNodes::Int64 = size(shapeFunction[1].∂ϕ_∂ξ,1)
-    K::Array{Float64,2} = zeros(noOfNodes*problemDim, noOfNodes*problemDim)
+    #K::Array{Float64,2} = zeros(noOfNodes*problemDim, noOfNodes*problemDim)
     for ipNo ∈ 1:noOfIpPoints
         ∂x_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
         ∂ξ_dx::Array{Float64,2} = ∂ξ_∂xFunc(∂x_∂ξ)
@@ -27,15 +27,14 @@ function local_v_λ_∇u_Vector(velocityFunction::Function, problemDim::Int64, e
             end
         end
     end
-    return K
+    return nothing
 end
 
 """Scalar type variant of the convection equation. Here the velocity function, λ, can be made dependent on the position, x
 
-    local_v_λ_∇u_Scalar(velocityFunction, problemDim, element, shapeFunction, coordArray)
+    local_v_λ_∇u_Scalar!(K::Array{Float64,2}, velocityFunction, problemDim, element, shapeFunction, coordArray)
 """
-function local_v_λ_∇u_Scalar(velocityFunction::Function, problemDim::Int64, element::AbstractElement, shapeFunction::Array{ShapeFunction}, coordArray::Array{Float64,2})::Array{Float64,2}
-    ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
+function local_v_λ_∇u_Scalar!(K::Array{Float64,2}, velocityFunction::Function, problemDim::Int64, element::AbstractElement, shapeFunction::Array{ShapeFunction}, coordArray::Array{Float64,2})
     dΩFunc::Function = getFunction_dΩ(element)
     noOfIpPoints::Int64 = length(shapeFunction)
     noOfNodes::Int64 = size(shapeFunction[1].∂ϕ_∂ξ,1)
@@ -57,5 +56,5 @@ function local_v_λ_∇u_Scalar(velocityFunction::Function, problemDim::Int64, e
             end
         end
     end
-    return K
+    return nothing
 end

@@ -17,15 +17,15 @@ function LinearElastic2Material()
     tensorMap::Dict{Int64, Int64} = RapidFEM.getTensorMapping()
     C1::Array{Float64,2} = RapidFEM.createVoigtElasticTensor(E1, ν1)
     C2::Array{Float64,2} = RapidFEM.createVoigtElasticTensor(E2, ν2)
-    K::SparseMatrixCSC = RapidFEM.assembleMatrix((tensorMap, C1), volAttrib1, FeSpace, mesh, RapidFEM.local_∇v_C_∇u, problemDim, activeDimensions)
-    K += RapidFEM.assembleMatrix((tensorMap, C2), volAttrib2, FeSpace, mesh, RapidFEM.local_∇v_C_∇u, problemDim, activeDimensions)
+    K::SparseMatrixCSC = RapidFEM.assembleMatrix((tensorMap, C1), volAttrib1, FeSpace, mesh, RapidFEM.local_∇v_C_∇u!, problemDim, activeDimensions)
+    K += RapidFEM.assembleMatrix((tensorMap, C2), volAttrib2, FeSpace, mesh, RapidFEM.local_∇v_C_∇u!, problemDim, activeDimensions)
     source(x) = [0.0, 0.0, 0.0]
     f::Vector = RapidFEM.assembleVector(source, volAttrib1, FeSpace, mesh, RapidFEM.localSource, problemDim, activeDimensions)
     f += RapidFEM.assembleVector(source, volAttrib2, FeSpace, mesh, RapidFEM.localSource, problemDim, activeDimensions)
     neumann(x) = [0.0, 0.0, -0.3333333333]
     f += RapidFEM.assembleVector(neumann, neumAttrib, FeSpace, mesh, RapidFEM.localNeumann, problemDim, activeDimensions)
     DirichletFunction(x) = zeros(problemDim)
-    RapidFEM.applyDirichletBC!(K, f, DirichletFunction, dirchAttrib, mesh, problemDim)
+    K = RapidFEM.applyDirichletBC!(f, K, DirichletFunction, dirchAttrib, mesh, problemDim)
     x::Vector = K\f
     σTemp::Array{Float64,1} = RapidFEM.InvDistInterpolation([RapidFEM.gaussianStress, RapidFEM.gaussianStress], x, [(tensorMap, C1), (tensorMap, C1)],  FeSpace, mesh,  [volAttrib1, volAttrib2], problemDim, activeDimensions)
     σ::Array{Float64,1} = RapidFEM.voigtToTensor(σTemp, mesh)

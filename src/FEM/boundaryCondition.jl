@@ -1,3 +1,4 @@
+
 function getPermutionMatrix(vNodes::Array{Int64}, mesh::Mesh, problemDim::Int64)
     noOfVectorNodes::Int64 = mesh.noOfNodes*problemDim
     Pzeros::SparseMatrixCSC = spzeros(noOfVectorNodes, noOfVectorNodes)
@@ -21,12 +22,13 @@ function getUniqueNodes(attribute::Tuple{Int64, Int64}, mesh::Mesh)::Array{Int64
     return NodeList
 end
 
+
 """Applies Dirichlet Boundary condition on the given Stiffness matrix 'A' and
 vector 'b' as per the given DirichletFunction which is depedent on the position, x
 
     applyDirichletBC!(A, b, DirichletFunction, attribute, mesh, problemDim)
 """
-function applyDirichletBC!(A::SparseMatrixCSC, b::Vector,
+function applyDirichletBC!(b::Vector, A::SparseMatrixCSC,
     DirichletFunction::Function, attribute::Tuple{Int64, Int64}, mesh::Mesh,
     problemDim::Int64)
 
@@ -36,7 +38,18 @@ function applyDirichletBC!(A::SparseMatrixCSC, b::Vector,
         coordArray::Array{Float64} = mesh.Nodes[nodes[nodeNo]]
         b[vNodes[nodeNo:nodeNo+problemDim-1]] = DirichletFunction(coordArray)
     end
+
+    #=A[:, vNodes] .= 0.0
+    A[vNodes, :] .= 0.0
+    Threads.@threads for vNode ∈ vNodes
+        A[vNode, vNode] = 1.0
+    end
+    return nothing
+    =#
     P::SparseMatrixCSC, Pzeros::SparseMatrixCSC =  getPermutionMatrix(vNodes, mesh, problemDim)
-    A[:] = P'*A*P
-    A[:] = A + Pzeros
+    A = P'*A
+    A *= P
+    A += Pzeros
+    return A
+
 end

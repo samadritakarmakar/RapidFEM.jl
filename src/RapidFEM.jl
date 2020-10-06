@@ -33,11 +33,11 @@ export getQuadrature
 export IpPoint, ShapeFunction, calculateShapeFunctions
 #From Models
 #general
-    export local_∇v_λ_∇u, local_v_ρ_u, localSource, localNeumann, localScalar, localScalarNeumann
+    export local_∇v_λ_∇u!, local_v_ρ_u!, localSource, localNeumann, localScalar, localScalarNeumann
 #linearElasticity
-    export local_∇v_C_∇u, createVoigtElasticTensor, getTensorMapping, gaussianStress
+    export local_∇v_C_∇u!, createVoigtElasticTensor, getTensorMapping, gaussianStress
 #convectionFluid
-    export local_v_λ_∇u_Vector, local_v_λ_∇u_Scalar
+    export local_v_λ_∇u_Vector!, local_v_λ_∇u_Scalar!
 #From WriteToVTK
     export VTKMeshData, InitializeVTK, vtkSave, vtkDataAdd
 end # module

@@ -29,14 +29,14 @@ function getVoigtIndex(mapDict::Dict{Int64, Int64}, i::Int64, j::Int64)::Int64
     return mapDict[10*i+j]
 end
 
-function local_∇v_C_∇u(tensorMapN_ElasticTensor::Tuple{Dict{Int64, Int64}, Array{Float64, 2}}, problemDim::Int64, element::AbstractElement, shapeFunction::Array{ShapeFunction}, coordArray::Array{Float64,2})::Array{Float64,2}
+function local_∇v_C_∇u!(K::Array{Float64,2}, tensorMapN_ElasticTensor::Tuple{Dict{Int64, Int64}, Array{Float64, 2}}, problemDim::Int64, element::AbstractElement, shapeFunction::Array{ShapeFunction}, coordArray::Array{Float64,2})
     mapDict::Dict{Int64, Int64} = tensorMapN_ElasticTensor[1]
     C::Array{Float64, 2} = tensorMapN_ElasticTensor[2]
     ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
     dΩFunc::Function = getFunction_dΩ(element)
     noOfIpPoints::Int64 = length(shapeFunction)
     noOfNodes::Int64 = size(shapeFunction[1].∂ϕ_∂ξ,1)
-    K::Array{Float64,2} = zeros(noOfNodes*problemDim, noOfNodes*problemDim)
+    #K::Array{Float64,2} = zeros(noOfNodes*problemDim, noOfNodes*problemDim)
     for ipNo::Int64 ∈ 1:noOfIpPoints
         ∂x_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
         ∂ξ_dx::Array{Float64,2} = ∂ξ_∂xFunc(∂x_∂ξ)
@@ -64,7 +64,7 @@ function local_∇v_C_∇u(tensorMapN_ElasticTensor::Tuple{Dict{Int64, Int64}, A
             end
         end
     end
-    return K
+    return nothing
 end
 
 function gaussianStress(tensorMapN_ElasticTensor::Tuple{Dict{Int64, Int64}, Array{Float64, 2}}, solAtNodes::Array{Float64,1}, problemDim::Int64,

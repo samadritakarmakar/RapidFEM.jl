@@ -13,18 +13,18 @@ function LinearElastic()
     ν::Float64 = 0.3
     tensorMap::Dict{Int64, Int64} = RapidFEM.getTensorMapping()
     C::Array{Float64,2} = RapidFEM.createVoigtElasticTensor(E, ν)
-    K::SparseMatrixCSC = RapidFEM.assembleMatrix((tensorMap, C), volAttrib, FeSpace, mesh, RapidFEM.local_∇v_C_∇u, problemDim, activeDimensions)
+    K::SparseMatrixCSC = RapidFEM.assembleMatrix((tensorMap, C), volAttrib, FeSpace, mesh, RapidFEM.local_∇v_C_∇u!, problemDim, activeDimensions)
     source(x) = [0.0, 0.0, 0.0]
     f::Vector = RapidFEM.assembleVector(source, volAttrib, FeSpace, mesh, RapidFEM.localSource, problemDim, activeDimensions)
     neumann(x) = [0.0, 0.0, -0.3333333333]
     f += RapidFEM.assembleVector(neumann, neumAttrib, FeSpace, mesh, RapidFEM.localNeumann, problemDim, activeDimensions)
     DirichletFunction(x) = zeros(problemDim)
-    RapidFEM.applyDirichletBC!(K, f, DirichletFunction, dirchAttrib, mesh, problemDim)
+    K = RapidFEM.applyDirichletBC!(f, K, DirichletFunction, dirchAttrib, mesh, problemDim)
     x::Vector = K\f
     σTemp::Array{Float64,1} = RapidFEM.InvDistInterpolation([RapidFEM.gaussianStress], x, [(tensorMap, C)],  FeSpace, mesh,  [volAttrib], problemDim, activeDimensions)
     σ::Array{Float64,1} = RapidFEM.voigtToTensor(σTemp, mesh)
     vtkMeshData::VTKMeshData = RapidFEM.InitializeVTK(x, "LinearElastic",mesh, [volAttrib], problemDim)
-    RapidFEM.vtkDataAdd(vtkMeshData, (x,σ), ("Displacement", "Stress"))
+    RapidFEM.vtkDataAdd(vtkMeshData, (x, σ), ("Displacement", "Stress"))
     RapidFEM.vtkSave(vtkMeshData)
     return nothing
 end

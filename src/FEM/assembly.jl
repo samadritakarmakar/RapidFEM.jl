@@ -30,15 +30,17 @@ function assembleMatrix(parameterFunction::T, attribute::Tuple{Int64, Int64},
     numOfThreads::Int64 = Threads.nthreads()    #Total number of threads running
     #An array of SparseMatrixCOO is used to addup matrices of in each thread
     K_COO::Array{SparseMatrixCOO, 1} = Array{SparseMatrixCOO, 1}(undef, numOfThreads)
+    K_localArray::Array{Array{Float64,2},1} = Array{Array{Float64,2},1}(undef, numOfThreads)
     Threads.@threads for thread ∈ 1:numOfThreads
         K_COO[thread] = SparseMatrixCOO() #Intiailization of SparseMatrixCOO
+        K_localArray[thread] = zeros(0,0)
     end
     #Intiailization of FeSpaceThreaded
     FeSpaceThreaded::Array{Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}}, 1} =
     Array{Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}}, 1}(undef, numOfThreads)
     FeSpaceThreaded[1] = FeSpace #First thread can be the same as the original FeSpace
     Threads.@threads for thread ∈ 2:numOfThreads
-        FeSpaceThreaded[thread] = deepcopy(FeSpace) #Others need to be deepcpoies
+        FeSpaceThreaded[thread] = deepcopy(FeSpace) #Others need to be deepcopies
     end
     RangeDict = createDimRange() # Creates a dim range. Useful when using for 1D or 2D problems
     dimRange::StepRange{Int64,Int64} = getRange(RangeDict, activeDimensions)
@@ -53,12 +55,19 @@ function assembleMatrix(parameterFunction::T, attribute::Tuple{Int64, Int64},
     Threads.@threads for elementNo ∈ 1:length(mesh.Elements[attribute])
         currentThread::Int64 = Threads.threadid()
         element::AbstractElement = mesh.Elements[attribute][elementNo]
+        #if the type of element changes then reallocate the local matrix else replace with zeros
+        if length(K_localArray[currentThread]) != problemDim*element.noOfElementNodes
+            K_localArray[currentThread] = zeros(problemDim*element.noOfElementNodes,problemDim*element.noOfElementNodes)
+        else
+            fill!(K_localArray[currentThread],0.0)
+        end
+        K_localArray[currentThread] = zeros(problemDim*element.noOfElementNodes,problemDim*element.noOfElementNodes)
         coordArrayTemp::Array{Float64,2} = getCoordArray(mesh, element)
         coordArray::Array{Float64,2} = coordArrayTemp[dimRange,:]
         shapeFunction::Array{ShapeFunction,1} = feSpace!(FeSpaceThreaded[currentThread], element, mesh, lagrange)
-        K_local::Array{Float64,2} = localMatrixFunc(parameterFunction, problemDim, element, shapeFunction, coordArray)
+        localMatrixFunc(K_localArray[currentThread], parameterFunction, problemDim, element, shapeFunction, coordArray)
         vNodes::Array{Int64} = getVectorNodes(element, problemDim)
-        FEMSparse.assemble_local_matrix!(K_COO[currentThread], vNodes, vNodes, K_local)
+        FEMSparse.assemble_local_matrix!(K_COO[currentThread], vNodes, vNodes, K_localArray[currentThread])
     end
     ### Multi-Thread Assembly ends here
     for thread ∈ 2:numOfThreads ### Adding all the thread matrices to 1st K_COO
