@@ -20,10 +20,10 @@ function LinearElastic2Material()
     K::SparseMatrixCSC = RapidFEM.assembleMatrix((tensorMap, C1), volAttrib1, FeSpace, mesh, RapidFEM.local_∇v_C_∇u!, problemDim, activeDimensions)
     K += RapidFEM.assembleMatrix((tensorMap, C2), volAttrib2, FeSpace, mesh, RapidFEM.local_∇v_C_∇u!, problemDim, activeDimensions)
     source(x) = [0.0, 0.0, 0.0]
-    f::Vector = RapidFEM.assembleVector(source, volAttrib1, FeSpace, mesh, RapidFEM.localSource, problemDim, activeDimensions)
-    f += RapidFEM.assembleVector(source, volAttrib2, FeSpace, mesh, RapidFEM.localSource, problemDim, activeDimensions)
+    f::Vector = RapidFEM.assembleVector(source, volAttrib1, FeSpace, mesh, RapidFEM.localSource!, problemDim, activeDimensions)
+    f += RapidFEM.assembleVector(source, volAttrib2, FeSpace, mesh, RapidFEM.localSource!, problemDim, activeDimensions)
     neumann(x) = [0.0, 0.0, -0.3333333333]
-    f += RapidFEM.assembleVector(neumann, neumAttrib, FeSpace, mesh, RapidFEM.localNeumann, problemDim, activeDimensions)
+    f += RapidFEM.assembleVector(neumann, neumAttrib, FeSpace, mesh, RapidFEM.localNeumann!, problemDim, activeDimensions)
     DirichletFunction(x) = zeros(problemDim)
     K = RapidFEM.applyDirichletBC!(f, K, DirichletFunction, dirchAttrib, mesh, problemDim)
     x::Vector = K\f

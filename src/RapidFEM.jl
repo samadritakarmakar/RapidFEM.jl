@@ -33,7 +33,7 @@ export getQuadrature
 export IpPoint, ShapeFunction, calculateShapeFunctions
 #From Models
 #general
-    export local_∇v_λ_∇u!, local_v_ρ_u!, localSource, localNeumann, localScalar, localScalarNeumann
+    export local_∇v_λ_∇u!, local_v_ρ_u!, localBoundary_v_ρ_u!, localSource!, localNeumann!, localScalar!, localScalarNeumann!
 #linearElasticity
     export local_∇v_C_∇u!, createVoigtElasticTensor, getTensorMapping, gaussianStress
 #convectionFluid

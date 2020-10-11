@@ -10,7 +10,7 @@ end
 
 """Generates an array of Unique nodes for the given attribute in the mesh data."""
 function getUniqueNodes(attribute::Tuple{Int64, Int64}, mesh::Mesh)::Array{Int64}
-    NodeList::Array{Int64} = []
+    #=NodeList::Array{Int64} = []
     for element ∈ mesh.Elements[attribute...]
         nodes::Array{Int64} = getNodes(element)
         for node ∈ nodes
@@ -18,7 +18,18 @@ function getUniqueNodes(attribute::Tuple{Int64, Int64}, mesh::Mesh)::Array{Int64
                 push!(NodeList, node)
             end
         end
+    end=#
+    NodeList::Array{Int64} = []
+    for element ∈ mesh.Elements[attribute...]
+        nodes::Array{Int64} = getNodes(element)
+        for node ∈ nodes
+            if length(searchsorted(NodeList, node))==0
+                push!(NodeList, node)
+                sort!(NodeList)
+            end
+        end
     end
+    #unique!(NodeList) #Makes sure of only one copy of each node in NodeList
     return NodeList
 end
 

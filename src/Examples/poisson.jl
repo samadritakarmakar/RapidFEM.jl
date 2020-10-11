@@ -13,10 +13,10 @@ function poissonEquation()
     FeSpace, mesh, RapidFEM.local_∇v_λ_∇u!, problemDim, activeDimensions)
     source(x) = [0.0]#, 0.0, 0.0]
     f::Vector = RapidFEM.assembleVector(source, volAttrib,
-    FeSpace, mesh, RapidFEM.localSource, problemDim, activeDimensions)
+    FeSpace, mesh, RapidFEM.localSource!, problemDim, activeDimensions)
     neumann(x) = [0.1]#, 0.0, 0.0]
     f += RapidFEM.assembleVector(neumann, neumAttrib,
-    FeSpace, mesh, RapidFEM.localNeumann, problemDim, activeDimensions)
+    FeSpace, mesh, RapidFEM.localNeumann!, problemDim, activeDimensions)
     DirichletFunction(x) = zeros(problemDim)
     K = RapidFEM.applyDirichletBC!(f, K, DirichletFunction, dirchAttrib,
     mesh, problemDim)

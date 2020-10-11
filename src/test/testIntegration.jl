@@ -24,7 +24,7 @@ function testIntegration()
     write(f, str)
     close(f)
     scalarFunction(x) = [1.0]
-    v1::Array{Float64,1} = RapidFEM.assembleScalar(scalarFunction, volAttrib, FeSpace, mesh, RapidFEM.localScalar, problemDim, activeDimensions)
-    v2::Array{Float64,1} = RapidFEM.assembleScalar(scalarFunction, neumAttrib, FeSpace, mesh, RapidFEM.localScalarNeumann, problemDim, activeDimensions)
-    return coordArray', (v1), (v2)
+    v1::Array{Float64,1} = RapidFEM.assembleScalar(scalarFunction, volAttrib, FeSpace, mesh, RapidFEM.localScalar!, problemDim, activeDimensions)
+    v2::Array{Float64,1} = RapidFEM.assembleScalar(scalarFunction, neumAttrib, FeSpace, mesh, RapidFEM.localScalarNeumann!, problemDim, activeDimensions)
+    return sum(v1), sum(v2)
 end

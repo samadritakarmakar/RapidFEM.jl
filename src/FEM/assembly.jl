@@ -20,9 +20,9 @@ end
 be anything depending on what you would like to send to the local matrix
 assembler. The below example is similar to used in: src/Examples/poisson.jl
 
-    K::SparseMatrixCSC = assembleMatrix(parameterFunction, volAttrib, FeSpace, mesh, RapidFEM.local_∇v_λ_∇u, problemDim, activeDimensions)
+    K::SparseMatrixCSC = assembleMatrix(parameters, volAttrib, FeSpace, mesh, RapidFEM.local_∇v_λ_∇u!, problemDim, activeDimensions)
 """
-function assembleMatrix(parameterFunction::T, attribute::Tuple{Int64, Int64},
+function assembleMatrix(parameters::T, attribute::Tuple{Int64, Int64},
     FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}},
     mesh::Mesh,  localMatrixFunc::Function, problemDim::Int64,
     activeDimensions::Array{Int64,1}=[1, 1, 1])::SparseMatrixCSC where T
@@ -65,7 +65,7 @@ function assembleMatrix(parameterFunction::T, attribute::Tuple{Int64, Int64},
         coordArrayTemp::Array{Float64,2} = getCoordArray(mesh, element)
         coordArray::Array{Float64,2} = coordArrayTemp[dimRange,:]
         shapeFunction::Array{ShapeFunction,1} = feSpace!(FeSpaceThreaded[currentThread], element, mesh, lagrange)
-        localMatrixFunc(K_localArray[currentThread], parameterFunction, problemDim, element, shapeFunction, coordArray)
+        localMatrixFunc(K_localArray[currentThread], parameters, problemDim, element, shapeFunction, coordArray)
         vNodes::Array{Int64} = getVectorNodes(element, problemDim)
         FEMSparse.assemble_local_matrix!(K_COO[currentThread], vNodes, vNodes, K_localArray[currentThread])
     end
@@ -79,21 +79,23 @@ function assembleMatrix(parameterFunction::T, attribute::Tuple{Int64, Int64},
     return SparseArrays.SparseMatrixCSC(K_COO[1])
 end
 
-"""Responsible for assembling of FEM Vectors. problemfunction could
+"""Responsible for assembling of FEM Vectors. parameters could
 be anything depending on what you would like to send to the local matrix
 assembler. The below example is similar to used in: src/Examples/poisson.jl
 
-    f::Vector = RapidFEM.assembleVector(problemfunction, volAttrib, FeSpace, mesh, RapidFEM.localSource, problemDim, activeDimensions)
-    """
-function assembleVector(problemfunction::T, attribute::Tuple{Int64, Int64},
+    f::Vector = RapidFEM.assembleVector(parameters, volAttrib, FeSpace, mesh, RapidFEM.localSource, problemDim, activeDimensions)
+"""
+function assembleVector(parameters::T, attribute::Tuple{Int64, Int64},
     FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}},
     mesh::Mesh, localVectorFunc::Function, problemDim::Int64,
     activeDimensions::Array{Int64,1}=[1, 1, 1])::Vector where T
 
     numOfThreads::Int64 = Threads.nthreads()    #Total number of threads running
     f::Array{Vector,1} = Array{Vector,1}(undef, numOfThreads)
+    f_localArray::Array{Array{Float64,1},1} = Array{Array{Float64,1},1}(undef, numOfThreads)
     Threads.@threads for thread ∈ 1:numOfThreads
         f[thread] = zeros(mesh.noOfNodes*problemDim)
+        f_localArray[thread] = zeros(0)
     end
     #Intiailization of FeSpaceThreaded
     FeSpaceThreaded::Array{Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}}, 1} =
@@ -107,12 +109,18 @@ function assembleVector(problemfunction::T, attribute::Tuple{Int64, Int64},
     Threads.@threads for elementNo ∈ 1:length(mesh.Elements[attribute])
         currentThread::Int64 = Threads.threadid()
         element::AbstractElement = mesh.Elements[attribute][elementNo]
+        #if the type of element changes then reallocate the local vector else replace with zeros
+        if length(f_localArray[currentThread]) != problemDim*element.noOfElementNodes
+            f_localArray[currentThread] = zeros(problemDim*element.noOfElementNodes)
+        else
+            fill!(f_localArray[currentThread],0.0)
+        end
         coordArrayTemp::Array{Float64,2} = getCoordArray(mesh, element)
         coordArray::Array{Float64,2} = coordArrayTemp[dimRange,:]
         shapeFunction::Array{ShapeFunction,1} = feSpace!(FeSpaceThreaded[currentThread], element, mesh, lagrange)
-        f_local::Array{Float64,1} = localVectorFunc(problemfunction, problemDim, element, shapeFunction, coordArray)
+        localVectorFunc(f_localArray[currentThread], parameters, problemDim, element, shapeFunction, coordArray)
         vNodes::Array{Int64} = getVectorNodes(element, problemDim)
-        f[currentThread][vNodes] += f_local
+        f[currentThread][vNodes] += f_localArray[currentThread]
     end
     for thread ∈ 2:numOfThreads ### Adding all the thread vectors to 1st f
         f[1] += f[thread]
@@ -124,27 +132,43 @@ end
 """Responsible for assembling of FEM Scalars. The kind of things that you
 may use this function for are, parameters important for the mathematical model.
 Examples of such parameters are area of the element, it's center of garvity, moment of Interia etc.
-problemfunction could be anything depending  on what you would like to send to the local matrix
+parameters could be anything depending  on what you would like to send to the local matrix
 assembler.
 
-    v::Array{Float64,1} = RapidFEM.assembleScalar(problemfunction, volAttrib, FeSpace, mesh, RapidFEM.localScalar, problemDim, activeDimensions)
+    v::Array{Float64,1} = RapidFEM.assembleScalar(parameters, volAttrib, FeSpace, mesh, RapidFEM.localScalar, problemDim, activeDimensions)
 """
-function assembleScalar(problemfunction::T, attribute::Tuple{Int64, Int64},
+function assembleScalar(parameters::T, attribute::Tuple{Int64, Int64},
     FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}},
     mesh::Mesh, localVectorFunc::Function, problemDim::Int64,
     activeDimensions::Array{Int64,1}=[1, 1, 1])::Vector where T
 
+    numOfThreads::Int64 = Threads.nthreads()    #Total number of threads running
     noOfElements::Int64 = getNoOfElements(mesh, attribute)
-    f::Vector = zeros(noOfElements*problemDim)
+    f::Array{Array{Float64,1},1} = Array{Array{Float64,1},1}(undef, numOfThreads)
+    f_localArray::Array{Array{Float64,1},1} = Array{Array{Float64,1},1}(undef, numOfThreads)
+    Threads.@threads for thread ∈ 1:numOfThreads
+        f[thread] = zeros(noOfElements*problemDim)
+        f_localArray[thread] = zeros(0)
+    end
     RangeDict = createDimRange()
     dimRange::StepRange{Int64,Int64} = getRange(RangeDict, activeDimensions)
-    for elementNo ∈ 1:length(mesh.Elements[attribute])
+    Threads.@threads for elementNo ∈ 1:length(mesh.Elements[attribute])
+        currentThread::Int64 = Threads.threadid()
         element::AbstractElement = mesh.Elements[attribute][elementNo]
+        if length(f_localArray[currentThread]) != problemDim
+            f_localArray[currentThread] = zeros(problemDim)
+        else
+            fill!(f_localArray[currentThread],0.0)
+        end
         coordArrayTemp::Array{Float64,2} = getCoordArray(mesh, element)
         coordArray::Array{Float64,2} = coordArrayTemp[dimRange,:]
         shapeFunction::Array{ShapeFunction,1} = feSpace!(FeSpace, element, mesh, lagrange)
-        f_local::Array{Float64,1} = localVectorFunc(problemfunction, problemDim, element, shapeFunction, coordArray)
-        f[problemDim*(elementNo-1)+1:problemDim*elementNo] += f_local
+        localVectorFunc(f_localArray[currentThread], parameters, problemDim, element, shapeFunction, coordArray)
+        f[currentThread][problemDim*(elementNo-1)+1:problemDim*elementNo] += f_localArray[currentThread]
     end
-    return f
+    for thread ∈ 2:numOfThreads ### Adding all the thread vectors to 1st f
+        f[1] += f[thread]
+        merge!(FeSpace, FeSpaceThreaded[thread]) ##Merge all threaded FeSpace together
+    end
+    return f[1]
 end

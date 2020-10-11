@@ -13,7 +13,7 @@ function local_v_λ_∇u_Vector!(K::Array{Float64,2}, velocityFunction::Function
         ∂ξ_dx::Array{Float64,2} = ∂ξ_∂xFunc(∂x_∂ξ)
         ϕ::Array{Float64} = shapeFunction[ipNo].ϕ
         x::Array{Float64, 1} = getInterpolated_x(coordArray, ϕ)
-        λ::Array{Float64, 1} = parameterFunction(x)
+        λ::Array{Float64, 1} = parameters(x)
         dΩ::Float64 = dΩFunc(∂x_∂ξ, shapeFunction[ipNo].ipData)
         ∂ϕ_∂x::Array{Float64} = shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dx
         for b ∈ 1:noOfNodes
@@ -44,7 +44,7 @@ function local_v_λ_∇u_Scalar!(K::Array{Float64,2}, velocityFunction::Function
         ∂ξ_dx::Array{Float64,2} = ∂ξ_∂xFunc(∂x_∂ξ)
         ϕ::Array{Float64} = shapeFunction[ipNo].ϕ
         x::Array{Float64, 1} = getInterpolated_x(coordArray, ϕ)
-        λ::Array{Float64, 1} = parameterFunction(x)
+        λ::Array{Float64, 1} = parameters(x)
         dΩ::Float64 = dΩFunc(∂x_∂ξ, shapeFunction[ipNo].ipData)
         ∂ϕ_∂x::Array{Float64} = shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dx
         for b ∈ 1:noOfNodes
