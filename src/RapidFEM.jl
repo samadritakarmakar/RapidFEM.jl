@@ -9,6 +9,7 @@ include("FEM/feSpace.jl")
 include("FEM/dofUtils.jl")
 include("FEM/postProcess.jl")
 include("FEM/utils.jl")
+include("Dynamic/singleStep_pj.jl")
 include("Models/general.jl")
 include("Models/linearElasticity.jl")
 include("Models/convectionFluid.jl")
@@ -31,6 +32,11 @@ export Mesh, readMesh, getNoOfElements, getCoordArray
 export getQuadrature
 #From ShapeFunction
 export IpPoint, ShapeFunction, calculateShapeFunctions
+#From Dynamic
+#singleStep_pj
+export get_SSpj_A_meanU_f, SSpj_getFinal_A_b, updateSolution!, update_f!
+
+
 #From Models
 #general
     export local_∇v_λ_∇u!, local_v_ρ_u!, localBoundary_v_ρ_u!, localSource!, localNeumann!, localScalar!, localScalarNeumann!

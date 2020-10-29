@@ -62,5 +62,18 @@ function applyDirichletBC!(b::Vector, A::SparseMatrixCSC,
     A *= P
     A += Pzeros
     return A
+end
 
+"""Applies Initial Boundary condition on the given vector 'u' as per the given
+    InitialFunction which is depedent on the position, x
+"""
+function applyInitialBC!(u::Vector, InitialBcFunction::Function,
+    attribute::Tuple{Int64, Int64}, mesh::Mesh, problemDim::Int64)
+
+    nodes::Array{Int64} = getUniqueNodes(attribute, mesh)
+    vNodes::Array{Int64} = getVectorNodes(nodes, problemDim)
+    for nodeNo ∈ 1:length(nodes)
+        coordArray::Array{Float64} = mesh.Nodes[nodes[nodeNo]]
+        u[vNodes[nodeNo:nodeNo+problemDim-1]] = InitialBcFunction(coordArray)
+    end
 end
