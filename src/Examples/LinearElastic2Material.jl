@@ -2,7 +2,7 @@ using RapidFEM, SparseArrays, WriteVTK
 
 
 function LinearElastic2Material()
-    mesh::Mesh = RapidFEM.readMesh("../test/Bar2.msh")
+    mesh::Mesh = RapidFEM.readMesh("../test/MeshFiles/Bar2.msh")
     FeSpace = RapidFEM.createFeSpace()
     problemDim::Int64 = 3
     volAttrib1::Tuple{Int64, Int64} = (3,4)

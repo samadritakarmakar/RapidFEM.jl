@@ -63,10 +63,13 @@ function build_f_mean(f_Array::Array{Array{Float64,1},1}, Δt::Float64, θ_Array
     @assert length(f_Array) == length(θ_Array)+1 "Length of f_Array must be 1 greater than length of θ_Array"
     f_DotMatrix::Array{Float64, 2} = taylor_f_Dot_eval(f_Array, Δt)
     f_mean::Array{Float64, 1} = deepcopy(f_Array[1])
+    factorial_i::Array{Float64, 1} = Array{Float64, 1}(undef, size(f_DotMatrix,1))
     for i ∈ 1:size(f_DotMatrix,1)
-        factorial_i::Float64 = float(factorial(i))
-        for j ∈ 1:size(f_DotMatrix,2)
-            f_mean[j] += θ_Array[i]*Δt^(i)/factorial_i*f_DotMatrix[i,j]
+        factorial_i[i] = float(factorial(i))
+    end
+    for j ∈ 1:size(f_DotMatrix,2)
+        for i ∈ 1:size(f_DotMatrix,1)
+            f_mean[j] += θ_Array[i]*Δt^(i)/factorial_i[i]*f_DotMatrix[i,j]
         end
     end
     #println("f_mean = ", f_mean)

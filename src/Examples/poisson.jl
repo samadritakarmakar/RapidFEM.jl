@@ -1,7 +1,7 @@
 using RapidFEM, SparseArrays, WriteVTK, FEMSparse
 
 function poissonEquation()
-    mesh::Mesh = RapidFEM.readMesh("../test/BarHex.msh")
+    mesh::Mesh = RapidFEM.readMesh("../test/MeshFiles/BarHex.msh")
     FeSpace = RapidFEM.createFeSpace()
     problemDim::Int64 = 1
     volAttrib::Tuple{Int64, Int64} = (3,3)

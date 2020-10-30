@@ -2,7 +2,7 @@ using RapidFEM, SparseArrays, WriteVTK, LinearAlgebra, IterativeSolvers
 LinearAlgebra.BLAS.set_num_threads(Threads.nthreads())
 
 function LinearElastic()
-    mesh::Mesh = RapidFEM.readMesh("../test/Bar.msh")
+    mesh::Mesh = RapidFEM.readMesh("../test/MeshFiles/Bar.msh")
     FeSpace = RapidFEM.createFeSpace()
     problemDim::Int64 = 3
     volAttrib::Tuple{Int64, Int64} = (3,4)
