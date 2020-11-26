@@ -29,7 +29,10 @@ function getVoigtIndex(mapDict::Dict{Int64, Int64}, i::Int64, j::Int64)::Int64
     return mapDict[10*i+j]
 end
 
-function local_∇v_C_∇u!(K::Array{Float64,2}, tensorMapN_ElasticTensor::Tuple{Dict{Int64, Int64}, Array{Float64, 2}}, problemDim::Int64, element::AbstractElement, shapeFunction::Array{ShapeFunction}, coordArray::Array{Float64,2})
+function local_∇v_C_∇u!(K::Array{Float64,2},
+    tensorMapN_ElasticTensor::Tuple{Dict{Int64, Int64}, Array{Float64, 2}},
+    problemDim::Int64, element::AbstractElement, shapeFunction::Array{ShapeFunction},
+    coordArray::Array{Float64,2}; kwargs4function...)
     mapDict::Dict{Int64, Int64} = tensorMapN_ElasticTensor[1]
     C::Array{Float64, 2} = tensorMapN_ElasticTensor[2]
     ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
@@ -67,8 +70,10 @@ function local_∇v_C_∇u!(K::Array{Float64,2}, tensorMapN_ElasticTensor::Tuple
     return nothing
 end
 
-function gaussianStress(tensorMapN_ElasticTensor::Tuple{Dict{Int64, Int64}, Array{Float64, 2}}, solAtNodes::Array{Float64,1}, problemDim::Int64,
-    element::AbstractElement, shapeFunction::Array{ShapeFunction}, coordArray::Array{Float64,2})::Array{Array{Float64,1},1}
+function gaussianStress(tensorMapN_ElasticTensor::Tuple{Dict{Int64, Int64}, Array{Float64, 2}},
+    solAtNodes::Array{Float64,1}, problemDim::Int64,
+    element::AbstractElement, shapeFunction::Array{ShapeFunction},
+    coordArray::Array{Float64,2}; kwargs4function...)::Array{Array{Float64,1},1}
     mapDict::Dict{Int64, Int64} = tensorMapN_ElasticTensor[1]
     C::Array{Float64, 2} = tensorMapN_ElasticTensor[2]
     StressDim::Int64 = size(C,1)

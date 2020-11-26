@@ -21,7 +21,7 @@ include("Output/WriteToVTK.jl")
 #feSpace
     export createFeSpace, feSpace!, lagrange, get_∂x_∂ξ, getFunction_dΩ, getFunction_dS, getFunction_dL, getFunction_∂ξ_∂x, getInterpolated_x, getNodes, getVectorNodes
 #boundaryCondition
-    export applyDirichletBC!, assembleVector, assembleMatrix
+    export applyDirichletBC!, applyDynamicDirichletBC!, assembleVector, assembleMatrix
 #utils
     export elmntSizeAlongVel
 #postProcess
@@ -45,5 +45,5 @@ export get_SSpj_A_meanU_f, SSpj_getFinal_A_b, updateSolution!, update_f!
 #convectionFluid
     export local_v_λ_∇u_Vector!, local_v_λ_∇u_Scalar!
 #From WriteToVTK
-    export VTKMeshData, InitializeVTK, vtkSave, vtkDataAdd
+    export VTKMeshData, InitializeVTK, vtkSave, vtkDataAdd!
 end # module

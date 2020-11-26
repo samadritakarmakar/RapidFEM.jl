@@ -25,7 +25,7 @@ assembler. The below example is similar to used in: src/Examples/poisson.jl
 function assembleMatrix(parameters::T, attribute::Tuple{Int64, Int64},
     FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}},
     mesh::Mesh,  localMatrixFunc::Function, problemDim::Int64,
-    activeDimensions::Array{Int64,1}=[1, 1, 1])::SparseMatrixCSC where T
+    activeDimensions::Array{Int64,1}=[1, 1, 1], varArgs...)::SparseMatrixCSC where T
 
     numOfThreads::Int64 = Threads.nthreads()    #Total number of threads running
     #An array of SparseMatrixCOO is used to addup matrices of in each thread
@@ -65,7 +65,7 @@ function assembleMatrix(parameters::T, attribute::Tuple{Int64, Int64},
         coordArrayTemp::Array{Float64,2} = getCoordArray(mesh, element)
         coordArray::Array{Float64,2} = coordArrayTemp[dimRange,:]
         shapeFunction::Array{ShapeFunction,1} = feSpace!(FeSpaceThreaded[currentThread], element, mesh, lagrange)
-        localMatrixFunc(K_localArray[currentThread], parameters, problemDim, element, shapeFunction, coordArray)
+        localMatrixFunc(K_localArray[currentThread], parameters, problemDim, element, shapeFunction, coordArray, varArgs...)
         vNodes::Array{Int64} = getVectorNodes(element, problemDim)
         FEMSparse.assemble_local_matrix!(K_COO[currentThread], vNodes, vNodes, K_localArray[currentThread])
     end
@@ -88,7 +88,7 @@ assembler. The below example is similar to used in: src/Examples/poisson.jl
 function assembleVector(parameters::T, attribute::Tuple{Int64, Int64},
     FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}},
     mesh::Mesh, localVectorFunc::Function, problemDim::Int64,
-    activeDimensions::Array{Int64,1}=[1, 1, 1])::Vector where T
+    activeDimensions::Array{Int64,1}=[1, 1, 1], varArgs...)::Vector where T
 
     numOfThreads::Int64 = Threads.nthreads()    #Total number of threads running
     f::Array{Vector,1} = Array{Vector,1}(undef, numOfThreads)
@@ -118,7 +118,7 @@ function assembleVector(parameters::T, attribute::Tuple{Int64, Int64},
         coordArrayTemp::Array{Float64,2} = getCoordArray(mesh, element)
         coordArray::Array{Float64,2} = coordArrayTemp[dimRange,:]
         shapeFunction::Array{ShapeFunction,1} = feSpace!(FeSpaceThreaded[currentThread], element, mesh, lagrange)
-        localVectorFunc(f_localArray[currentThread], parameters, problemDim, element, shapeFunction, coordArray)
+        localVectorFunc(f_localArray[currentThread], parameters, problemDim, element, shapeFunction, coordArray, varArgs...)
         vNodes::Array{Int64} = getVectorNodes(element, problemDim)
         f[currentThread][vNodes] += f_localArray[currentThread]
     end
@@ -140,7 +140,7 @@ assembler.
 function assembleScalar(parameters::T, attribute::Tuple{Int64, Int64},
     FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}},
     mesh::Mesh, localVectorFunc::Function, problemDim::Int64,
-    activeDimensions::Array{Int64,1}=[1, 1, 1])::Vector where T
+    activeDimensions::Array{Int64,1}=[1, 1, 1], varArgs...)::Vector where T
 
     numOfThreads::Int64 = Threads.nthreads()    #Total number of threads running
     noOfElements::Int64 = getNoOfElements(mesh, attribute)
@@ -163,7 +163,7 @@ function assembleScalar(parameters::T, attribute::Tuple{Int64, Int64},
         coordArrayTemp::Array{Float64,2} = getCoordArray(mesh, element)
         coordArray::Array{Float64,2} = coordArrayTemp[dimRange,:]
         shapeFunction::Array{ShapeFunction,1} = feSpace!(FeSpace, element, mesh, lagrange)
-        localVectorFunc(f_localArray[currentThread], parameters, problemDim, element, shapeFunction, coordArray)
+        localVectorFunc(f_localArray[currentThread], parameters, problemDim, element, shapeFunction, coordArray, varArgs...)
         f[currentThread][problemDim*(elementNo-1)+1:problemDim*elementNo] += f_localArray[currentThread]
     end
     for thread ∈ 2:numOfThreads ### Adding all the thread vectors to 1st f

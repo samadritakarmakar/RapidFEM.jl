@@ -2,7 +2,9 @@
 
     local_v_λ_∇u_Vector!(K::Array{Float64,2}, velocityFunction, problemDim, element, shapeFunction, coordArray)
 """
-function local_v_λ_∇u_Vector!(K::Array{Float64,2}, velocityFunction::Function, problemDim::Int64, element::AbstractElement, shapeFunction::Array{ShapeFunction}, coordArray::Array{Float64,2})
+function local_v_λ_∇u_Vector!(K::Array{Float64,2}, velocityFunction::Function,
+    problemDim::Int64, element::AbstractElement, shapeFunction::Array{ShapeFunction},
+    coordArray::Array{Float64,2}; kwargs4function...)
     ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
     dΩFunc::Function = getFunction_dΩ(element)
     noOfIpPoints::Int64 = length(shapeFunction)
@@ -13,7 +15,7 @@ function local_v_λ_∇u_Vector!(K::Array{Float64,2}, velocityFunction::Function
         ∂ξ_dx::Array{Float64,2} = ∂ξ_∂xFunc(∂x_∂ξ)
         ϕ::Array{Float64} = shapeFunction[ipNo].ϕ
         x::Array{Float64, 1} = getInterpolated_x(coordArray, ϕ)
-        λ::Array{Float64, 1} = parameters(x)
+        λ::Array{Float64, 1} = velocityFunction(x; kwargs4function...)
         dΩ::Float64 = dΩFunc(∂x_∂ξ, shapeFunction[ipNo].ipData)
         ∂ϕ_∂x::Array{Float64} = shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dx
         for b ∈ 1:noOfNodes
@@ -34,7 +36,9 @@ end
 
     local_v_λ_∇u_Scalar!(K::Array{Float64,2}, velocityFunction, problemDim, element, shapeFunction, coordArray)
 """
-function local_v_λ_∇u_Scalar!(K::Array{Float64,2}, velocityFunction::Function, problemDim::Int64, element::AbstractElement, shapeFunction::Array{ShapeFunction}, coordArray::Array{Float64,2})
+function local_v_λ_∇u_Scalar!(K::Array{Float64,2}, velocityFunction::Function,
+    problemDim::Int64, element::AbstractElement, shapeFunction::Array{ShapeFunction},
+    coordArray::Array{Float64,2}; kwargs4function...)
     dΩFunc::Function = getFunction_dΩ(element)
     noOfIpPoints::Int64 = length(shapeFunction)
     noOfNodes::Int64 = size(shapeFunction[1].∂ϕ_∂ξ,1)
@@ -44,7 +48,7 @@ function local_v_λ_∇u_Scalar!(K::Array{Float64,2}, velocityFunction::Function
         ∂ξ_dx::Array{Float64,2} = ∂ξ_∂xFunc(∂x_∂ξ)
         ϕ::Array{Float64} = shapeFunction[ipNo].ϕ
         x::Array{Float64, 1} = getInterpolated_x(coordArray, ϕ)
-        λ::Array{Float64, 1} = parameters(x)
+        λ::Array{Float64, 1} = velocityFunction(x; kwargs4function...)
         dΩ::Float64 = dΩFunc(∂x_∂ξ, shapeFunction[ipNo].ipData)
         ∂ϕ_∂x::Array{Float64} = shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dx
         for b ∈ 1:noOfNodes

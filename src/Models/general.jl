@@ -1,4 +1,8 @@
-function local_∇v_λ_∇u!(K::Array{Float64,2}, parameters::Function, problemDim::Int64, element::AbstractElement, shapeFunction::Array{ShapeFunction}, coordArray::Array{Float64,2})
+function local_∇v_λ_∇u!(K::Array{Float64,2}, parameters::Function,
+    problemDim::Int64, element::AbstractElement,
+    shapeFunction::Array{ShapeFunction},
+    coordArray::Array{Float64,2}; kwargs4function...)
+
     ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
     dΩFunc::Function = getFunction_dΩ(element)
     noOfIpPoints::Int64 = length(shapeFunction)
@@ -8,7 +12,7 @@ function local_∇v_λ_∇u!(K::Array{Float64,2}, parameters::Function, problemD
         ∂x_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
         ∂ξ_dx::Array{Float64,2} = ∂ξ_∂xFunc(∂x_∂ξ)
         x::Array{Float64, 1} = getInterpolated_x(coordArray, shapeFunction[ipNo].ϕ)
-        λ::Array{Float64, 1} = parameters(x)
+        λ::Array{Float64, 1} = parameters(x; kwargs4function...)
         dΩ::Float64 = dΩFunc(∂x_∂ξ, shapeFunction[ipNo].ipData)
         ∂ϕ_∂x::Array{Float64} = shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dx
         for b ∈ 1:noOfNodes
@@ -25,7 +29,11 @@ function local_∇v_λ_∇u!(K::Array{Float64,2}, parameters::Function, problemD
     return nothing
 end
 
-function local_v_ρ_u!(M::Array{Float64,2}, parameters::Function, problemDim::Int64, element::AbstractElement, shapeFunction::Array{ShapeFunction}, coordArray::Array{Float64,2})
+function local_v_ρ_u!(M::Array{Float64,2}, parameters::Function,
+    problemDim::Int64, element::AbstractElement,
+    shapeFunction::Array{ShapeFunction},
+    coordArray::Array{Float64,2}; kwargs4function...)
+
     ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
     dΩFunc::Function = getFunction_dΩ(element)
     noOfIpPoints::Int64 = length(shapeFunction)
@@ -36,7 +44,7 @@ function local_v_ρ_u!(M::Array{Float64,2}, parameters::Function, problemDim::In
         ∂ξ_dx::Array{Float64,2} = ∂ξ_∂xFunc(∂x_∂ξ)
         ϕ::Array{Float64} = shapeFunction[ipNo].ϕ
         x::Array{Float64, 1} = getInterpolated_x(coordArray, ϕ)
-        ρ::Array{Float64, 1} = parameters(x)
+        ρ::Array{Float64, 1} = parameters(x; kwargs4function...)
         dΩ::Float64 = dΩFunc(∂x_∂ξ, shapeFunction[ipNo].ipData)
         for b ∈ 1:noOfNodes
             for a ∈ 1:noOfNodes
@@ -50,7 +58,10 @@ function local_v_ρ_u!(M::Array{Float64,2}, parameters::Function, problemDim::In
     return nothing
 end
 
-function localBoundary_v_ρ_u!(M::Array{Float64,2}, parameters::Function, problemDim::Int64, element::AbstractElement, shapeFunction::Array{ShapeFunction}, coordArray::Array{Float64,2})
+function localBoundary_v_ρ_u!(M::Array{Float64,2}, parameters::Function,
+    problemDim::Int64, element::AbstractElement,shapeFunction::Array{ShapeFunction},
+    coordArray::Array{Float64,2}; kwargs4function...)
+
     ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
     dSFunc::Function = getFunction_dS(element)
     noOfIpPoints::Int64 = length(shapeFunction)
@@ -61,7 +72,7 @@ function localBoundary_v_ρ_u!(M::Array{Float64,2}, parameters::Function, proble
         ∂ξ_dx::Array{Float64,2} = ∂ξ_∂xFunc(∂x_∂ξ)
         ϕ::Array{Float64} = shapeFunction[ipNo].ϕ
         x::Array{Float64, 1} = getInterpolated_x(coordArray, ϕ)
-        ρ::Array{Float64, 1} = parameters(x)
+        ρ::Array{Float64, 1} = parameters(x; kwargs4function...)
         dS::Float64 = dSFunc(∂x_∂ξ, shapeFunction[ipNo].ipData)
         for b ∈ 1:noOfNodes
             for a ∈ 1:noOfNodes
@@ -76,7 +87,9 @@ function localBoundary_v_ρ_u!(M::Array{Float64,2}, parameters::Function, proble
 end
 
 
-function localSource!(S::Vector, sourceFunc::Function, problemDim::Int64, element::AbstractElement, shapeFunction::Array{ShapeFunction}, coordArray::Array{Float64,2})
+function localSource!(S::Vector, sourceFunc::Function, problemDim::Int64,
+    element::AbstractElement, shapeFunction::Array{ShapeFunction},
+    coordArray::Array{Float64,2}; kwargs4function...)
     ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
     dΩFunc::Function = getFunction_dΩ(element)
     noOfIpPoints::Int64 = length(shapeFunction)
@@ -88,7 +101,7 @@ function localSource!(S::Vector, sourceFunc::Function, problemDim::Int64, elemen
         dΩ::Float64 = dΩFunc(∂x_∂ξ, shapeFunction[ipNo].ipData)
         ϕ::Array{Float64,1} = shapeFunction[ipNo].ϕ
         x::Array{Float64,1} = getInterpolated_x(coordArray, ϕ)
-        s::Array{Float64,1} = sourceFunc(x)
+        s::Array{Float64,1} = sourceFunc(x; kwargs4function...)
         for a ∈ 1:noOfNodes
             for i ∈ 1:problemDim
                 S[problemDim*(a-1)+i] += ϕ[a]*s[i]*dΩ
@@ -98,7 +111,11 @@ function localSource!(S::Vector, sourceFunc::Function, problemDim::Int64, elemen
     return nothing
 end
 
-function localNeumann!(Nm::Vector, neumannFunc::Function, problemDim::Int64, element::AbstractElement, shapeFunction::Array{ShapeFunction}, coordArray::Array{Float64,2})
+function localNeumann!(Nm::Vector, neumannFunc::Function,
+    problemDim::Int64, element::AbstractElement,
+    shapeFunction::Array{ShapeFunction},
+    coordArray::Array{Float64,2}; kwargs4function...)
+
     #∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
     dSFunc::Function = getFunction_dS(element)
     noOfIpPoints::Int64 = length(shapeFunction)
@@ -110,7 +127,7 @@ function localNeumann!(Nm::Vector, neumannFunc::Function, problemDim::Int64, ele
         dS::Float64 = dSFunc(∂x_∂ξ, shapeFunction[ipNo].ipData)
         ϕ::Array{Float64,1} = shapeFunction[ipNo].ϕ
         x::Array{Float64,1} = getInterpolated_x(coordArray, ϕ)
-        nm::Array{Float64,1} = neumannFunc(x)
+        nm::Array{Float64,1} = neumannFunc(x; kwargs4function...)
         for a ∈ 1:noOfNodes
             for i ∈ 1:problemDim
                 Nm[problemDim*(a-1)+i] += ϕ[a]*nm[i]*dS
@@ -121,7 +138,10 @@ function localNeumann!(Nm::Vector, neumannFunc::Function, problemDim::Int64, ele
 end
 
 
-function localScalar!(S::Array{Float64,1}, scalarFunc::Function, problemDim::Int64, element::AbstractElement, shapeFunction::Array{ShapeFunction}, coordArray::Array{Float64,2})
+function localScalar!(S::Array{Float64,1}, scalarFunc::Function,
+    problemDim::Int64, element::AbstractElement,
+    shapeFunction::Array{ShapeFunction},
+    coordArray::Array{Float64,2}; kwargs4function...)
     ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
     dΩFunc::Function = getFunction_dΩ(element)
     noOfIpPoints::Int64 = length(shapeFunction)
@@ -133,7 +153,7 @@ function localScalar!(S::Array{Float64,1}, scalarFunc::Function, problemDim::Int
         dΩ::Float64 = dΩFunc(∂x_∂ξ, shapeFunction[ipNo].ipData)
         ϕ::Array{Float64,1} = shapeFunction[ipNo].ϕ
         x::Array{Float64,1} = getInterpolated_x(coordArray, ϕ)
-        s::Array{Float64,1} = scalarFunc(x)
+        s::Array{Float64,1} = scalarFunc(x; kwargs4function...)
         for i ∈ 1:problemDim
             S[i] += s[i]*dΩ
         end
@@ -141,7 +161,10 @@ function localScalar!(S::Array{Float64,1}, scalarFunc::Function, problemDim::Int
     return nothing
 end
 
-function localScalarNeumann!(S::Array{Float64,1}, scalarFunc::Function, problemDim::Int64, element::AbstractElement, shapeFunction::Array{ShapeFunction}, coordArray::Array{Float64,2})
+function localScalarNeumann!(S::Array{Float64,1}, scalarFunc::Function,
+    problemDim::Int64, element::AbstractElement,
+    shapeFunction::Array{ShapeFunction},
+    coordArray::Array{Float64,2}; kwargs4function...)
     #∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
     dSFunc::Function = getFunction_dS(element)
     noOfIpPoints::Int64 = length(shapeFunction)
@@ -153,7 +176,7 @@ function localScalarNeumann!(S::Array{Float64,1}, scalarFunc::Function, problemD
         dS::Float64 = dSFunc(∂x_∂ξ, shapeFunction[ipNo].ipData)
         ϕ::Array{Float64,1} = shapeFunction[ipNo].ϕ
         x::Array{Float64,1} = getInterpolated_x(coordArray, ϕ)
-        s::Array{Float64,1} = scalarFunc(x)
+        s::Array{Float64,1} = scalarFunc(x; kwargs4function...)
         for i ∈ 1:problemDim
             S[i] += s[i]*dS
         end

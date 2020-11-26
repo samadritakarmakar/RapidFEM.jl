@@ -41,13 +41,13 @@ vector 'b' as per the given DirichletFunction which is depedent on the position,
 """
 function applyDirichletBC!(b::Vector, A::SparseMatrixCSC,
     DirichletFunction::Function, attribute::Tuple{Int64, Int64}, mesh::Mesh,
-    problemDim::Int64)
+    problemDim::Int64, varArgs...)
 
     nodes::Array{Int64} = getUniqueNodes(attribute, mesh)
     vNodes::Array{Int64} = getVectorNodes(nodes, problemDim)
     for nodeNo ∈ 1:length(nodes)
         coordArray::Array{Float64} = mesh.Nodes[nodes[nodeNo]]
-        b[vNodes[nodeNo:nodeNo+problemDim-1]] = DirichletFunction(coordArray)
+        b[vNodes[nodeNo:nodeNo+problemDim-1]] = DirichletFunction(coordArray, varArgs...)
     end
 
     #=A[:, vNodes] .= 0.0
@@ -68,12 +68,30 @@ end
     InitialFunction which is depedent on the position, x
 """
 function applyInitialBC!(u::Vector, InitialBcFunction::Function,
-    attribute::Tuple{Int64, Int64}, mesh::Mesh, problemDim::Int64)
+    attribute::Tuple{Int64, Int64}, mesh::Mesh, problemDim::Int64, varArgs...)
 
     nodes::Array{Int64} = getUniqueNodes(attribute, mesh)
     vNodes::Array{Int64} = getVectorNodes(nodes, problemDim)
     for nodeNo ∈ 1:length(nodes)
         coordArray::Array{Float64} = mesh.Nodes[nodes[nodeNo]]
-        u[vNodes[nodeNo:nodeNo+problemDim-1]] = InitialBcFunction(coordArray)
+        u[vNodes[nodeNo:nodeNo+problemDim-1]] = InitialBcFunction(coordArray, varArgs...)
     end
+end
+
+function applyDynamicDirichletBC!(SolutionArray::Array{Array{Float64,1},1}, b::Vector, A::SparseMatrixCSC,
+    DirichletFunction::Function, attribute::Tuple{Int64, Int64}, mesh::Mesh,
+    problemDim::Int64, varArgs...)
+
+    nodes::Array{Int64} = getUniqueNodes(attribute, mesh)
+    vNodes::Array{Int64} = getVectorNodes(nodes, problemDim)
+    for nodeNo ∈ 1:length(nodes)
+        coordArray::Array{Float64} = mesh.Nodes[nodes[nodeNo]]
+        SolutionArray[1][vNodes[nodeNo:nodeNo+problemDim-1]] = DirichletFunction(coordArray, varArgs...)
+        b[vNodes[nodeNo:nodeNo+problemDim-1]] .= 0.0
+    end
+    P::SparseMatrixCSC, Pzeros::SparseMatrixCSC =  getPermutionMatrix(vNodes, mesh, problemDim)
+    A = P'*A
+    A *= P
+    A += Pzeros
+    return A
 end

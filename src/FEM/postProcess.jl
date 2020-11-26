@@ -77,7 +77,7 @@ See src/Examples/LinearElastic2Material.jl example.
 function InvDistInterpolation(postProcessFunctionArray::Array{func, 1}, sol::Array{Float64,1},
     parametersDataArray::Array{T, 1},  FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}},
     mesh::Mesh,  attributeArray::Array{Tuple{Int64, Int64},1}, problemDim::Int64,
-    activeDimensions::Array{Int64,1}=[1, 1, 1], pow::Float64=14.0) where {func, T}
+    activeDimensions::Array{Int64,1}=[1, 1, 1], pow::Float64=14.0, varArgs...) where {func, T}
     @assert length(postProcessFunctionArray)==length(attributeArray) "Length of postProcessFunctionArray should be equal to attributeArray."
     @assert length(parametersDataArray)==length(attributeArray) "Length of parametersDataArray should be equal to attributeArray."
     f::Array{Float64,1} = []
@@ -97,7 +97,7 @@ function InvDistInterpolation(postProcessFunctionArray::Array{func, 1}, sol::Arr
             shapeFunction::Array{ShapeFunction,1} = feSpace!(FeSpace, element, mesh, lagrange)
             InvDists::Array{Array{Float64,1},1} = findInvDistances(coordArray, shapeFunction, pow)
             f_g::Array{Array{Float64,1},1} = postProcessFunction(parametersData,
-            solAtNodes, problemDim, element, shapeFunction, coordArray)
+            solAtNodes, problemDim, element, shapeFunction, coordArray, varArgs...)
             noOfElementNodes::Int64 = element.noOfElementNodes
             fDim = length(f_g[1])
             vectorFNodes::Array{Int64,1} = RapidFEM.getVectorNodes(element, fDim)

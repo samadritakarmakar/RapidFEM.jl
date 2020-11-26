@@ -81,7 +81,7 @@ function InitializeVTK_Collection(fileName::String)::WriteVTK.CollectionFile
     return WriteVTK.paraview_collection(fileName)
 end
 
-function InitializeVTK(x::Vector, fileName::String, mesh::Mesh, attributeArray::Array{Tuple{Int64, Int64},1}, problemDim::Int64)::VTKMeshData
+function InitializeVTK(fileName::String, mesh::Mesh, attributeArray::Array{Tuple{Int64, Int64},1}, problemDim::Int64)::VTKMeshData
     endElementNo::Array{Int64,1} = Array{Int64,1}(undef, length(attributeArray))
     attributeNo::Int64 = 1
 
@@ -127,7 +127,7 @@ function vtkSave(vtkfile::T) where T
     return nothing
 end
 
-function vtkDataAdd(vtkMeshData::VTKMeshData, dataTuple::T1, dataNameTuple::T2, time::Float64 = 0.0, step::Int64=1) where {T1, T2}
+function vtkDataAdd!(vtkMeshData::VTKMeshData, dataTuple::T1, dataNameTuple::T2, time::Float64 = 0.0, step::Int64=1) where {T1, T2}
     @assert (length(dataTuple) == length(dataNameTuple)) "The dataTuple and dataNameTuple lengths must match."
     vtkFile::WriteVTK.DatasetFile = createVTKFile(vtkMeshData, step)
     for i ∈ 1:length(dataNameTuple)
