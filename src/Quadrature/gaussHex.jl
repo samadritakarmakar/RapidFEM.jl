@@ -1,3 +1,11 @@
+#====================================================================
+  Copyright (c) 2020 Samadrita Karmakar samadritakarmakar@gmail.com
+
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ =====================================================================#
+ 
 include("gaussQuad.jl")
 function getQuadratureHex(order::Int64)
     w_base::Array{Float64,1}, ip_base::Array{Float64,1} = getQuadratureLine(order)

@@ -1,6 +1,13 @@
+#====================================================================
+  Copyright (c) 2020 Samadrita Karmakar samadritakarmakar@gmail.com
+
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ =====================================================================#
+ 
 function local_∇v_λ_∇u!(K::Array{Float64,2}, parameters::Function,
-    problemDim::Int64, element::AbstractElement,
-    shapeFunction::Array{ShapeFunction},
+    problemDim::Int64, element::AbstractElement, elementNo::Int64, shapeFunction::Array{ShapeFunction},
     coordArray::Array{Float64,2}; kwargs4function...)
 
     ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
@@ -30,8 +37,7 @@ function local_∇v_λ_∇u!(K::Array{Float64,2}, parameters::Function,
 end
 
 function local_v_ρ_u!(M::Array{Float64,2}, parameters::Function,
-    problemDim::Int64, element::AbstractElement,
-    shapeFunction::Array{ShapeFunction},
+    problemDim::Int64, element::AbstractElement, elementNo::Int64, shapeFunction::Array{ShapeFunction},
     coordArray::Array{Float64,2}; kwargs4function...)
 
     ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
@@ -59,7 +65,7 @@ function local_v_ρ_u!(M::Array{Float64,2}, parameters::Function,
 end
 
 function localBoundary_v_ρ_u!(M::Array{Float64,2}, parameters::Function,
-    problemDim::Int64, element::AbstractElement,shapeFunction::Array{ShapeFunction},
+    problemDim::Int64, element::AbstractElement, elementNo::Int64, shapeFunction::Array{ShapeFunction},
     coordArray::Array{Float64,2}; kwargs4function...)
 
     ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
@@ -88,7 +94,7 @@ end
 
 
 function localSource!(S::Vector, sourceFunc::Function, problemDim::Int64,
-    element::AbstractElement, shapeFunction::Array{ShapeFunction},
+    element::AbstractElement, elementNo::Int64, shapeFunction::Array{ShapeFunction},
     coordArray::Array{Float64,2}; kwargs4function...)
     ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
     dΩFunc::Function = getFunction_dΩ(element)
@@ -112,8 +118,7 @@ function localSource!(S::Vector, sourceFunc::Function, problemDim::Int64,
 end
 
 function localNeumann!(Nm::Vector, neumannFunc::Function,
-    problemDim::Int64, element::AbstractElement,
-    shapeFunction::Array{ShapeFunction},
+    problemDim::Int64, element::AbstractElement, elementNo::Int64, shapeFunction::Array{ShapeFunction},
     coordArray::Array{Float64,2}; kwargs4function...)
 
     #∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
@@ -139,8 +144,7 @@ end
 
 
 function localScalar!(S::Array{Float64,1}, scalarFunc::Function,
-    problemDim::Int64, element::AbstractElement,
-    shapeFunction::Array{ShapeFunction},
+    problemDim::Int64, element::AbstractElement, elementNo::Int64, shapeFunction::Array{ShapeFunction},
     coordArray::Array{Float64,2}; kwargs4function...)
     ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
     dΩFunc::Function = getFunction_dΩ(element)
@@ -162,8 +166,7 @@ function localScalar!(S::Array{Float64,1}, scalarFunc::Function,
 end
 
 function localScalarNeumann!(S::Array{Float64,1}, scalarFunc::Function,
-    problemDim::Int64, element::AbstractElement,
-    shapeFunction::Array{ShapeFunction},
+    problemDim::Int64, element::AbstractElement, elementNo::Int64, shapeFunction::Array{ShapeFunction},
     coordArray::Array{Float64,2}; kwargs4function...)
     #∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
     dSFunc::Function = getFunction_dS(element)

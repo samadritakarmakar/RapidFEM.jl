@@ -1,3 +1,11 @@
+#====================================================================
+  Copyright (c) 2020 Samadrita Karmakar samadritakarmakar@gmail.com
+
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ =====================================================================#
+ 
 function getTensorMapping()::Dict{Int64, Int64}
     mapDict::Dict{Int64, Int64} = Dict{Int64, Int64}()
     mapDict[11] = 1
@@ -31,7 +39,7 @@ end
 
 function local_∇v_C_∇u!(K::Array{Float64,2},
     tensorMapN_ElasticTensor::Tuple{Dict{Int64, Int64}, Array{Float64, 2}},
-    problemDim::Int64, element::AbstractElement, shapeFunction::Array{ShapeFunction},
+    problemDim::Int64, element::AbstractElement, elementNo::Int64, shapeFunction::Array{ShapeFunction},
     coordArray::Array{Float64,2}; kwargs4function...)
     mapDict::Dict{Int64, Int64} = tensorMapN_ElasticTensor[1]
     C::Array{Float64, 2} = tensorMapN_ElasticTensor[2]
@@ -72,7 +80,7 @@ end
 
 function gaussianStress(tensorMapN_ElasticTensor::Tuple{Dict{Int64, Int64}, Array{Float64, 2}},
     solAtNodes::Array{Float64,1}, problemDim::Int64,
-    element::AbstractElement, shapeFunction::Array{ShapeFunction},
+    element::AbstractElement, elementNo::Int64, shapeFunction::Array{ShapeFunction},
     coordArray::Array{Float64,2}; kwargs4function...)::Array{Array{Float64,1},1}
     mapDict::Dict{Int64, Int64} = tensorMapN_ElasticTensor[1]
     C::Array{Float64, 2} = tensorMapN_ElasticTensor[2]

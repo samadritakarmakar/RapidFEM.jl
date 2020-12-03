@@ -1,4 +1,10 @@
+#====================================================================
+  Copyright (c) 2020 Samadrita Karmakar samadritakarmakar@gmail.com
 
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ =====================================================================#
 function getPermutionMatrix(vNodes::Array{Int64}, mesh::Mesh, problemDim::Int64)
     noOfVectorNodes::Int64 = mesh.noOfNodes*problemDim
     Pzeros::SparseMatrixCSC = spzeros(noOfVectorNodes, noOfVectorNodes)
@@ -47,7 +53,8 @@ function applyDirichletBC!(b::Vector, A::SparseMatrixCSC,
     vNodes::Array{Int64} = getVectorNodes(nodes, problemDim)
     for nodeNo ∈ 1:length(nodes)
         coordArray::Array{Float64} = mesh.Nodes[nodes[nodeNo]]
-        b[vNodes[nodeNo:nodeNo+problemDim-1]] = DirichletFunction(coordArray, varArgs...)
+        #b[vNodes[nodeNo:nodeNo+problemDim-1]] = DirichletFunction(coordArray, varArgs...)
+        b[vNodes[(nodeNo-1)*problemDim+1:nodeNo*problemDim]] = DirichletFunction(coordArray, varArgs...)
     end
 
     #=A[:, vNodes] .= 0.0
@@ -74,7 +81,43 @@ function applyInitialBC!(u::Vector, InitialBcFunction::Function,
     vNodes::Array{Int64} = getVectorNodes(nodes, problemDim)
     for nodeNo ∈ 1:length(nodes)
         coordArray::Array{Float64} = mesh.Nodes[nodes[nodeNo]]
-        u[vNodes[nodeNo:nodeNo+problemDim-1]] = InitialBcFunction(coordArray, varArgs...)
+        u[vNodes[(nodeNo-1)*problemDim+1:nodeNo*problemDim]] = InitialBcFunction(coordArray, varArgs...)
+    end
+end
+
+function applyNLDirichletBC_on_J!(J::SparseMatrixCSC, attribute::Tuple{Int64, Int64}, mesh::Mesh,
+    problemDim::Int64, varArgs...)
+
+    nodes::Array{Int64} = getUniqueNodes(attribute, mesh)
+    vNodes::Array{Int64} = getVectorNodes(nodes, problemDim)
+    P::SparseMatrixCSC, Pzeros::SparseMatrixCSC =  getPermutionMatrix(vNodes, mesh, problemDim)
+    J = P'*J
+    J *= P
+    J += Pzeros
+    return J
+end
+
+function applyNLDirichletBC_on_Soln!(Soln::Array{Float64,1},
+    DirichletFunction::Function,  attribute::Tuple{Int64, Int64},
+    mesh::Mesh, problemDim::Int64, varArgs...)
+
+    nodes::Array{Int64} = getUniqueNodes(attribute, mesh)
+    vNodes::Array{Int64} = getVectorNodes(nodes, problemDim)
+    for nodeNo ∈ 1:length(nodes)
+        coordArray::Array{Float64} = mesh.Nodes[nodes[nodeNo]]
+        Soln[vNodes[(nodeNo-1)*problemDim+1:nodeNo*problemDim]] .= DirichletFunction(coordArray, varArgs...)
+    end
+end
+
+function applyNLDirichletBC_on_f!(f::Vector, attribute::Tuple{Int64, Int64}, mesh::Mesh,
+    problemDim::Int64, varArgs...)
+
+    nodes::Array{Int64} = getUniqueNodes(attribute, mesh)
+    vNodes::Array{Int64} = getVectorNodes(nodes, problemDim)
+    #println("vNodes = ",vNodes)
+    for nodeNo ∈ 1:length(nodes)
+        f[vNodes[(nodeNo-1)*problemDim+1:nodeNo*problemDim]] .= 0.0
+        #println("Dirichlet vNodes = ", vNodes[(nodeNo-1)*problemDim+1:nodeNo*problemDim])
     end
 end
 
@@ -86,8 +129,8 @@ function applyDynamicDirichletBC!(SolutionArray::Array{Array{Float64,1},1}, b::V
     vNodes::Array{Int64} = getVectorNodes(nodes, problemDim)
     for nodeNo ∈ 1:length(nodes)
         coordArray::Array{Float64} = mesh.Nodes[nodes[nodeNo]]
-        SolutionArray[1][vNodes[nodeNo:nodeNo+problemDim-1]] = DirichletFunction(coordArray, varArgs...)
-        b[vNodes[nodeNo:nodeNo+problemDim-1]] .= 0.0
+        SolutionArray[1][vNodes[(nodeNo-1)*problemDim+1:nodeNo*problemDim]] = DirichletFunction(coordArray, varArgs...)
+        b[vNodes[(nodeNo-1)*problemDim+1:nodeNo*problemDim]] .= 0.0
     end
     P::SparseMatrixCSC, Pzeros::SparseMatrixCSC =  getPermutionMatrix(vNodes, mesh, problemDim)
     A = P'*A

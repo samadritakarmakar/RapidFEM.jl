@@ -1,4 +1,11 @@
-#using LinearAlgebra
+#====================================================================
+  Copyright (c) 2020 Samadrita Karmakar samadritakarmakar@gmail.com
+
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ =====================================================================#
+ 
 """This function creates a Dict of ShapeFunctions arrays. Since the library
 uses isoparametric elements, the shape functions for a certain element are
 calculated just once and used all over the domain. The returned Dict variable

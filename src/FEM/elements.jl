@@ -1,3 +1,10 @@
+#====================================================================
+  Copyright (c) 2020 Samadrita Karmakar samadritakarmakar@gmail.com
+
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ =====================================================================#
 """This defines the an abstract type of element, to be used for functions which
 are common to all kinds of elements"""
 abstract type AbstractElement end

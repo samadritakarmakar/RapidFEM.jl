@@ -1,3 +1,11 @@
+#====================================================================
+  Copyright (c) 2020 Samadrita Karmakar samadritakarmakar@gmail.com
+
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ =====================================================================#
+
 using RapidFEM, SparseArrays, WriteVTK, LinearAlgebra, IterativeSolvers
 LinearAlgebra.BLAS.set_num_threads(Threads.nthreads())
 
@@ -16,7 +24,7 @@ function LinearElastic()
     K::SparseMatrixCSC = RapidFEM.assembleMatrix((tensorMap, C), volAttrib, FeSpace, mesh, RapidFEM.local_∇v_C_∇u!, problemDim, activeDimensions)
     source(x, varArgs...) = [0.0, 0.0, 0.0]
     f::Vector = RapidFEM.assembleVector(source, volAttrib, FeSpace, mesh, RapidFEM.localSource!, problemDim, activeDimensions)
-    neumann(x; varArgs...) = [0.0, 0.0, -0.3333333333]
+    neumann(x; varArgs...) = [40.0, 0.0, 0.0]
     f += RapidFEM.assembleVector(neumann, neumAttrib, FeSpace, mesh, RapidFEM.localNeumann!, problemDim, activeDimensions)
     DirichletFunction(x; varArgs...) = zeros(problemDim)
     K = RapidFEM.applyDirichletBC!(f, K, DirichletFunction, dirchAttrib, mesh, problemDim)

@@ -1,3 +1,14 @@
+#====================================================================
+  Copyright (c) 2020 Samadrita Karmakar samadritakarmakar@gmail.com
+
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ =====================================================================#
+
+
+
+
 #=This algorithm is as per the algorithm mentioned in The Finite Element
 Method: Its Basis and Fundamentals, Sixth edition, O.C. Zienkiewicz
 Ch-17 The time dimension – discrete approximation in time=#

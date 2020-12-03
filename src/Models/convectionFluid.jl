@@ -1,9 +1,17 @@
+#====================================================================
+  Copyright (c) 2020 Samadrita Karmakar samadritakarmakar@gmail.com
+
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ =====================================================================#
+ 
 """Vector type variant of the convection equation. Here the velocity function, λ, can be made dependent on the position, x
 
     local_v_λ_∇u_Vector!(K::Array{Float64,2}, velocityFunction, problemDim, element, shapeFunction, coordArray)
 """
 function local_v_λ_∇u_Vector!(K::Array{Float64,2}, velocityFunction::Function,
-    problemDim::Int64, element::AbstractElement, shapeFunction::Array{ShapeFunction},
+    problemDim::Int64, element::AbstractElement, elementNo::Int64, shapeFunction::Array{ShapeFunction},
     coordArray::Array{Float64,2}; kwargs4function...)
     ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
     dΩFunc::Function = getFunction_dΩ(element)
@@ -37,7 +45,7 @@ end
     local_v_λ_∇u_Scalar!(K::Array{Float64,2}, velocityFunction, problemDim, element, shapeFunction, coordArray)
 """
 function local_v_λ_∇u_Scalar!(K::Array{Float64,2}, velocityFunction::Function,
-    problemDim::Int64, element::AbstractElement, shapeFunction::Array{ShapeFunction},
+    problemDim::Int64, element::AbstractElement, elementNo::Int64, shapeFunction::Array{ShapeFunction},
     coordArray::Array{Float64,2}; kwargs4function...)
     dΩFunc::Function = getFunction_dΩ(element)
     noOfIpPoints::Int64 = length(shapeFunction)

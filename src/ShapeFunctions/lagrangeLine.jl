@@ -1,3 +1,11 @@
+#====================================================================
+  Copyright (c) 2020 Samadrita Karmakar samadritakarmakar@gmail.com
+
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ =====================================================================#
+ 
 function lagrangeLineOrder1_gmsh(ξ_Array::Array{T})::Array{T} where T
     ξ::T = ξ_Array[1]
     ξ_::Array{Float64}= [-1.0 0 0;
