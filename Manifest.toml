@@ -283,9 +283,9 @@ version = "5.2.0"
 
 [[HTTP]]
 deps = ["Base64", "Dates", "IniFile", "MbedTLS", "Sockets", "URIs"]
-git-tree-sha1 = "9634200f8e16554cb1620dfb20501483b873df86"
+git-tree-sha1 = "504ca74f27377a25ebfd63b1f5e6ec3e9fb14690"
 uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
-version = "0.9.0"
+version = "0.9.1"
 
 [[IOCapture]]
 deps = ["Logging"]
@@ -569,11 +569,6 @@ version = "1.0.6"
 [[SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
 
-[[SIMD]]
-git-tree-sha1 = "b2202f63f62d8c1214ed16c18319f72fa74adc4d"
-uuid = "fdea26ae-647d-5447-a871-4b548cad5224"
-version = "3.2.1"
-
 [[SIMDPirates]]
 deps = ["VectorizationBase"]
 git-tree-sha1 = "a1b418634d6478bf2163920eae3b536dcc768626"
@@ -598,14 +593,6 @@ deps = ["InteractiveUtils", "MacroTools"]
 git-tree-sha1 = "daf7aec3fe3acb2131388f93a4c409b8c7f62226"
 uuid = "699a6c99-e7fa-54fc-8d76-47d257e15c1d"
 version = "0.9.3"
-
-[[SmallStrainPlastic]]
-deps = ["Documenter", "LinearAlgebra", "Tensors"]
-git-tree-sha1 = "e9f6d778216d5e3c516e72a8b3ccf4111a066f3c"
-repo-rev = "master"
-repo-url = "https://github.com/samadritakarmakar/smallStrainPlastic.jl"
-uuid = "b5fb8cbd-b1c6-42ae-8cde-a9279db76f58"
-version = "0.2.0"
 
 [[Sockets]]
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
@@ -645,12 +632,6 @@ deps = ["IteratorInterfaceExtensions"]
 git-tree-sha1 = "b1ad568ba658d8cbb3b892ed5380a6f3e781a81e"
 uuid = "3783bdb8-4a98-5b6b-af9a-565f29a5fe9c"
 version = "1.0.0"
-
-[[Tensors]]
-deps = ["ForwardDiff", "LinearAlgebra", "SIMD", "Statistics"]
-git-tree-sha1 = "b2ac703de1090ac4fa92e9a469b063fee285bda1"
-uuid = "48a634ad-e948-5137-8d70-aa71f2a747f4"
-version = "1.4.3"
 
 [[TerminalLoggers]]
 deps = ["LeftChildRightSiblingTrees", "Logging", "Markdown", "Printf", "ProgressLogging", "UUIDs"]

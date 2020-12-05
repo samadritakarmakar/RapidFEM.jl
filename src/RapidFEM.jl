@@ -8,7 +8,7 @@
 
 __precompile__()
 module RapidFEM
-using FEMSparse, SparseArrays, LinearAlgebra, WriteVTK, SmallStrainPlastic
+using FEMSparse, SparseArrays, LinearAlgebra, WriteVTK
 include("FEM/elements.jl")
 include("ShapeFunctions/shapeFunction.jl")
 include("FEM/boundaryCondition.jl")
@@ -22,7 +22,7 @@ include("Dynamic/singleStep_pj.jl")
 include("Models/general.jl")
 include("Models/linearElasticity.jl")
 include("Models/convectionFluid.jl")
-include("Models/smallStrainPlasticity.jl")
+#include("Models/smallStrainPlasticity.jl")
 include("Output/WriteToVTK.jl")
 
 
@@ -40,7 +40,7 @@ include("Output/WriteToVTK.jl")
 ##utils
     export elmntSizeAlongVel
 ##postProcess
-    export InvDistInterpolation, voigtToTensor
+    export InvDistInterpolation, voigtToTensor, getSolAtElement
 #From Mesh
 export Mesh, readMesh, getNoOfElements, getCoordArray
 #From Quadrature
@@ -57,12 +57,12 @@ export get_SSpj_A_meanU_f, SSpj_getFinal_A_b, updateSolution!, update_f!
 ##general
     export local_∇v_λ_∇u!, local_v_ρ_u!, localBoundary_v_ρ_u!, localSource!, localNeumann!, localScalar!, localScalarNeumann!
 ##linearElasticity
-    export local_∇v_C_∇u!, createVoigtElasticTensor, getTensorMapping, gaussianStress
+    export local_∇v_C_∇u!, createVoigtElasticTensor, getTensorMapping, gaussianStress, getVoigtIndex
 ##convectionFluid
     export local_v_λ_∇u_Vector!, local_v_λ_∇u_Scalar!
 ##SmallStrainPlastic
-    export local_∇v_Cᵀ_∇u!, local_∇v_σ_Vector!, j2Model, initParams_j2
-    export updateStateDict4rmBuffer
+#    export local_∇v_Cᵀ_∇u!, local_∇v_σ_Vector!, j2Model, initParams_j2
+#    export updateStateDict4rmBuffer
 #From WriteToVTK
     export VTKMeshData, InitializeVTK, vtkSave, vtkDataAdd!
 end # module

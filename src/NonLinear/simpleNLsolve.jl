@@ -1,5 +1,5 @@
 function simpleNLsolve(assemble_f::Function, assemble_J::Function, initSoln::AbstractVector;
-    xtol = 1e-8, ftol = 1e-8, iterations = 30)
+    xtol = 1e-8, ftol = 1e-8, iterations = 30, printConvergence = false)
     f = assemble_f(initSoln)
     ΔSoln = zeros(length(f))
     iter = 0
@@ -9,6 +9,9 @@ function simpleNLsolve(assemble_f::Function, assemble_J::Function, initSoln::Abs
         initSoln -= ΔSoln
         f = assemble_f(initSoln)
         iter += 1
+        if printConvergence
+            println("\nnorm(f) = ", norm(f), " norm(Δx) = ", norm(ΔSoln), " Iteration = ", iter, "\n")
+        end
         #println("norm(ΔSoln) = ", norm(ΔSoln))
     end
     if (iter>=iterations)
@@ -18,7 +21,7 @@ function simpleNLsolve(assemble_f::Function, assemble_J::Function, initSoln::Abs
 end
 
 function simpleNLsolve(assemble_fJ::Function, initSoln::AbstractVector;
-    xtol = 1e-8, ftol = 1e-8, iterations = 30)
+    xtol = 1e-8, ftol = 1e-8, iterations = 30, printConvergence = false)
     f, J = assemble_fJ(initSoln)
     ΔSoln = zeros(length(f))
     iter = 0
@@ -27,6 +30,9 @@ function simpleNLsolve(assemble_fJ::Function, initSoln::AbstractVector;
         initSoln -= ΔSoln
         f, J = assemble_fJ(initSoln)
         iter += 1
+        if printConvergence
+            println("\nnorm(f) = ", norm(f), " norm(Δx) = ", norm(ΔSoln), " Iteration = ", iter, "\n")
+        end
         #println("norm(ΔSoln) = ", norm(ΔSoln))
     end
     if (iter>=iterations)
