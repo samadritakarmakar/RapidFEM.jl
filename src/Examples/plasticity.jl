@@ -10,11 +10,11 @@ include("plasticLocalAssembly/smallStrainPlasticity.jl")
 
 
 function plasticity()
-    #mesh::Mesh = RapidFEM.readMesh("../test/MeshFiles/Bar.msh")
-    mesh::Mesh = RapidFEM.readMesh("../test/OneElmntMsh/TetrahedralOrder2.msh")
+    mesh::Mesh = RapidFEM.readMesh("../test/MeshFiles/Bar.msh")
+    #mesh::Mesh = RapidFEM.readMesh("../test/OneElmntMsh/TetrahedralOrder2.msh")
     FeSpace = RapidFEM.createFeSpace()
     problemDim::Int64 = 3
-    volAttrib::Tuple{Int64, Int64} = (3,3)
+    volAttrib::Tuple{Int64, Int64} = (3,4)
     neumAttrib::Tuple{Int64, Int64} = (2,2) #Force
     dirchAttrib::Tuple{Int64, Int64} = (2,1) #Lock
     activeDimensions::Array{Int64,1} = [1, 1, 1]
@@ -38,33 +38,6 @@ function plasticity()
     finalSoln::Array{Float64, 1} = zeros(totalDoF)
     #J::SparseMatrixCSC = spzeros(totalDoF, totalDoF)
     DirichletFunction(x; varArgs...) = zeros(problemDim)
-#=
-    assemble_fJ(initSoln) = begin
-        source(x, varArgs...) = [0.0, 0.0, 0.0]
-        f::Array{Float64,1} = -RapidFEM.assembleVector(source, volAttrib, FeSpace,
-        mesh, RapidFEM.localSource!, problemDim, activeDimensions)
-        #println("Fx = ", Fx)
-        neumann(x; varArgs...) = [Fx, 0.0, 0.0]
-        f -= RapidFEM.assembleVector(neumann, neumAttrib, FeSpace,
-        mesh, RapidFEM.localNeumann!, problemDim, activeDimensions)
-        #println("external = ", f)
-
-        tensorMap_N_PlasticData = (tensorMap, plasticVars, RapidFEM.j2Model, params_J2, initSoln)
-
-        fσ::Array{Float64,1}, J::SparseMatrixCSC = RapidFEM.assembleVectorMatrix!(tensorMap_N_PlasticData, volAttrib, FeSpace,
-        mesh, RapidFEM.local_∇v_σ_Vector!, RapidFEM.local_∇v_Cᵀ_∇u!, problemDim, activeDimensions)
-
-        f+= fσ
-
-        RapidFEM.applyNLDirichletBC_on_f!(f, dirchAttrib, mesh, problemDim)
-        J = applyNLDirichletBC_on_J!(J, dirchAttrib, mesh, problemDim)
-
-        println("norm(f) = ", norm(f))#, "\nnorm(fσ) = ", fσ, "\nnorm(initSoln) = ", initSoln)
-        #println("\nnorm(initSoln) = ", initSoln)
-        finalSoln .= initSoln
-        #println("norm(J) = ", Matrix(J))
-        return f, J
-    end=#
 
     assemble_f(initSoln) = begin
         source(x, varArgs...) = [0.0, 0.0, 0.0]
@@ -74,7 +47,7 @@ function plasticity()
         neumann(x; varArgs...) = [Fx, 0.0, 0.0]
         f -= RapidFEM.assembleVector(neumann, neumAttrib, FeSpace,
         mesh, RapidFEM.localNeumann!, problemDim, activeDimensions)
-        println("external = ", f)
+        #println("external = ", f)
 
         tensorMap_N_PlasticData = (tensorMap, C, model, params_J2, stateDict, stateDictBuffer, initSoln)
         fσ::Array{Float64,1} = RapidFEM.assembleVector!(tensorMap_N_PlasticData, volAttrib, FeSpace,
@@ -83,7 +56,8 @@ function plasticity()
         f+= fσ
         RapidFEM.applyNLDirichletBC_on_f!(f, dirchAttrib, mesh, problemDim)
         #RapidFEM.applyNLDirichletBC_on_f!(fσ, dirchAttrib, mesh, problemDim)
-        println("\nnorm(fσ) = ", fσ,"\n")#, "\nnorm(initSoln) = ", initSoln)
+        #println("\nnorm(f) = ", norm(f),"\n")#, "\nnorm(initSoln) = ", initSoln)
+        #finalSoln .= initSoln
         return f
     end
 
@@ -96,21 +70,21 @@ function plasticity()
     end
 
     vtkMeshData::VTKMeshData = RapidFEM.InitializeVTK("Plasticity", mesh, [volAttrib], problemDim)
-    for i ∈ 1:20
+    for i ∈ 1:8
         println("i = ", i)
         RapidFEM.applyNLDirichletBC_on_Soln!(initSoln, DirichletFunction, dirchAttrib,
         mesh, problemDim)
         #solverResults = NLsolve.nlsolve(assemble_f, assemble_J, initSoln;
-        #xtol = 1e-7, ftol = 1e-7, iterations = 30)
-        finalSoln = RapidFEM.simpleNLsolve(assemble_f, assemble_J, initSoln;
-            xtol = 1e-7, ftol = 1e-7, iterations = 50, printConvergence = true)
-        initSoln .= finalSoln
+        #xtol = 1e-7, ftol = 1e-7, iterations = 1000)
+        initSoln = RapidFEM.simpleNLsolve(assemble_f, assemble_J, initSoln;
+            xtol = 1e-7, ftol = 1e-5, iterations = 1000, skipJacobian =1000 , printConvergence = true)
+        #initSoln .= finalSoln
 
         SmallStrainPlastic.updateStateDict4rmBuffer!(stateDict, stateDictBuffer)
         #println("finalSoln = ", finalSoln)
-        RapidFEM.vtkDataAdd!(vtkMeshData, (finalSoln,),
+        RapidFEM.vtkDataAdd!(vtkMeshData, (initSoln,),
         ("Displacement", ), float(i), i)
-        if i<=15
+        if i<7
             Fx = 40*(i+1.0)
         else
             Fx = 0.0

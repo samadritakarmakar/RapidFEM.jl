@@ -1,14 +1,19 @@
 function simpleNLsolve(assemble_f::Function, assemble_J::Function, initSoln::AbstractVector;
-    xtol = 1e-8, ftol = 1e-8, iterations = 30, printConvergence = false)
+    xtol = 1e-8, ftol = 1e-8, iterations = 30, skipJacobian = 1, printConvergence = false)
     f = assemble_f(initSoln)
+    J = assemble_J(initSoln)
     ΔSoln = zeros(length(f))
+    ΔSoln = J\f
+    initSoln -= ΔSoln
     iter = 0
     while (norm(f)> ftol || norm(ΔSoln) > xtol) && iter < iterations
-        J = assemble_J(initSoln)
+        iter += 1
+        f = assemble_f(initSoln)
+        if (mod(iter,skipJacobian) == 0)
+            J = assemble_J(initSoln)
+        end
         ΔSoln = J\f
         initSoln -= ΔSoln
-        f = assemble_f(initSoln)
-        iter += 1
         if printConvergence
             println("\nnorm(f) = ", norm(f), " norm(Δx) = ", norm(ΔSoln), " Iteration = ", iter, "\n")
         end
