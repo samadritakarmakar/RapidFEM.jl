@@ -31,7 +31,7 @@ function local_∇v_Cᵀ_∇u!(K::Array{Float64,2}, tensorMap_N_PlasticData::T,
     modelParams::ModelParams  = tensorMap_N_PlasticData[4]
     stateDict  = tensorMap_N_PlasticData[5]
     stateDictBuffer  = tensorMap_N_PlasticData[6]
-    stateDictBufferCopy = deepcopy(stateDictBuffer)
+    #stateDictBufferCopy = deepcopy(stateDictBuffer)
     lastSoln::Array{Float64, 1} = tensorMap_N_PlasticData[7]
     plasticVars::PlasticVars = SmallStrainPlastic.initPlasticVars(model)
     plasticVars.C = C
@@ -50,9 +50,9 @@ function local_∇v_Cᵀ_∇u!(K::Array{Float64,2}, tensorMap_N_PlasticData::T,
         ∂ϕ_∂x::Array{Float64} = shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dx
         findStrain!(mapDict, ϵ, ∂ϕ_∂x,  solAtNodes, problemDim)
         plasticVars.ϵ = deepcopy(ϵ)
-        #getState!(plasticVars.ϵᵖ, plasticVars.α, stateDictBufferCopy, elementNo, ipNo)
+        #getState!(plasticVars.ϵᵖ, plasticVars.α, stateDict, elementNo, ipNo)
         plasticVars.Cᵀ = SmallStrainPlastic.findNumerical_Cᵀ(plasticVars, model,
-        #modelParams, stateDict,  elementNo, ipNo)
+        modelParams, stateDict,  elementNo, ipNo)
         #plasticVars.Cᵀ = plasticVars.C
         #SmallStrainPlastic.checkPlasticState!(plasticVars, model,
         #modelParams, stateDict, stateDictBufferCopy,  elementNo, ipNo; algoTangent = true)
@@ -93,7 +93,7 @@ function local_∇v_σ_Vector!(f::Vector, tensorMap_N_PlasticData::T, problemDim
     modelParams::ModelParams  = tensorMap_N_PlasticData[4]
     stateDict  = tensorMap_N_PlasticData[5]
     stateDictBuffer  = tensorMap_N_PlasticData[6]
-    stateDictBufferCopy = deepcopy(stateDictBuffer)
+    #stateDictBufferCopy = deepcopy(stateDictBuffer)
     lastSoln::Array{Float64, 1} = tensorMap_N_PlasticData[7]
     plasticVars::PlasticVars = SmallStrainPlastic.initPlasticVars(model)
     plasticVars.C = C
@@ -114,10 +114,12 @@ function local_∇v_σ_Vector!(f::Vector, tensorMap_N_PlasticData::T, problemDim
         ∂ϕ_∂x::Array{Float64} = shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dx
         findStrain!(mapDict, ϵ, ∂ϕ_∂x,  solAtNodes, problemDim)
         plasticVars.ϵ = deepcopy(ϵ)
-        #getState!(plasticVars.ϵᵖ, plasticVars.α, stateDictBufferCopy, elementNo, ipNo)
+        #getState!(plasticVars.ϵᵖ, plasticVars.α, stateDict, elementNo, ipNo)
         SmallStrainPlastic.checkPlasticState!(plasticVars, model,
         modelParams, stateDict, stateDictBuffer,  elementNo, ipNo)
-        #println("plasticVars.ϵᵖ ∇v_σ= \n", plasticVars.ϵᵖ)
+        if ipNo ==1
+            #println("plasticVars.α ∇v_σ= \n", plasticVars.α)
+        end
         for a ∈ 1:noOfNodes
             for j::Int64 ∈ 1:problemDim
                 for i::Int64 ∈ 1:j
@@ -132,6 +134,37 @@ function local_∇v_σ_Vector!(f::Vector, tensorMap_N_PlasticData::T, problemDim
     #SmallStrainPlastic.updateStateDict!(stateDictBuffer, stateDictBufferCopy)
     return nothing
 end
+
+
+function gaussian_ϵᵖ(tensorMap_N_PlasticData::T,
+    solAtNodes::Array{Float64,1}, problemDim::Int64,
+    element::AbstractElement, elementNo::Int64, shapeFunction::Array{ShapeFunction},
+    coordArray::Array{Float64,2}; kwargs4function...)::Array{Array{Float64,1},1} where T
+    mapDict::Dict{Int64, Int64} = tensorMap_N_PlasticData[1]
+    C::Array{Float64,2} = tensorMap_N_PlasticData[2]
+    model::PlasticModel = tensorMap_N_PlasticData[3]
+    modelParams::ModelParams  = tensorMap_N_PlasticData[4]
+    stateDict  = tensorMap_N_PlasticData[5]
+    stateDictBuffer  = tensorMap_N_PlasticData[6]
+
+    plasticVars::PlasticVars = SmallStrainPlastic.initPlasticVars(model)
+    StressDim::Int64 = size(C,1)
+    ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
+    noOfIpPoints::Int64 = length(shapeFunction)
+    noOfNodes::Int64 = size(shapeFunction[1].∂ϕ_∂ξ,1)
+    ϵᵖ_g::Array{Array{Float64,1},1} = Array{Array{Float64,1},1}(undef, noOfIpPoints)
+    for ipNo::Int64 ∈ 1:noOfIpPoints
+        ϵᵖ_g[ipNo] = zeros(StressDim)
+        #∂x_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
+        #∂ξ_dx::Array{Float64,2} = ∂ξ_∂xFunc(∂x_∂ξ)
+        #∂ϕ_∂x::Array{Float64} = shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dx
+        SmallStrainPlastic.getState!(plasticVars.ϵᵖ, plasticVars.α, stateDict, elementNo, ipNo)
+        #println(plasticVars.ϵᵖ)
+        ϵᵖ_g[ipNo] .= plasticVars.ϵᵖ
+    end
+    return ϵᵖ_g
+end
+
 #=
 j2Model = SmallStrainPlastic.j2Model
 
