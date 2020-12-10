@@ -5,7 +5,7 @@
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
  =====================================================================#
-using RapidFEM, SmallStrainPlastic, SparseArrays, WriteVTK, NLsolve, LinearAlgebra
+using RapidFEM, SmallStrainPlastic, SparseArrays, WriteVTK, NLsolve, LinearAlgebra, Plots
 include("plasticLocalAssembly/smallStrainPlasticity.jl")
 
 
@@ -26,10 +26,13 @@ function plasticity()
     minLoadLimit = 0.0
     stepsMaxLoad = 40.0
     stepsMinLoad = 80.0
+
     stepMatrix = [0.0 0.0 1.0
                 stepsMaxLoad stepsMaxLoad^2 1.0
                 stepsMinLoad stepsMinLoad^2 1.0]
     stepCoeff = stepMatrix\[0.0; maxLoadLimit; minLoadLimit]
+
+    forceArray = zeros(0)
 
     steps = stepsMinLoad
 
@@ -85,7 +88,7 @@ function plasticity()
     for i ∈ 1:Int64(steps)
         FxTemp = [float(i) float(i)^2 1.0]*stepCoeff
         Fx = FxTemp[1]
-
+        push!(forceArray, Fx)
         println("i = ", i)
         RapidFEM.applyNLDirichletBC_on_Soln!(initSoln, DirichletFunction, dirchAttrib,
         mesh, problemDim)
@@ -102,13 +105,14 @@ function plasticity()
         initSoln, [tensorMap_N_PlasticData],  FeSpace, mesh,  [volAttrib],
         problemDim, activeDimensions)
         ϵᵖ::Array{Float64,1} = RapidFEM.voigtToTensor(ϵᵖTemp, mesh)
+
         #println("finalSoln = ", finalSoln)
         RapidFEM.vtkDataAdd!(vtkMeshData, (initSoln,ϵᵖ),
         ("Displacement", "PlasticStrain"), float(i), i)
 
     end
     RapidFEM.vtkSave(vtkMeshData)
-    return nothing
-    #plot(residualArray)
+    #return nothing
+    plot(forceArray, label = ["Force"])
 
 end

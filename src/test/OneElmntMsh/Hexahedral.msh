@@ -3,8 +3,8 @@ $MeshFormat
 $EndMeshFormat
 $PhysicalNames
 3
-2 1 "ForceSurf"
-2 2 "lockedsurf"
+2 1 "lockedsurf"
+2 2 "ForceSurf"
 3 3 "othr"
 $EndPhysicalNames
 $Nodes
