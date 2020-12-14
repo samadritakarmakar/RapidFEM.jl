@@ -11,7 +11,7 @@ include("plasticLocalAssembly/smallStrainPlasticity.jl")
 
 function plasticity()
     #mesh::Mesh = RapidFEM.readMesh("../test/MeshFiles/Bar.msh")
-    mesh::Mesh = RapidFEM.readMesh("../test/OneElmntMsh/HexahedralL3O1.msh")
+    mesh::Mesh = RapidFEM.readMesh("../test/OneElmntMsh/HexahedralL3O2.msh")
     FeSpace = RapidFEM.createFeSpace()
     problemDim::Int64 = 3
     volAttrib::Tuple{Int64, Int64} = (3,5)
@@ -25,9 +25,9 @@ function plasticity()
     σ_y::Float64 = 200.0
     Dx::Float64 = 0.0
     maxDispLimit = 4.1e-3
-    minDispLimit = 4.0e-3
-    stepsMaxDisp::Int64 = 2
-    stepsMinDisp::Int64 = 4
+    minDispLimit = -1.0e-3
+    stepsMaxDisp::Int64 = 50
+    stepsMinDisp::Int64 = 100
 
     stepMatrix = [0.0 0.0 1.0
                 stepsMaxDisp stepsMaxDisp^2 1.0
@@ -46,7 +46,7 @@ function plasticity()
     model::PlasticModel = SmallStrainPlastic.j2Model
     stateDict = SmallStrainPlastic.createStateDict()
     stateDictBuffer = SmallStrainPlastic.createStateDict()
-    params_J2 = SmallStrainPlastic.initParams_j2(σ_y, 20.0e3)
+    params_J2 = SmallStrainPlastic.initParams_j2(σ_y, 0.0)
 
     totalDoF::Int64 = mesh.noOfNodes*problemDim
     #f::Array{Float64,1} = zeros(totalDoF)
@@ -91,7 +91,7 @@ function plasticity()
     vtkMeshData::VTKMeshData = RapidFEM.InitializeVTK("Plasticity", mesh, [volAttrib], problemDim)
     ######Delete later###############################
     σEffectiveArray = zeros(steps, mesh.noOfNodes)
-    ϵₘArray = zeros(steps, mesh.noOfNodes)
+    eArray = zeros(steps, mesh.noOfNodes)
     ################################################
     for i ∈ 1:Int64(steps)
         push!(dispArray, Dx)
@@ -134,7 +134,7 @@ function plasticity()
         #################Delete Later################################
         for j ∈ 1:length(ϵTemp)/6
             ϵₘ, 𝒆 = SmallStrainPlastic.get_ϵₘ_𝒆(ϵTemp[Int(6*(j-1)+1):Int(6*j)])
-            ϵₘArray[Int(i),Int(j)] = ϵTemp[Int(6*(j-1)+1)]
+            eArray[Int(i),Int(j)] = ϵTemp[Int(6*(j-1)+1)]
         end
         #########################################################
         ϵ::Array{Float64,1} = RapidFEM.voigtToTensor(ϵTemp, mesh)
@@ -147,7 +147,7 @@ function plasticity()
         #################Delete Later################################
         for j ∈ 1:length(σTemp)/6
             σₘ, 𝐬 = SmallStrainPlastic.get_σₘ_𝐬(σTemp[Int(6*(j-1)+1):Int(6*j)])
-            σEffectiveArray[Int(i),Int(j)] = σTemp[Int(6*(j-1)+1)]
+            σEffectiveArray[Int(i),Int(j)] = 𝐬
         end
         #########################################################
         σ::Array{Float64,1} = RapidFEM.voigtToTensor(σTemp, mesh)
@@ -162,5 +162,5 @@ function plasticity()
     RapidFEM.vtkSave(vtkMeshData)
     #return nothing
     #plot(dispArray, label = ["Displacement"])
-    plot(ϵₘArray, σEffectiveArray, legend= :bottomright)
+    plot(eArray, σEffectiveArray, legend= legend = false)
 end

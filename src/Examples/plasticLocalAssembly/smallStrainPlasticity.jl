@@ -56,7 +56,7 @@ function local_∇v_Cᵀ_∇u!(K::Array{Float64,2}, tensorMap_N_PlasticData::T,
         modelParams, stateDict,  elementNo, ipNo)
         #plasticVars.Cᵀ = plasticVars.C
         #SmallStrainPlastic.checkPlasticState!(plasticVars, model,
-        #modelParams, stateDict, stateDictBufferCopy,  elementNo, ipNo; algoTangent = true)
+        #modelParams, stateDict, stateDictBuffer,  elementNo, ipNo; algoTangent = true)
         #println("plasticVars.ϵᵖ at ∇v_Cᵀ_∇u= ", plasticVars.ϵᵖ)
         #println("plasticVars.Cᵀ = ", plasticVars.Cᵀ)
         for b::Int64 ∈ 1:noOfNodes

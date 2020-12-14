@@ -1,0 +1,5 @@
+For locking normals on the 3 surfaces and then displacing in x direction we have uniform total and plastic strains.
+The stresses are also uniform.
+The Volumetric Plastic Strain is zero.
+The solution of effective stress vs effective strain is satifactory for perfect plasticity as well.
+For perfect plasticity, the stress is the same at the end of the plastic deformation. 

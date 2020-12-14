@@ -73,7 +73,7 @@ function plasticity()
         RapidFEM.applyNLDirichletBC_on_f!(f, dirchAttribx, mesh, problemDim, [1, 0, 0])
         RapidFEM.applyNLDirichletBC_on_f!(f, dirchAttriby, mesh, problemDim, [0, 1, 0])
         RapidFEM.applyNLDirichletBC_on_f!(f, dirchAttribz, mesh, problemDim, [0, 0, 1])
-        #println("\nnorm(fσ) = ", fσ,"\n")#, "\nnorm(initSoln) = ", initSoln)
+        #println("\nnorm(fσ) = ", fσ[1],"\n")#, "\nnorm(initSoln) = ", initSoln)
         #finalSoln .= initSoln
         return f
     end
@@ -125,7 +125,7 @@ function plasticity()
         initSoln, [tensorMap_N_PlasticData],  FeSpace, mesh,  [volAttrib],
         problemDim, activeDimensions)
         σ::Array{Float64,1} = RapidFEM.voigtToTensor(σTemp, mesh)
-
+        println("σ = ", σ[1])
         RapidFEM.vtkDataAdd!(vtkMeshData, (initSoln,ϵᵖ, ϵ, σ),
         ("Displacement", "PlasticStrain", "Strain", "Stress"), float(i), i)
 
