@@ -128,6 +128,7 @@ function plasticity()
         ("Displacement", "PlasticStrain", "Strain", "Stress"), float(mainIter),mainIter)
     end
 
+    
     for cycle ∈ 1:1
         f₀ = assemble_f₀()
         while(abs(Δλ-1.0)>1e-9 || mainIter < 3)
