@@ -17,6 +17,7 @@ include("FEM/feSpace.jl")
 include("FEM/dofUtils.jl")
 include("FEM/postProcess.jl")
 include("FEM/utils.jl")
+include("NonLinear/nonLinearUtils.jl")
 include("NonLinear/simpleNLsolve.jl")
 include("Dynamic/singleStep_pj.jl")
 include("Models/general.jl")
@@ -50,6 +51,8 @@ export IpPoint, ShapeFunction, calculateShapeFunctions
 #From NonLinear
 ##simpleNLsolve
 export simpleNLsolve
+##nonLinearUtils
+export berganIncrement
 #From Dynamic
 ##singleStep_pj
 export get_SSpj_A_meanU_f, SSpj_getFinal_A_b, updateSolution!, update_f!
