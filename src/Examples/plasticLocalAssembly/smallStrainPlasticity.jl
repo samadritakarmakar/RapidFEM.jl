@@ -13,7 +13,7 @@ function findStrain!(mapDict::Dict{Int64, Int64}, ϵ::Array{Float64, 1}, ∂ϕ_�
     for a ∈ 1:size(∂ϕ_∂x, 1)
         for j ∈ 1:problemDim
             for i ∈ 1:j
-                ij::Int64 = getVoigtIndex(mapDict, i, j)
+                ij::Int64 = RapidFEM.getVoigtIndex(mapDict, i, j)
                 c1::Float64 = (i==j) ? 0.5 : 1.0
                 ϵ[ij] += c1*(∂ϕ_∂x[a,j]*solAtNodes[problemDim*(a-1)+i]+∂ϕ_∂x[a,i]*solAtNodes[problemDim*(a-1)+j])
             end
@@ -41,7 +41,7 @@ function local_∇v_Cᵀ_∇u!(K::Array{Float64,2}, tensorMap_N_PlasticData::T,
     dΩFunc::Function = getFunction_dΩ(element)
     noOfIpPoints::Int64 = length(shapeFunction)
     noOfNodes::Int64 = size(shapeFunction[1].∂ϕ_∂ξ,1)
-    ϵ::Array{Float64, 1} = zeros(model.ϵSize)
+    ϵ::Array{Float64, 1} = zeros(model.ϵVoigtSize)
     for ipNo::Int64 ∈ 1:noOfIpPoints
         ∂x_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
         ∂ξ_dx::Array{Float64,2} = ∂ξ_∂xFunc(∂x_∂ξ)
@@ -49,26 +49,28 @@ function local_∇v_Cᵀ_∇u!(K::Array{Float64,2}, tensorMap_N_PlasticData::T,
         dΩ::Float64 = dΩFunc(∂x_∂ξ, shapeFunction[ipNo].ipData)
         ∂ϕ_∂x::Array{Float64} = shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dx
         findStrain!(mapDict, ϵ, ∂ϕ_∂x,  solAtNodes, problemDim)
-        plasticVars.ϵ = deepcopy(ϵ)
+        plasticVars.ϵ = SmallStrainPlastic.getContinuumMandelStrain(ϵ)
 
         #getState!(plasticVars.ϵᵖ, plasticVars.α, stateDict, elementNo, ipNo)
-        plasticVars.Cᵀ = SmallStrainPlastic.findNumerical_Cᵀ(plasticVars, model,
-        modelParams, stateDict,  elementNo, ipNo)
+        #plasticVars.Cᵀ = SmallStrainPlastic.findNumerical_Cᵀ(plasticVars, model,
+        #modelParams, stateDict,  elementNo, ipNo)
         #plasticVars.Cᵀ = plasticVars.C
-        #SmallStrainPlastic.checkPlasticState!(plasticVars, model,
-        #modelParams, stateDict, stateDictBuffer,  elementNo, ipNo; algoTangent = true)
+        SmallStrainPlastic.checkPlasticState!(plasticVars, model,
+        modelParams, stateDict, stateDictBuffer,  elementNo, ipNo; algoTangent = true)
         #println("plasticVars.ϵᵖ at ∇v_Cᵀ_∇u= ", plasticVars.ϵᵖ)
         #println("plasticVars.Cᵀ = ", plasticVars.Cᵀ)
         for b::Int64 ∈ 1:noOfNodes
             for a::Int64 ∈ 1:noOfNodes
                 for l::Int64 ∈ 1:problemDim
                     for k::Int64 ∈ 1:l
-                        kl::Int64 = getVoigtIndex(mapDict, k, l)
+                        kl::Int64 = RapidFEM.getVoigtIndex(mapDict, k, l)
                         c2::Float64 = (k==l) ? 0.5 : 1.0
+                        #c2 = 0.5
                         for j::Int64 ∈ 1:problemDim
                             for i::Int64 ∈ 1:j
-                                ij::Int64 = getVoigtIndex(mapDict, i, j)
+                                ij::Int64 = RapidFEM.getVoigtIndex(mapDict, i, j)
                                 c1::Float64 = (i==j) ? 0.5 : 1.0
+                                #c1 = 0.5
                                 K[problemDim*(a-1)+i,problemDim*(b-1)+k] += c1*c2*∂ϕ_∂x[a,j]*plasticVars.Cᵀ[ij,kl]*∂ϕ_∂x[b,l]*dΩ
                                 K[problemDim*(a-1)+j,problemDim*(b-1)+l] += c1*c2*∂ϕ_∂x[a,i]*plasticVars.Cᵀ[ij,kl]*∂ϕ_∂x[b,k]*dΩ
                                 K[problemDim*(a-1)+j,problemDim*(b-1)+k] += c1*c2*∂ϕ_∂x[a,i]*plasticVars.Cᵀ[ij,kl]*∂ϕ_∂x[b,l]*dΩ
@@ -106,9 +108,9 @@ function local_∇v_σ_Vector!(f::Vector, tensorMap_N_PlasticData::T, problemDim
     dΩFunc::Function = getFunction_dΩ(element)
     noOfIpPoints::Int64 = length(shapeFunction)
     noOfNodes::Int64 = size(shapeFunction[1].∂ϕ_∂ξ,1)
-    ϵ::Array{Float64, 1} = zeros(model.ϵSize)
+    ϵ::Array{Float64, 1} = zeros(model.ϵVoigtSize)
     for ipNo ∈ 1:noOfIpPoints
-        #ϵ::Array{Float64, 1} = zeros(model.ϵSize)
+        #ϵ::Array{Float64, 1} = zeros(model.ϵVoigtSize)
         ∂x_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
         ∂ξ_dx::Array{Float64,2} = ∂ξ_∂xFunc(∂x_∂ξ)
         dΩ::Float64 = dΩFunc(∂x_∂ξ, shapeFunction[ipNo].ipData)
@@ -116,7 +118,7 @@ function local_∇v_σ_Vector!(f::Vector, tensorMap_N_PlasticData::T, problemDim
         x::Array{Float64,1} = getInterpolated_x(coordArray, ϕ)
         ∂ϕ_∂x::Array{Float64} = shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dx
         findStrain!(mapDict, ϵ, ∂ϕ_∂x,  solAtNodes, problemDim)
-        plasticVars.ϵ = deepcopy(ϵ)
+        plasticVars.ϵ = SmallStrainPlastic.getContinuumMandelStrain(ϵ)
         #getState!(plasticVars.ϵᵖ, plasticVars.α, stateDict, elementNo, ipNo)
         SmallStrainPlastic.checkPlasticState!(plasticVars, model,
         modelParams, stateDict, stateDictBuffer,  elementNo, ipNo)
@@ -127,7 +129,7 @@ function local_∇v_σ_Vector!(f::Vector, tensorMap_N_PlasticData::T, problemDim
         for a ∈ 1:noOfNodes
             for j::Int64 ∈ 1:problemDim
                 for i::Int64 ∈ 1:j
-                    ij::Int64 = getVoigtIndex(mapDict, i, j)
+                    ij::Int64 = RapidFEM.getVoigtIndex(mapDict, i, j)
                     c1::Float64 = (i==j) ? 0.5 : 1.0
                     f[problemDim*(a-1)+i] += c1*∂ϕ_∂x[a,j]*plasticVars.σ_voigt[ij]*dΩ
                     f[problemDim*(a-1)+j] += c1*∂ϕ_∂x[a,i]*plasticVars.σ_voigt[ij]*dΩ
@@ -188,14 +190,14 @@ function gaussian_ϵ(tensorMap_N_PlasticData::T,
     noOfIpPoints::Int64 = length(shapeFunction)
     noOfNodes::Int64 = size(shapeFunction[1].∂ϕ_∂ξ,1)
     ϵ_g::Array{Array{Float64,1},1} = Array{Array{Float64,1},1}(undef, noOfIpPoints)
-    ϵ::Array{Float64, 1} = zeros(model.ϵSize)
+    ϵ::Array{Float64, 1} = zeros(model.ϵVoigtSize)
     for ipNo::Int64 ∈ 1:noOfIpPoints
         ϵ_g[ipNo] = zeros(StressDim)
         ∂x_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
         ∂ξ_dx::Array{Float64,2} = ∂ξ_∂xFunc(∂x_∂ξ)
         ∂ϕ_∂x::Array{Float64} = shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dx
         findStrain!(mapDict, ϵ, ∂ϕ_∂x,  solAtNodes, problemDim)
-        plasticVars.ϵ = deepcopy(ϵ)
+        plasticVars.ϵ = SmallStrainPlastic.getContinuumMandelStrain(ϵ)
         #println(plasticVars.ϵᵖ)
         ϵ_g[ipNo] .= plasticVars.ϵ
     end
@@ -220,14 +222,14 @@ function gaussian_σ(tensorMap_N_PlasticData::T,
     noOfIpPoints::Int64 = length(shapeFunction)
     noOfNodes::Int64 = size(shapeFunction[1].∂ϕ_∂ξ,1)
     σ_g::Array{Array{Float64,1},1} = Array{Array{Float64,1},1}(undef, noOfIpPoints)
-    ϵ::Array{Float64, 1} = zeros(model.ϵSize)
+    ϵ::Array{Float64, 1} = zeros(model.ϵVoigtSize)
     for ipNo::Int64 ∈ 1:noOfIpPoints
         σ_g[ipNo] = zeros(StressDim)
         ∂x_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
         ∂ξ_dx::Array{Float64,2} = ∂ξ_∂xFunc(∂x_∂ξ)
         ∂ϕ_∂x::Array{Float64} = shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dx
         findStrain!(mapDict, ϵ, ∂ϕ_∂x,  solAtNodes, problemDim)
-        plasticVars.ϵ = deepcopy(ϵ)
+        plasticVars.ϵ = SmallStrainPlastic.getContinuumMandelStrain(ϵ)
         SmallStrainPlastic.getState!(plasticVars.ϵᵖ, plasticVars.α, stateDict, elementNo, ipNo)
         #println(plasticVars.ϵᵖ)
         σ_g[ipNo] .= C*(plasticVars.ϵ - plasticVars.ϵᵖ)

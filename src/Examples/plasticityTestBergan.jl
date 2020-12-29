@@ -30,7 +30,7 @@ function plasticity()
 
     residualArray::Array{Float64, 1} = zeros(0)
     tensorMap::Dict{Int64, Int64} = RapidFEM.getTensorMapping()
-    C::Array{Float64, 2} = SmallStrainPlastic.createVoigtElasticTensor(E, ν)
+    C::Array{Float64, 2} = SmallStrainPlastic.getMandelElasticTensor(E, ν)
 
     #Intializing SmallStrainPlastic Library
     model::PlasticModel = SmallStrainPlastic.j2Model
@@ -114,22 +114,22 @@ function plasticity()
         problemDim, activeDimensions)
         ϵᵖ::Array{Float64,1} = RapidFEM.voigtToTensor(ϵᵖTemp, mesh)
 
-        ϵTemp::Array{Float64,1} = RapidFEM.InvDistInterpolation([gaussian_ϵ],
+        ϵ::Array{Float64,1} = RapidFEM.InvDistInterpolation([gaussian_ϵ],
         initSoln, [tensorMap_N_PlasticData],  FeSpace, mesh,  [volAttrib],
         problemDim, activeDimensions)
-        ϵ::Array{Float64,1} = RapidFEM.voigtToTensor(ϵTemp, mesh)
+        #ϵ::Array{Float64,1} = RapidFEM.voigtToTensor(ϵTemp, mesh)
         #println("finalSoln = ", finalSoln)
-        σTemp::Array{Float64,1} = RapidFEM.InvDistInterpolation([gaussian_σ],
+        σ::Array{Float64,1} = RapidFEM.InvDistInterpolation([gaussian_σ],
         initSoln, [tensorMap_N_PlasticData],  FeSpace, mesh,  [volAttrib],
         problemDim, activeDimensions)
-        σ::Array{Float64,1} = RapidFEM.voigtToTensor(σTemp, mesh)
+        #σ::Array{Float64,1} = RapidFEM.voigtToTensor(σTemp, mesh)
         println("σ = ", σ[1])
         RapidFEM.vtkDataAdd!(vtkMeshData, (initSoln,ϵᵖ, ϵ, σ),
         ("Displacement", "PlasticStrain", "Strain", "Stress"), float(mainIter),mainIter)
     end
 
-    
-    for cycle ∈ 1:1
+
+    for cycle ∈ 1:2
         f₀ = assemble_f₀()
         while(abs(Δλ-1.0)>1e-9 || mainIter < 3)
             println("\nmainIter = ", mainIter, " abs(Δλ-1.0) = ", abs(Δλ-1.0))

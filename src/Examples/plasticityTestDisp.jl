@@ -40,7 +40,7 @@ function plasticity()
 
     residualArray::Array{Float64, 1} = zeros(0)
     tensorMap::Dict{Int64, Int64} = RapidFEM.getTensorMapping()
-    C::Array{Float64, 2} = SmallStrainPlastic.createVoigtElasticTensor(E, ν)
+    C::Array{Float64, 2} = SmallStrainPlastic.getMandelElasticTensor(E, ν)
 
     #Intializing SmallStrainPlastic Library
     model::PlasticModel = SmallStrainPlastic.j2Model
@@ -128,29 +128,29 @@ function plasticity()
         #end
         ϵᵖ::Array{Float64,1} = RapidFEM.voigtToTensor(ϵᵖTemp, mesh)
 
-        ϵTemp::Array{Float64,1} = RapidFEM.InvDistInterpolation([gaussian_ϵ],
+        ϵ::Array{Float64,1} = RapidFEM.InvDistInterpolation([gaussian_ϵ],
         initSoln, [tensorMap_N_PlasticData],  FeSpace, mesh,  [volAttrib],
         problemDim, activeDimensions)
         #################Delete Later################################
-        for j ∈ 1:length(ϵTemp)/6
-            ϵₘ, 𝒆 = SmallStrainPlastic.get_ϵₘ_𝒆(ϵTemp[Int(6*(j-1)+1):Int(6*j)])
-            eArray[Int(i),Int(j)] = ϵTemp[Int(6*(j-1)+1)]
+        for j ∈ 1:length(ϵ)/9
+            ϵₘ, 𝒆 = SmallStrainPlastic.get_ϵₘ_𝒆_mandel(ϵ[Int(9*(j-1)+1):Int(9*j)])
+            eArray[Int(i),Int(j)] = ϵ[Int(9*(j-1)+1)]
         end
         #########################################################
-        ϵ::Array{Float64,1} = RapidFEM.voigtToTensor(ϵTemp, mesh)
+        #ϵ::Array{Float64,1} = RapidFEM.voigtToTensor(ϵTemp, mesh)
 
 
         #println("finalSoln = ", finalSoln)
-        σTemp::Array{Float64,1} = RapidFEM.InvDistInterpolation([gaussian_σ],
+        σ::Array{Float64,1} = RapidFEM.InvDistInterpolation([gaussian_σ],
         initSoln, [tensorMap_N_PlasticData],  FeSpace, mesh,  [volAttrib],
         problemDim, activeDimensions)
         #################Delete Later################################
-        for j ∈ 1:length(σTemp)/6
-            σₘ, 𝐬 = SmallStrainPlastic.get_σₘ_𝐬(σTemp[Int(6*(j-1)+1):Int(6*j)])
+        for j ∈ 1:length(σ)/9
+            σₘ, 𝐬 = SmallStrainPlastic.get_σₘ_𝐬_mandel(σ[Int(9*(j-1)+1):Int(9*j)])
             σEffectiveArray[Int(i),Int(j)] = 𝐬
         end
         #########################################################
-        σ::Array{Float64,1} = RapidFEM.voigtToTensor(σTemp, mesh)
+        #σ::Array{Float64,1} = RapidFEM.voigtToTensor(σTemp, mesh)
 
 
         RapidFEM.vtkDataAdd!(vtkMeshData, (initSoln,ϵᵖ, ϵ, σ),

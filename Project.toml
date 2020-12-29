@@ -1,16 +1,14 @@
 name = "RapidFEM"
 uuid = "845bbcf8-0925-49a4-8eb3-5fd4eb0a75d5"
 authors = ["sam "]
-version = "0.2.0"
+version = "0.2.1"
 
 [deps]
-CuArrays = "3a865a2d-5b23-5a0f-bc46-62713ec82fae"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 FEMSparse = "dcdf9ed5-39e7-592a-90de-966c054b7718"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 IterativeSolvers = "42fd0dbc-a981-5370-80f2-aaf504508153"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
 Preconditioners = "af69fa37-3177-5a40-98ee-561f696e4fcd"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 WriteVTK = "64499a7a-5c06-52f2-abe2-ccb03c286192"

@@ -24,10 +24,10 @@ function plasticity()
     ν::Float64 = 0.3
     σ_y::Float64 = 200.0
     Fx::Float64 = 4.0
-    maxLoadLimit = 210.0
+    maxLoadLimit = 250
     minLoadLimit = 0.0
-    stepsMaxLoad = 3.0
-    stepsMinLoad = 6.0
+    stepsMaxLoad = 40
+    stepsMinLoad = 80
 
     stepMatrix = [0.0 0.0 1.0
                 stepsMaxLoad stepsMaxLoad^2 1.0
@@ -40,13 +40,13 @@ function plasticity()
 
     residualArray::Array{Float64, 1} = zeros(0)
     tensorMap::Dict{Int64, Int64} = RapidFEM.getTensorMapping()
-    C::Array{Float64, 2} = SmallStrainPlastic.createVoigtElasticTensor(E, ν)
+    C::Array{Float64, 2} = SmallStrainPlastic.getMandelElasticTensor(E, ν)
 
     #Intializing SmallStrainPlastic Library
     model::PlasticModel = SmallStrainPlastic.j2Model
     stateDict = SmallStrainPlastic.createStateDict()
     stateDictBuffer = SmallStrainPlastic.createStateDict()
-    params_J2 = SmallStrainPlastic.initParams_j2(σ_y, 20e3)
+    params_J2 = SmallStrainPlastic.initParams_j2(σ_y, 20.0e3)
 
     totalDoF::Int64 = mesh.noOfNodes*problemDim
     #f::Array{Float64,1} = zeros(totalDoF)
@@ -90,7 +90,10 @@ function plasticity()
     end
 
     vtkMeshData::VTKMeshData = RapidFEM.InitializeVTK("Plasticity", mesh, [volAttrib], problemDim)
-
+    ######Delete later###############################
+    σEffectiveArray = zeros(steps, mesh.noOfNodes)
+    eArray = zeros(steps, mesh.noOfNodes)
+    ################################################
     for i ∈ 1:Int64(steps)
         FxTemp = [float(i) float(i)^2 1.0]*stepCoeff
         Fx = FxTemp[1]
@@ -111,20 +114,33 @@ function plasticity()
         SmallStrainPlastic.updateStateDict4rmBuffer!(stateDict, stateDictBuffer)
 
         tensorMap_N_PlasticData = (tensorMap, C, model, params_J2, stateDict, stateDictBuffer, initSoln)
-        ϵᵖTemp::Array{Float64,1} = RapidFEM.InvDistInterpolation([gaussian_ϵᵖ],
+        ϵᵖ::Array{Float64,1} = RapidFEM.InvDistInterpolation([gaussian_ϵᵖ],
         initSoln, [tensorMap_N_PlasticData],  FeSpace, mesh,  [volAttrib],
         problemDim, activeDimensions)
-        ϵᵖ::Array{Float64,1} = RapidFEM.voigtToTensor(ϵᵖTemp, mesh)
+        #ϵᵖ::Array{Float64,1} = RapidFEM.voigtToTensor(ϵᵖTemp, mesh)
 
-        ϵTemp::Array{Float64,1} = RapidFEM.InvDistInterpolation([gaussian_ϵ],
+        ϵ::Array{Float64,1} = RapidFEM.InvDistInterpolation([gaussian_ϵ],
         initSoln, [tensorMap_N_PlasticData],  FeSpace, mesh,  [volAttrib],
         problemDim, activeDimensions)
-        ϵ::Array{Float64,1} = RapidFEM.voigtToTensor(ϵTemp, mesh)
+        println("ϵ = ", ϵ[1])
+        #################Delete Later################################
+        for j ∈ 1:length(ϵ)/9
+            ϵₘ, 𝒆 = SmallStrainPlastic.get_ϵₘ_𝒆_mandel(ϵ[Int(9*(j-1)+1):Int(9*j)])
+            eArray[Int(i),Int(j)] = ϵ[Int(9*(j-1)+1)]
+        end
+        #########################################################
+        #ϵ::Array{Float64,1} = RapidFEM.voigtToTensor(ϵTemp, mesh)
         #println("finalSoln = ", finalSoln)
-        σTemp::Array{Float64,1} = RapidFEM.InvDistInterpolation([gaussian_σ],
+        σ::Array{Float64,1} = RapidFEM.InvDistInterpolation([gaussian_σ],
         initSoln, [tensorMap_N_PlasticData],  FeSpace, mesh,  [volAttrib],
         problemDim, activeDimensions)
-        σ::Array{Float64,1} = RapidFEM.voigtToTensor(σTemp, mesh)
+        #################Delete Later################################
+        for j ∈ 1:length(σ)/9
+            σₘ, 𝐬 = SmallStrainPlastic.get_σₘ_𝐬_mandel(σ[Int(9*(j-1)+1):Int(9*j)])
+            σEffectiveArray[Int(i),Int(j)] = 𝐬
+        end
+        #########################################################
+        #σ::Array{Float64,1} = RapidFEM.voigtToTensor(σTemp, mesh)
         println("σ = ", σ[1])
         RapidFEM.vtkDataAdd!(vtkMeshData, (initSoln,ϵᵖ, ϵ, σ),
         ("Displacement", "PlasticStrain", "Strain", "Stress"), float(i), i)
@@ -132,6 +148,6 @@ function plasticity()
     end
     RapidFEM.vtkSave(vtkMeshData)
     #return nothing
-    plot(forceArray, label = ["Force"])
-
+    #plot(forceArray, label = ["Force"])
+    plot(eArray, σEffectiveArray, legend= legend = false)
 end

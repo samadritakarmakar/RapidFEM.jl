@@ -59,8 +59,8 @@ function applyDirichletBC!(b::Vector, A::SparseMatrixCSC,
         diricFunc::Array{Float64,1} = DirichletFunction(coordArray, varArgs...)
         for j ∈ 1:problemDim
             if appliedDof[j] == 1
-                Soln[vNodes[(nodeNo-1)*lengthAppldDof+sum(appliedDof[1:j])]] = diricFunc[j]
-                b[vNodes[(nodeNo-1)*lengthAppldDof+sum(appliedDof[1:j])]]  = 0.0
+                b[vNodes[(nodeNo-1)*lengthAppldDof+sum(appliedDof[1:j])]] = diricFunc[j]
+                #b[vNodes[(nodeNo-1)*lengthAppldDof+sum(appliedDof[1:j])]]  = 0.0
             end
         end
         #b[vNodes[nodeNo:nodeNo+problemDim-1]] = DirichletFunction(coordArray, varArgs...)
