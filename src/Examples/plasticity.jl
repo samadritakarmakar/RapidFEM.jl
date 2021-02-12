@@ -44,7 +44,7 @@ function plasticity()
     model::PlasticModel = SmallStrainPlastic.j2Model
     stateDict = SmallStrainPlastic.createStateDict()
     stateDictBuffer = SmallStrainPlastic.createStateDict()
-    params_J2 = SmallStrainPlastic.initParams_j2(σ_y, 20e3)
+    params_J2 = SmallStrainPlastic.initParams_j2(σ_y, 2.0, 0.0)
 
     totalDoF::Int64 = mesh.noOfNodes*problemDim
     #f::Array{Float64,1} = zeros(totalDoF)
