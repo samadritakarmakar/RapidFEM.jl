@@ -5,7 +5,7 @@
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
  =====================================================================#
- 
+
 include("gaussTri.jl")
 include("gaussTet.jl")
 include("gaussHex.jl")
@@ -25,7 +25,8 @@ function getQuadrature(element::TriElement)
 end
 
 function getQuadrature(element::QuadElement)
-    order::Int64 = 2*element.order
+    #order::Int64 = 2*element.order
+    order::Int64 = Int64(ceil((element.order +1)/2))
     return getQuadratureQuad(order)
 end
 
@@ -40,6 +41,7 @@ function getQuadrature(element::TetElement)
 end
 
 function getQuadrature(element::HexElement)
-    order::Int64 = 3*element.order
+    #order::Int64 = 3*element.order
+    order::Int64 = Int64(ceil((element.order +1)/2)+2)
     return getQuadratureHex(order)
 end

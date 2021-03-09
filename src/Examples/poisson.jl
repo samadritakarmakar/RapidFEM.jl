@@ -8,7 +8,8 @@
 using RapidFEM, SparseArrays, WriteVTK, FEMSparse
 
 function poissonEquation()
-    mesh::Mesh = RapidFEM.readMesh("../test/OneElmntMsh/TetrahedralOrder2.msh")
+    #mesh::Mesh = RapidFEM.readMesh("../test/OneElmntMsh/TetrahedralOrder2.msh")
+    mesh::Mesh = RapidFEM.readMesh("../test/OneElmntMsh/HexahedralOrder1.msh")
     FeSpace = RapidFEM.createFeSpace()
     problemDim::Int64 = 1
     volAttrib::Tuple{Int64, Int64} = (3,3)
