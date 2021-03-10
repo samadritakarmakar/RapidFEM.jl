@@ -21,8 +21,8 @@ function hyperElasticity()
 
     Fx_max::Float64 = 0.0
     Fy_max::Float64 = 0.0
-    Fz_max::Float64 = 0.33
-    noOfSteps = 3
+    Fz_max::Float64 = 3.3
+    noOfSteps = 30
 
     hyperModel = LargeDeformations.saintVenantModel
     modelParams::Tuple  = (λ, μ)
@@ -81,7 +81,7 @@ function hyperElasticity()
         RapidFEM.applyNLDirichletBC_on_Soln!(initSoln, DirichletFunction, dirchAttrib,
         mesh, problemDim)
         initSoln = RapidFEM.simpleNLsolve(assemble_f, assemble_J, initSoln;
-            xtol = 1e-11, ftol = 1.3e-6, iterations = 100, skipJacobian = 5 , printConvergence = true)
+            xtol = 1e-11, ftol = 1.e-5, iterations = 100, skipJacobian = 1 , printConvergence = true)
         RapidFEM.vtkDataAdd!(vtkMeshData, (initSoln,), ("Displacement", ), float(i), i)
     end
     RapidFEM.vtkSave(vtkMeshData)

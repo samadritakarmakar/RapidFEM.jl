@@ -3,16 +3,16 @@ function simpleNLsolve(assemble_f::Function, assemble_J::Function, initSoln::Abs
     f = assemble_f(initSoln)
     J = assemble_J(initSoln)
     ΔSoln = zeros(length(f))
-    ΔSoln = J\f
+    ΔSoln .= J\f
     initSoln -= ΔSoln
     iter = 0
     while (norm(f)> ftol || norm(ΔSoln) > xtol) && iter < iterations
         iter += 1
-        f = assemble_f(initSoln)
+        f .= assemble_f(initSoln)
         if (mod(iter,skipJacobian) == 0)
             J = assemble_J(initSoln)
         end
-        ΔSoln = J\f
+        ΔSoln .= J\f
         initSoln -= ΔSoln
         if printConvergence
             println("\nnorm(f) = ", norm(f), " norm(Δx) = ", norm(ΔSoln), " Iteration = ", iter, "\n")
@@ -31,7 +31,7 @@ function simpleNLsolve(assemble_fJ::Function, initSoln::AbstractVector;
     ΔSoln = zeros(length(f))
     iter = 0
     while (norm(f)> ftol || norm(ΔSoln) > xtol) && iter < iterations
-        ΔSoln = J\f
+        ΔSoln .= J\f
         initSoln -= ΔSoln
         f, J = assemble_fJ(initSoln)
         iter += 1

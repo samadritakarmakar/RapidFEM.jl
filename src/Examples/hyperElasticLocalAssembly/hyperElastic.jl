@@ -65,7 +65,7 @@ function local_δE_S_Vector!(f::Vector, hyperElasticData::T, problemDim::Int64,
     #ϵ::Array{Float64, 1} = zeros(model.ϵVoigtSize)
     ∂u_∂X::Array{Float64, 1} = zeros(problemDim^2)
     F = zeros(problemDim^2)
-    J = 1.0
+    Jacobian = 1.0
     E = zeros(problemDim^2)
     S = zeros(problemDim^2)
     for ipNo::Int64 ∈ 1:noOfIpPoints
@@ -83,7 +83,7 @@ function local_δE_S_Vector!(f::Vector, hyperElasticData::T, problemDim::Int64,
         #    println("∂u_∂X = ", LargeDeformations.convert2DMandelToTensor(∂u_∂X))
         #end
         #println("E = ", LargeDeformations.getGreenStrain(F))
-        J = LargeDeformations.getJacobianDeformationGradient(F)
+        #Jacobian = LargeDeformations.getJacobianDeformationGradient(F)
         E .= LargeDeformations.getGreenStrain(F)
         S .= model.secondPiolaStress(E, modelParams)
         #if ipNo == 1
@@ -140,15 +140,15 @@ function local_∇v_σ_Vector!(f::Vector, hyperElasticData::T, problemDim::Int64
         #findStrain!(ϵ, ∂ϕ_∂x,  solAtNodes, problemDim)
         get_∂u_∂X!(∂u_∂X, solAtNodes, ∂ϕ_∂X, problemDim)
         F = LargeDeformations.getDeformationGradient(∂u_∂X)
-        J = LargeDeformations.getJacobianDeformationGradient(F)
+        Jacobian = LargeDeformations.getJacobianDeformationGradient(F)
         σ = model.cauchyStress(F, modelParams)
         for a ∈ 1:noOfNodes
             for j::Int64 ∈ 1:problemDim
                 for i::Int64 ∈ 1:problemDim
                     ij::Int64 = LargeDeformations.getMandelIndex(i, j)
                     c1::Float64 = 0.5#(i==j) ? 0.5 : 1.0
-                    f[problemDim*(a-1)+i] += c1*∂ϕ_∂x[a,j]*σ[ij]*J*dΩ
-                    f[problemDim*(a-1)+j] += c1*∂ϕ_∂x[a,i]*σ[ij]*J*dΩ
+                    f[problemDim*(a-1)+i] += c1*∂ϕ_∂x[a,j]*σ[ij]*Jacobian*dΩ
+                    f[problemDim*(a-1)+j] += c1*∂ϕ_∂x[a,i]*σ[ij]*Jacobian*dΩ
                 end
             end
         end
@@ -174,10 +174,11 @@ function local_δE_Cᵀ_ΔE!(𝕂::Array{Float64,2}, hyperElasticData::T,
     #ϵ::Array{Float64, 1} = zeros(model.ϵVoigtSize)
     ∂u_∂X::Array{Float64, 1} = zeros(problemDim^2)
     F = zeros(problemDim^2)
-    J = 1.0
+    Jacobian = 1.0
     E = zeros(problemDim^2)
     S = zeros(problemDim^2)
     ℂ = zeros(problemDim^2, problemDim^2)
+    model.materialTangentTensor!(ℂ, rand(9), modelParams)
     for ipNo::Int64 ∈ 1:noOfIpPoints
         ∂X_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
         ∂ξ_dX::Array{Float64,2} = ∂ξ_∂xFunc(∂X_∂ξ)
@@ -189,12 +190,12 @@ function local_δE_Cᵀ_ΔE!(𝕂::Array{Float64,2}, hyperElasticData::T,
         get_∂u_∂X!(∂u_∂X, solAtNodes, ∂ϕ_∂X, problemDim)
         F .= LargeDeformations.getDeformationGradient(∂u_∂X)
         #println(F)
-        J = LargeDeformations.getJacobianDeformationGradient(F)
+        #Jacobian = LargeDeformations.getJacobianDeformationGradient(F)
         E .= LargeDeformations.getGreenStrain(F)
         S .= model.secondPiolaStress(E, modelParams)
         #F_func(∂u_∂X) =
         #S_func(E_parm) = model.secondPiolaStress(E_parm, modelParams)
-        model.materialTangentTensor!(ℂ, E, modelParams)
+        #model.materialTangentTensor!(ℂ, E, modelParams)
         for b::Int64 ∈ 1:noOfNodes
             for a::Int64 ∈ 1:noOfNodes
                 for L::Int64 ∈ 1:problemDim
@@ -264,7 +265,7 @@ function local_∇v_Cᵀ_∇u!(K::Array{Float64,2}, hyperElasticData::T,
         #findStrain!(ϵ, ∂ϕ_∂x,  solAtNodes, problemDim)
         get_∂u_∂X!(∂u_∂X, solAtNodes, ∂ϕ_∂X, problemDim)
         F = LargeDeformations.getDeformationGradient(∂u_∂X)
-        J = LargeDeformations.getJacobianDeformationGradient(F)
+        Jacobian = LargeDeformations.getJacobianDeformationGradient(F)
         𝕔 = model.spatialTangentTensor(F, modelParams)
         for b::Int64 ∈ 1:noOfNodes
             for a::Int64 ∈ 1:noOfNodes
@@ -278,10 +279,10 @@ function local_∇v_Cᵀ_∇u!(K::Array{Float64,2}, hyperElasticData::T,
                                 ij::Int64 = LargeDeformations.getMandelIndex(i, j)
                                 c1::Float64 = 0.5#(i==j) ? 0.5 : 1.0
                                 #c1 = 0.5
-                                K[problemDim*(a-1)+i,problemDim*(b-1)+k] += c1*c2*∂ϕ_∂x[a,j]*𝕔[ij,kl]*∂ϕ_∂x[b,l]*J*dΩ
-                                K[problemDim*(a-1)+j,problemDim*(b-1)+l] += c1*c2*∂ϕ_∂x[a,i]*𝕔[ij,kl]*∂ϕ_∂x[b,k]*J*dΩ
-                                K[problemDim*(a-1)+j,problemDim*(b-1)+k] += c1*c2*∂ϕ_∂x[a,i]*𝕔[ij,kl]*∂ϕ_∂x[b,l]*J*dΩ
-                                K[problemDim*(a-1)+i,problemDim*(b-1)+l] += c1*c2*∂ϕ_∂x[a,j]*𝕔[ij,kl]*∂ϕ_∂x[b,k]*J*dΩ
+                                K[problemDim*(a-1)+i,problemDim*(b-1)+k] += c1*c2*∂ϕ_∂x[a,j]*𝕔[ij,kl]*∂ϕ_∂x[b,l]*Jacobian*dΩ
+                                K[problemDim*(a-1)+j,problemDim*(b-1)+l] += c1*c2*∂ϕ_∂x[a,i]*𝕔[ij,kl]*∂ϕ_∂x[b,k]*Jacobian*dΩ
+                                K[problemDim*(a-1)+j,problemDim*(b-1)+k] += c1*c2*∂ϕ_∂x[a,i]*𝕔[ij,kl]*∂ϕ_∂x[b,l]*Jacobian*dΩ
+                                K[problemDim*(a-1)+i,problemDim*(b-1)+l] += c1*c2*∂ϕ_∂x[a,j]*𝕔[ij,kl]*∂ϕ_∂x[b,k]*Jacobian*dΩ
                             end
                         end
                     end
