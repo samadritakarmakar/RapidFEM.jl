@@ -77,8 +77,9 @@ function applyDirichletBC!(b::Vector, A::SparseMatrixCSC,
     P::SparseMatrixCSC, Pzeros::SparseMatrixCSC =  getPermutionMatrix(vNodes, mesh, problemDim)
     A = P'*A
     A *= P
-    A += Pzeros
-    return A
+    #A += Pzeros
+    #return A
+    return A .+ Pzeros
 end
 
 """Applies Initial Boundary condition on the given vector 'u' as per the given
@@ -104,8 +105,8 @@ function applyNLDirichletBC_on_J!(J::SparseMatrixCSC,
     P::SparseMatrixCSC, Pzeros::SparseMatrixCSC =  getPermutionMatrix(vNodes, mesh, problemDim)
     J = P'*J
     J *= P
-    J += Pzeros
-    return J
+    #J += Pzeros
+    return J .+ Pzeros
 end
 
 function applyNLDirichletBC_on_Soln!(Soln::Array{Float64,1},
@@ -170,6 +171,6 @@ function applyDynamicDirichletBC!(SolutionArray::Array{Array{Float64,1},1},
     P::SparseMatrixCSC, Pzeros::SparseMatrixCSC =  getPermutionMatrix(vNodes, mesh, problemDim)
     A = P'*A
     A *= P
-    A += Pzeros
-    return A
+    #A += Pzeros
+    return A .+ Pzeros
 end

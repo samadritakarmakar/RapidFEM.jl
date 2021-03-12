@@ -5,7 +5,7 @@
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
  =====================================================================#
- 
+
 function getTensorMapping()::Dict{Int64, Int64}
     mapDict::Dict{Int64, Int64} = Dict{Int64, Int64}()
     mapDict[11] = 1
@@ -47,13 +47,18 @@ function local_∇v_C_∇u!(K::Array{Float64,2},
     dΩFunc::Function = getFunction_dΩ(element)
     noOfIpPoints::Int64 = length(shapeFunction)
     noOfNodes::Int64 = size(shapeFunction[1].∂ϕ_∂ξ,1)
+    ∂x_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[1].∂ϕ_∂ξ)
+    ∂ξ_dx::Array{Float64,2} = ∂ξ_∂xFunc(∂x_∂ξ)
+    x::Array{Float64, 1} = getInterpolated_x(coordArray, shapeFunction[1].ϕ)
+    dΩ::Float64 = dΩFunc(∂x_∂ξ, shapeFunction[1].ipData)
+    ∂ϕ_∂x::Array{Float64} = shapeFunction[1].∂ϕ_∂ξ*∂ξ_dx
     #K::Array{Float64,2} = zeros(noOfNodes*problemDim, noOfNodes*problemDim)
     for ipNo::Int64 ∈ 1:noOfIpPoints
-        ∂x_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
-        ∂ξ_dx::Array{Float64,2} = ∂ξ_∂xFunc(∂x_∂ξ)
-        x::Array{Float64, 1} = getInterpolated_x(coordArray, shapeFunction[ipNo].ϕ)
-        dΩ::Float64 = dΩFunc(∂x_∂ξ, shapeFunction[ipNo].ipData)
-        ∂ϕ_∂x::Array{Float64} = shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dx
+        ∂x_∂ξ = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
+        ∂ξ_dx = ∂ξ_∂xFunc(∂x_∂ξ)
+        x = getInterpolated_x(coordArray, shapeFunction[ipNo].ϕ)
+        dΩ = dΩFunc(∂x_∂ξ, shapeFunction[ipNo].ipData)
+        ∂ϕ_∂x .= shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dx
         for b::Int64 ∈ 1:noOfNodes
             for a::Int64 ∈ 1:noOfNodes
                 for l::Int64 ∈ 1:problemDim
@@ -89,11 +94,14 @@ function gaussianStress(tensorMapN_ElasticTensor::Tuple{Dict{Int64, Int64}, Arra
     noOfIpPoints::Int64 = length(shapeFunction)
     noOfNodes::Int64 = size(shapeFunction[1].∂ϕ_∂ξ,1)
     σ_g::Array{Array{Float64,1},1} = Array{Array{Float64,1},1}(undef, noOfIpPoints)
+    ∂x_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[1].∂ϕ_∂ξ)
+    ∂ξ_dx::Array{Float64,2} = ∂ξ_∂xFunc(∂x_∂ξ)
+    ∂ϕ_∂x::Array{Float64} = shapeFunction[1].∂ϕ_∂ξ*∂ξ_dx
     for ipNo::Int64 ∈ 1:noOfIpPoints
         σ_g[ipNo] = zeros(StressDim)
-        ∂x_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
-        ∂ξ_dx::Array{Float64,2} = ∂ξ_∂xFunc(∂x_∂ξ)
-        ∂ϕ_∂x::Array{Float64} = shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dx
+        ∂x_∂ξ = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
+        ∂ξ_dx = ∂ξ_∂xFunc(∂x_∂ξ)
+        ∂ϕ_∂x .= shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dx
         for b::Int64 ∈ 1:noOfNodes
             for l::Int64 ∈ 1:problemDim
                 for k::Int64 ∈ 1:l
