@@ -8,7 +8,7 @@ function simpleNLsolve(assemble_f::Function, assemble_J::Function, initSoln::Abs
     iter = 0
     while (norm(f)> ftol || norm(ΔSoln) > xtol) && iter < iterations
         iter += 1
-        f .= assemble_f(initSoln)
+        f = assemble_f(initSoln)
         if (mod(iter,skipJacobian) == 0)
             J = assemble_J(initSoln)
         end
