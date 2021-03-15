@@ -3,7 +3,7 @@ include("hyperElasticLocalAssembly/hyperElastic.jl")
 
 function hyperElasticity()
     #mesh::Mesh = RapidFEM.readMesh("../test/OneElmntMsh/HexahedralOrder2.msh")
-    mesh::Mesh = RapidFEM.readMesh("../test/MeshFiles/BarFine.msh")
+    mesh::Mesh = RapidFEM.readMesh("../test/MeshFiles/Bar.msh")
     FeSpace = RapidFEM.createFeSpace()
     problemDim::Int64 = 3
     volAttrib::Tuple{Int64, Int64} = (3,4)

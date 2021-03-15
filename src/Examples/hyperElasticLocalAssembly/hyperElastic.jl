@@ -238,7 +238,7 @@ function local_δE_Cᵀ_ΔE!(𝕂::Array{Float64,2}, hyperElasticData::T,
                                         ℂ[IJ, KL]*
                                         (∂ϕ_∂X[b,K]*F[jL]+∂ϕ_∂X[b,L]*F[jK])*dΩ=#
                                         𝕂[problemDim*(a-1)+i,problemDim*(b-1)+j] += 0.25*
-                                        (∂ϕ_∂X_a_I*F[iJ]+∂ϕ_∂X_a_J*F[iI])*
+                                        (∂ϕ_∂X_a_J*F[iI] + ∂ϕ_∂X_a_I*F[iJ])*
                                         ℂ_IJKL*
                                         (∂ϕ_∂X_b_K*F[jL]+∂ϕ_∂X_b_L*F[jK])*dΩ
                                     end
