@@ -5,7 +5,7 @@
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
  =====================================================================#
-using RapidFEM, SmallStrainPlastic, SparseArrays, WriteVTK, NLsolve, LinearAlgebra, Plots
+using RapidFEM, SmallStrainPlastic, SparseArrays, WriteVTK, NLsolve, LinearAlgebra, PyPlot
 include("plasticLocalAssembly/smallStrainPlasticity.jl")
 
 
@@ -107,7 +107,7 @@ function plasticity()
         mesh, problemDim, [0,0,1])
         #solverResults = NLsolve.nlsolve(assemble_f, assemble_J, initSoln;
         #xtol = 1e-7, ftol = 1e-7, iterations = 1000)
-        initSoln = RapidFEM.simpleNLsolve(assemble_f, assemble_J, initSoln;
+        initSoln, convergenceData = RapidFEM.simpleNLsolve(assemble_f, assemble_J, initSoln;
             xtol = 1e-12, ftol = 1e-8, iterations = 2000, skipJacobian =1 , printConvergence = true)
         #initSoln .= finalSoln
 
@@ -144,8 +144,10 @@ function plasticity()
         println("σ = ", σ[1])
         RapidFEM.vtkDataAdd!(vtkMeshData, (initSoln,ϵᵖ, ϵ, σ),
         ("Displacement", "PlasticStrain", "Strain", "Stress"), float(i), i)
-
+        plot(log.(convergenceData.relNorm), linestyle= :dashdot)
     end
+    xlabel("Iterations")
+    ylabel("Relative Convergence")
     RapidFEM.vtkSave(vtkMeshData)
     #return nothing
     #plot(forceArray, label = ["Force"])

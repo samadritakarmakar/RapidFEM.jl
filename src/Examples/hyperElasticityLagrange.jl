@@ -1,4 +1,4 @@
-using RapidFEM, LargeDeformations, SparseArrays, LinearAlgebra
+using RapidFEM, LargeDeformations, SparseArrays, LinearAlgebra, PyPlot
 include("hyperElasticLocalAssembly/hyperElastic.jl")
 
 function hyperElasticity()
@@ -10,7 +10,7 @@ function hyperElasticity()
     neumAttrib::Tuple{Int64, Int64} = (2,2) #Force
     dirchAttrib::Tuple{Int64, Int64} = (2,1) #Lock
     activeDimensions::Array{Int64,1} = [1, 1, 1]
-    E::Float64 = 100e3 #MPa
+    E::Float64 = 1e3 #MPa
     ν::Float64 = 0.3
     λ = (ν*E)/((1+ν)*(1-2*ν))
     μ = E/(2*(1+ν))
@@ -19,10 +19,11 @@ function hyperElasticity()
     Fy::Float64 = 0.0
     Fz::Float64 = 0.0
 
-    Fx_max::Float64 = 0.0
+    Fx_max::Float64 = 40.0
     Fy_max::Float64 = 0.0
-    Fz_max::Float64 = 3.3
+    Fz_max::Float64 = 0.0
     noOfSteps = 10
+    γ = zeros(noOfSteps)
 
     hyperModel = LargeDeformations.saintVenantModel
     modelParams::Tuple  = (λ, μ)
@@ -54,7 +55,7 @@ function hyperElasticity()
         RapidFEM.applyNLDirichletBC_on_f!(f, dirchAttrib, mesh, problemDim)
         #println("f =", f)
         elasped = time() - start
-        println("Time for vector Assembly = ", elasped)
+        #println("Time for vector Assembly = ", elasped)
         return f
     end
 
@@ -67,7 +68,7 @@ function hyperElasticity()
         @inbounds J = RapidFEM.applyNLDirichletBC_on_J!(J, dirchAttrib, mesh, problemDim)
         #println("J =", Matrix(J))
         elasped = time() - start
-        println("Time for Matrix Assembly = ", elasped)
+        #println("Time for Matrix Assembly = ", elasped)
         return J
     end
 
@@ -75,18 +76,23 @@ function hyperElasticity()
 
     for i ∈ 1:noOfSteps
 
-        Fx = i/noOfSteps*Fx_max
-        Fy = i/noOfSteps*Fy_max
-        Fz = i/noOfSteps*Fz_max
+        γ[i] = (i/noOfSteps)#^0.45
+
+        Fx = γ[i]*Fx_max
+        Fy = γ[i]*Fy_max
+        Fz = γ[i]*Fz_max
 
         println("i = ", i, " Fx = ", Fx, " Fy = ", Fy, " Fz = ", Fz)
 
         RapidFEM.applyNLDirichletBC_on_Soln!(initSoln, DirichletFunction, dirchAttrib,
         mesh, problemDim)
 
-        @inbounds initSoln = RapidFEM.simpleNLsolve(assemble_f, assemble_J, initSoln;
-            xtol = 1e-11, ftol = 1.e-5, iterations = 100, skipJacobian = 1 , printConvergence = true)
+        @inbounds initSoln, convergenceData = RapidFEM.simpleNLsolve(assemble_f, assemble_J, initSoln;
+            xtol = 1e-11, ftol = 1.e-5, relTol= 1e-6, iterations = 100, skipJacobian = 1 , printConvergence = true)
         RapidFEM.vtkDataAdd!(vtkMeshData, (initSoln,), ("Displacement", ), float(i), i)
+        plot(log.(convergenceData.relNorm), linestyle= :dashdot)
     end
+    xlabel("Iterations")
+    ylabel("Natural Log of Relative Convergence")
     RapidFEM.vtkSave(vtkMeshData)
 end

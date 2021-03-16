@@ -225,13 +225,15 @@ function local_δE_Cᵀ_ΔE!(𝕂::Array{Float64,2}, hyperElasticData::T,
                                     jK::Int64 = LargeDeformations.getMandelIndex(j, K)
                                     jL::Int64 = LargeDeformations.getMandelIndex(j, L)
 
-                                    #𝕂[problemDim*(a-1)+j,problemDim*(b-1)+j] += (∂ϕ_∂X[a,I]*∂ϕ_∂X[b,J]+ ∂ϕ_∂X[a,J]*∂ϕ_∂X[b,I])*S[IJ]*dΩ
-                                    𝕂[problemDim*(a-1)+j,problemDim*(b-1)+j] += (∂ϕ_∂X_a_I*∂ϕ_∂X_b_J + ∂ϕ_∂X_a_J*∂ϕ_∂X_b_I)*S_IJ*dΩ
+                                    #𝕂[problemDim*(a-1)+j,problemDim*(b-1)+j] += 0.5*(∂ϕ_∂X[a,I]*∂ϕ_∂X[b,J]+ ∂ϕ_∂X[a,J]*∂ϕ_∂X[b,I])*S[IJ]*dΩ
+                                    𝕂[problemDim*(a-1)+j,problemDim*(b-1)+j] += 0.5*∂ϕ_∂X_a_I*∂ϕ_∂X_b_J*S_IJ*dΩ #+ ∂ϕ_∂X_a_J*∂ϕ_∂X_b_I*S_IJ*dΩ
                                     F_jL = F[jL]
                                     F_jK = F[jK]
                                     @fastmath for i::Int64 ∈ 1:problemDim
                                         iI::Int64 = LargeDeformations.getMandelIndex(i, I)
                                         iJ::Int64 = LargeDeformations.getMandelIndex(i, J)
+
+                                        𝕂[problemDim*(a-1)+i,problemDim*(b-1)+i] += 0.5*(∂ϕ_∂X_a_J*∂ϕ_∂X_b_I)*S_IJ*dΩ
 
                                         #=𝕂[problemDim*(a-1)+i,problemDim*(b-1)+j] += 0.25*
                                         (∂ϕ_∂X[a,I]*F[iJ]+∂ϕ_∂X[a,J]*F[iI])*

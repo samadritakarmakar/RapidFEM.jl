@@ -50,7 +50,7 @@ export getQuadrature
 export IpPoint, ShapeFunction, calculateShapeFunctions
 #From NonLinear
 ##simpleNLsolve
-export simpleNLsolve
+export simpleNLsolve, Convergence
 ##nonLinearUtils
 export berganIncrement
 #From Dynamic
