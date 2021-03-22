@@ -144,12 +144,12 @@ function plasticity()
         println("σ = ", σ[1])
         RapidFEM.vtkDataAdd!(vtkMeshData, (initSoln,ϵᵖ, ϵ, σ),
         ("Displacement", "PlasticStrain", "Strain", "Stress"), float(i), i)
-        plot(log.(convergenceData.relNorm), linestyle= :dashdot)
+        #plot(log.(convergenceData.relNorm), linestyle= :dashdot)
     end
     xlabel("Iterations")
     ylabel("Relative Convergence")
     RapidFEM.vtkSave(vtkMeshData)
     #return nothing
     #plot(forceArray, label = ["Force"])
-    plot(eArray, σEffectiveArray, legend= legend = false)
+    plot(eArray, σEffectiveArray)
 end
