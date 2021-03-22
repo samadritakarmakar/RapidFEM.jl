@@ -93,12 +93,12 @@ function local_δE_S_Vector!(f::Vector, hyperElasticData::T, problemDim::Int64,
                 for I::Int64 ∈ 1:problemDim
                     ∂ϕ_∂X_a_I = ∂ϕ_∂X[a,I]
                     IJ::Int64 = LargeDeformations.getMandelIndex(I, J)
-                    c1::Float64 = 0.5#(i==j) ? 0.5 : 1.0
+                    #c1::Float64 = 0.5#(i==j) ? 0.5 : 1.0
                     S_IJ =S[IJ]
                     @fastmath @simd for i ∈ 1:problemDim
                         iI::Int64 = LargeDeformations.getMandelIndex(i, I)
                         iJ::Int64 = LargeDeformations.getMandelIndex(i, J)
-                        f[problemDim*(a-1)+i] += c1*(∂ϕ_∂X_a_I*F[iJ]+∂ϕ_∂X_a_J*F[iI])*
+                        f[problemDim*(a-1)+i] += 0.5*(∂ϕ_∂X_a_I*F[iJ]+∂ϕ_∂X_a_J*F[iI])*
                         S_IJ*dΩ
                         #if  (i == 1 && S[IJ] > 39.0 && a==2 && f[problemDim*(a-1)+i] != 0.0)
                         #    println("∂ϕ_∂X[a,I]= ",∂ϕ_∂X[a,I], " F[iJ] = ", F[iJ], " ∂ϕ_∂X[a,J] = ", ∂ϕ_∂X[a,J], " F[iI] = ", F[iI], " S[IJ] = ", S[IJ])
@@ -179,7 +179,6 @@ function local_δE_Cᵀ_ΔE!(𝕂::Array{Float64,2}, hyperElasticData::T,
     E = zeros(problemDim^2)
     S = zeros(problemDim^2)
     ℂ = zeros(problemDim^2, problemDim^2)
-    model.materialTangentTensor!(ℂ, rand(9), modelParams)
     ∂X_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[1].∂ϕ_∂ξ)
     ∂ξ_dX::Array{Float64,2} = ∂ξ_∂xFunc(∂X_∂ξ)
     dΩ::Float64 = dΩFunc(∂X_∂ξ, shapeFunction[1].ipData)
@@ -187,12 +186,12 @@ function local_δE_Cᵀ_ΔE!(𝕂::Array{Float64,2}, hyperElasticData::T,
     #X::Array{Float64,1} = getInterpolated_x(coordArray, ϕ)
     ∂ϕ_∂X::Array{Float64} = shapeFunction[1].∂ϕ_∂ξ*∂ξ_dX
     for ipNo::Int64 ∈ 1:noOfIpPoints
-        @inbounds ∂X_∂ξ = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
-        @inbounds ∂ξ_dX = ∂ξ_∂xFunc(∂X_∂ξ)
+         ∂X_∂ξ = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
+         ∂ξ_dX = ∂ξ_∂xFunc(∂X_∂ξ)
         dΩ = dΩFunc(∂X_∂ξ, shapeFunction[ipNo].ipData)
-        @inbounds ϕ = shapeFunction[ipNo].ϕ
+         ϕ = shapeFunction[ipNo].ϕ
         #X::Array{Float64,1} = getInterpolated_x(coordArray, ϕ)
-        @inbounds ∂ϕ_∂X = shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dX
+         ∂ϕ_∂X = shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dX
         #findStrain!(ϵ, ∂ϕ_∂x,  solAtNodes, problemDim)
         get_∂u_∂X!(∂u_∂X, solAtNodes, ∂ϕ_∂X, problemDim)
         LargeDeformations.getDeformationGradient!(F, ∂u_∂X)
@@ -200,6 +199,7 @@ function local_δE_Cᵀ_ΔE!(𝕂::Array{Float64,2}, hyperElasticData::T,
         #Jacobian = LargeDeformations.getJacobianDeformationGradient(F)
         LargeDeformations.getGreenStrain!(E, F)
         model.secondPiolaStress!(S, E, modelParams)
+        model.materialTangentTensor!(ℂ, E, modelParams)
         #F_func(∂u_∂X) =
         #S_func(E_parm) = model.secondPiolaStress(E_parm, modelParams)
         #model.materialTangentTensor!(ℂ, E, modelParams)
@@ -224,21 +224,23 @@ function local_δE_Cᵀ_ΔE!(𝕂::Array{Float64,2}, hyperElasticData::T,
                                 @fastmath for j::Int64 ∈ 1:problemDim
                                     jK::Int64 = LargeDeformations.getMandelIndex(j, K)
                                     jL::Int64 = LargeDeformations.getMandelIndex(j, L)
-
-                                    #𝕂[problemDim*(a-1)+j,problemDim*(b-1)+j] += 0.5*(∂ϕ_∂X[a,I]*∂ϕ_∂X[b,J]+ ∂ϕ_∂X[a,J]*∂ϕ_∂X[b,I])*S[IJ]*dΩ
-                                    𝕂[problemDim*(a-1)+j,problemDim*(b-1)+j] += 0.5*∂ϕ_∂X_a_I*∂ϕ_∂X_b_J*S_IJ*dΩ #+ ∂ϕ_∂X_a_J*∂ϕ_∂X_b_I*S_IJ*dΩ
                                     F_jL = F[jL]
                                     F_jK = F[jK]
+
+                                    #𝕂[problemDim*(a-1)+j,problemDim*(b-1)+j] += 0.5*(∂ϕ_∂X[a,I]*∂ϕ_∂X[b,J]+ ∂ϕ_∂X[a,J]*∂ϕ_∂X[b,I])*S[IJ]*dΩ
+                                    𝕂[problemDim*(a-1)+j,problemDim*(b-1)+j] += ∂ϕ_∂X_a_I*∂ϕ_∂X_b_J*S_IJ*dΩ #+ ∂ϕ_∂X_a_J*∂ϕ_∂X_b_I*S_IJ*dΩ)
+
                                     @fastmath for i::Int64 ∈ 1:problemDim
+
+
                                         iI::Int64 = LargeDeformations.getMandelIndex(i, I)
                                         iJ::Int64 = LargeDeformations.getMandelIndex(i, J)
-
-                                        𝕂[problemDim*(a-1)+i,problemDim*(b-1)+i] += 0.5*(∂ϕ_∂X_a_J*∂ϕ_∂X_b_I)*S_IJ*dΩ
 
                                         #=𝕂[problemDim*(a-1)+i,problemDim*(b-1)+j] += 0.25*
                                         (∂ϕ_∂X[a,I]*F[iJ]+∂ϕ_∂X[a,J]*F[iI])*
                                         ℂ[IJ, KL]*
                                         (∂ϕ_∂X[b,K]*F[jL]+∂ϕ_∂X[b,L]*F[jK])*dΩ=#
+
                                         𝕂[problemDim*(a-1)+i,problemDim*(b-1)+j] += 0.25*
                                         (∂ϕ_∂X_a_J*F[iI] + ∂ϕ_∂X_a_I*F[iJ])*
                                         ℂ_IJKL*
