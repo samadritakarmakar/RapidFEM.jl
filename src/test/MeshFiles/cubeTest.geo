@@ -59,16 +59,12 @@ Surface Loop(1) = {2, 3, 4, 5, 1, 6};
 Volume(1) = {1};
 Transfinite Volume {1} = {1,2,3,4,6,7,8,5};
 //+
-Physical Surface("lockedSurf") = {2};
+Physical Surface("lockedsurfx") = {2};
 //+
-Physical Surface("moveSurf") = {4};
+Physical Surface("ForceSurfx") = {4};
 //+
-Physical Surface("locked_y") = {5};
+Physical Surface("lockedsurfy") = {5, 3};
 //+
-Physical Surface("move_y") = {3};
-//+
-Physical Surface("locked_z") = {6};
-//+
-Physical Surface("move_z") = {1};
+Physical Surface("lockedsurfz") = {6, 1};
 //+
 Physical Volume("vol") = {1};

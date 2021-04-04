@@ -1,6 +1,6 @@
 using RapidFEM
 function testIntegration()
-    mesh::Mesh = RapidFEM.readMesh("OneElmntMsh/TetrahedralOrder3.msh")
+    mesh::Mesh = RapidFEM.readMesh("OneElmntMsh/TetrahedralOrder2.msh")
     FeSpace = RapidFEM.createFeSpace()
     problemDim::Int64 = 1
     volAttrib::Tuple{Int64, Int64} = (3,3)

@@ -273,6 +273,12 @@ function assembleScalar!(parameters::T, attribute::Tuple{Int64, Int64},
         f[thread] = zeros(noOfElements*problemDim)
         f_localArray[thread] = zeros(0)
     end
+    FeSpaceThreaded::Array{Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}}, 1} =
+    Array{Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}}, 1}(undef, numOfThreads)
+    FeSpaceThreaded[1] = FeSpace #First thread can be the same as the original FeSpace
+    Threads.@threads for thread ∈ 2:numOfThreads
+        FeSpaceThreaded[thread] = deepcopy(FeSpace) #Others need to be deepcopies
+    end
     RangeDict = createDimRange()
     dimRange::StepRange{Int64,Int64} = getRange(RangeDict, activeDimensions)
     Threads.@threads for elementNo ∈ 1:length(mesh.Elements[attribute])

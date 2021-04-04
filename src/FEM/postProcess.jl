@@ -28,10 +28,19 @@ function getWeighed_f(InvDist::Array{Array{Float64,1},1}, f_g::Array{Array{Float
     noOfIpPoint::Int64 = length(f_g)
     #println(numOfNodes, " ", fDim, " ", noOfIpPoint)
     f_n::Array{Float64,1} = zeros(numOfNodes*fDim)
-    for ipNo ∈ 1:noOfIpPoint
+    ipNo = 1
+    InfFlag = false
+    while (ipNo <= noOfIpPoint && InfFlag == false)
         for node ∈ 1:numOfNodes
-            f_n[fDim*(node-1)+1:fDim*node] += InvDist[ipNo][node]*f_g[ipNo]
+            if InvDist[ipNo][node] == Inf
+                f_n[fDim*(node-1)+1:fDim*node]  = f_g[ipNo]
+                InfFlag = true
+                break
+            else
+                f_n[fDim*(node-1)+1:fDim*node] += InvDist[ipNo][node]*f_g[ipNo]
+            end
         end
+        ipNo += 1
     end
     return f_n
 end
@@ -126,7 +135,7 @@ function InvDistInterpolation(postProcessFunctionArray::Array{func, 1}, sol::Arr
         end
     end
     for node ∈ 1:mesh.noOfNodes #Check no Inv Distance is a zero, if so replace with 1.0
-        sumInvDistances[node] = sumInvDistances[node]==0.0 ? 1.0 : sumInvDistances[node]
+        sumInvDistances[node] = sumInvDistances[node]==Inf ? 1.0 : sumInvDistances[node]
     end
     finalizeInvInterpolation!(f,sumInvDistances)
     return f
