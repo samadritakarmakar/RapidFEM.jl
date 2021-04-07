@@ -1,9 +1,9 @@
-using RapidFEM, LargeDefs, SparseArrays, LinearAlgebra, Tensors, PyPlot
+using RapidFEM, LargeDefs, SparseArrays, LinearAlgebra, Tensors, NLsolve, PyPlot
 include("../hyperElasticLocalAssembly/hyperElastic.jl")
 
 function hyperElasticity()
     #mesh::Mesh = RapidFEM.readMesh("../../test/OneElmntMsh/HexahedralOrder2.msh")
-    mesh::Mesh = RapidFEM.readMesh("../../test/MeshFiles/cubeTest.msh")
+    mesh::Mesh = RapidFEM.readMesh("../../test/MeshFiles/cubeTestTet.msh")
     #mesh::Mesh = RapidFEM.readMesh("../../test/MeshFiles/cube1elmnt.msh")
     #mesh::Mesh = RapidFEM.readMesh("../../test/MeshFiles/wedge.msh")
     FeSpace = RapidFEM.createFeSpace()
@@ -75,7 +75,7 @@ function hyperElasticity()
         return J
     end
 
-    vtkMeshData::VTKMeshData = RapidFEM.InitializeVTK("cubeTest", mesh, [volAttrib], problemDim)
+    vtkMeshData::VTKMeshData = RapidFEM.InitializeVTK("cubeTestTet", mesh, [volAttrib], problemDim)
     plot()
     for i ∈ 1:noOfSteps
 
@@ -95,8 +95,10 @@ function hyperElasticity()
         RapidFEM.applyNLDirichletBC_on_Soln!(initSoln, DirichletFunctionDisp, dirchAttribDisp_x,
         mesh, problemDim, [1,0,0])
 
-         initSoln, convergenceData = RapidFEM.simpleNLsolve(assemble_f, assemble_J, initSoln;
-            xtol = 1e-11, ftol = 1.e-5, relTol= 1e-8, iterations = 100, skipJacobian = 1 , printConvergence = true)
+         #initSoln, convergenceData = RapidFEM.simpleNLsolve(assemble_f, assemble_J, initSoln;
+        #    xtol = 1e-11, ftol = 1.e-5, relTol= 1e-8, iterations = 100, skipJacobian = 1 , printConvergence = true)
+        solverResults = nlsolve(assemble_f, assemble_J, initSoln, show_trace = true, method = :trust_region, linesearch = BackTracking())
+        initSoln .= solverResults.zero
 
         hyperElasticParameters = (hyperModel, modelParams)
 
@@ -111,9 +113,9 @@ function hyperElasticity()
         initSoln, [hyperElasticParameters],  FeSpace, mesh,  [volAttrib],
                 problemDim, activeDimensions)
         RapidFEM.vtkDataAdd!(vtkMeshData, (initSoln, SecondPiolaStress, GreenStrain, DeformationGrad), ("Displacement", "Second Piola Stress", "Green Strain", "Deformation Gradient"), float(i), i)
-        plot(log10.(convergenceData.relNorm), linestyle= :dashdot)
+        #plot(log10.(convergenceData.relNorm), linestyle= :dashdot)
     end
-    xlabel("Iterations")
-    ylabel("Log base 10 of Relative Convergence")
+    #xlabel("Iterations")
+    #ylabel("Log base 10 of Relative Convergence")
     RapidFEM.vtkSave(vtkMeshData)
 end

@@ -296,7 +296,7 @@ function checkLagrangeHex()
         ξ=ξ_η_ζ[pnt,1]
         η=ξ_η_ζ[pnt,2]
         ζ = ξ_η_ζ[pnt,3]
-        ϕ = lagrangeHexOrder3_gmsh(ξ, η, ζ)
+        ϕ = lagrangeHexOrder3_gmsh([ξ, η, ζ])
         println(pnt)
         println("ξ= ", ξ, " η = ", η, " ζ = ", ζ)
         for i ∈ 1:length(ϕ)

@@ -63,7 +63,7 @@ function checkLagrangeTri()
         ξ=ξ_η[pnt,1]
         η=ξ_η[pnt,2]
         ζ=1-(ξ+η)
-        ϕ = lagrangeTriOrder3_gmsh(ξ, η, ζ)
+        ϕ = lagrangeTriOrder3_gmsh([ξ, η, ζ])
         println(pnt)
         println("ξ= ", ξ, " η = ", η)
         for i ∈ 1:length(ϕ)

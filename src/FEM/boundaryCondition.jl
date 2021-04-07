@@ -83,7 +83,8 @@ function applyDirichletBC!(b::Vector, A::SparseMatrixCSC,
 end
 
 """Applies Initial Boundary condition on the given vector 'u' as per the given
-    InitialFunction which is depedent on the position, x
+    InitialFunction which is dependent on the position, x. To be used for solving Linear 
+    Problems of the form [K]{u} = {f}
 """
 function applyInitialBC!(u::Vector, InitialBcFunction::Function,
     attribute::Tuple{Int64, Int64}, mesh::Mesh, problemDim::Int64, varArgs...)
@@ -96,6 +97,8 @@ function applyInitialBC!(u::Vector, InitialBcFunction::Function,
     end
 end
 
+"""Applies boundary condition on the Jacobian for solving Non-Linear Equation. To be used for solving 
+Non-Linear Equations of the form: ``u^{n+1} = u^{n} + J^{-1}\\cdot R``"""
 function applyNLDirichletBC_on_J!(J::SparseMatrixCSC,
     attribute::Tuple{Int64, Int64}, mesh::Mesh,
     problemDim::Int64, appliedDof::Array{Int64, 1} = ones(Int, problemDim), varArgs...)
@@ -109,6 +112,8 @@ function applyNLDirichletBC_on_J!(J::SparseMatrixCSC,
     return J
 end
 
+"""Applies boundary condition on the solution 'u' for solving Non-Linear Equation. To be used for solving 
+Non-Linear Equations of the form: ``u^{n+1} = u^{n} + J^{-1}\\cdot R``"""
 function applyNLDirichletBC_on_Soln!(Soln::Array{Float64,1},
     DirichletFunction::Function,  attribute::Tuple{Int64, Int64},
     mesh::Mesh, problemDim::Int64,
@@ -129,6 +134,8 @@ function applyNLDirichletBC_on_Soln!(Soln::Array{Float64,1},
     end
 end
 
+"""Applies boundary condition on the force vector 'f' for solving Non-Linear Equation. To be used for solving 
+Non-Linear Equations of the form: ``\\mathbf{u}^{n+1} = \\mathbf{u}^{n} + \\mathbf{J}^{-1}\\cdot \\mathbf{R}``"""
 function applyNLDirichletBC_on_f!(f::Vector,
     attribute::Tuple{Int64, Int64}, mesh::Mesh, problemDim::Int64,
     appliedDof::Array{Int64, 1} = ones(Int, problemDim), varArgs...)
@@ -148,7 +155,7 @@ function applyNLDirichletBC_on_f!(f::Vector,
     end
 end
 
-function applyDynamicDirichletBC!(SolutionArray::Array{Array{Float64,1},1},
+function applyDynamicDirichletBC!(Soln::Array{Array{Float64,1},1},
     b::Vector, A::SparseMatrixCSC, DirichletFunction::Function,
     attribute::Tuple{Int64, Int64}, mesh::Mesh, problemDim::Int64,
     appliedDof::Array{Int64, 1} = ones(Int, problemDim), varArgs...)

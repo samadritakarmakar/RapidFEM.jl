@@ -34,7 +34,7 @@ end
 function addCell!(cells::Array{MeshCell,1}, element::TriElement, tagArray::Array{Int64,1}, elementNo::Int64)
     nodeTagsArray::Array{Int64} = getNodeTagArray(element, tagArray)
     #push!(cells, MeshCell(VTKCellTypes.VTK_LAGRANGE_TRIANGLE, element.nodeTags))
-    cells[elementNo] = MeshCell(VTKCellTypes.VTK_LAGRANGE_TRIANGLE, element.nodeTags, nodeTagsArray)
+    cells[elementNo] = MeshCell(VTKCellTypes.VTK_LAGRANGE_TRIANGLE, nodeTagsArray)
     return nothing
 end
 

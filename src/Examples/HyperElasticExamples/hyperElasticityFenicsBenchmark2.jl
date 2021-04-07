@@ -25,8 +25,8 @@ function hyperElasticity()
     Fz::Float64 = 0.0
 
     Fx_max::Float64 = 0.0
-    Fy_max::Float64 = .5
-    Fz_max::Float64 = .5
+    Fy_max::Float64 = 0.5
+    Fz_max::Float64 = 0.5
 
     disp_max(X) = begin
         x, y, z = X
