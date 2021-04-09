@@ -1,19 +1,25 @@
-using RapidFEM, LargeDefs, SparseArrays, PyPlot
+using RapidFEM, LargeDefs, SparseArrays, Tensors, PyPlot
 include("../hyperElasticLocalAssembly/hyperElastic.jl")
 
 function hyperElasticity()
-    mesh::Mesh = RapidFEM.readMesh("../../test/OneElmntMsh/HexahedralOrder1.msh")
+    #mesh::Mesh = RapidFEM.readMesh("../../test/OneElmntMsh/HexahedralOrder1.msh")
+    mesh::Mesh = RapidFEM.readMesh("../../test/MeshFiles/cubeTest.msh")
     FeSpace = RapidFEM.createFeSpace()
     problemDim::Int64 = 3
-    volAttrib::Tuple{Int64, Int64} = (3,3)
+    volAttrib::Tuple{Int64, Int64} = (3,5)
     neumAttrib::Tuple{Int64, Int64} = (2,2) #Force
     dirchAttrib::Tuple{Int64, Int64} = (2,1) #Lock
     activeDimensions::Array{Int64,1} = [1, 1, 1]
     E::Float64 = 10.0 #MPa
     ν::Float64 = 0.3
-    λ = (ν*E)/((1+ν)*(1-2*ν))
-    μ = E/(2*(1+ν))
-    Fx::Float64 = 5.0
+    #λ = (ν*E)/((1+ν)*(1-2*ν))
+    #μ = E/(2*(1+ν))
+    μ = 3.8
+    λ = 5.0
+
+    println("λ = ", λ, " μ = ", μ)
+
+    Fx::Float64 = 2.5
 
     #hyperModel = LargeDefs.neoHookeanCompressible
     hyperModel = LargeDefs.neoHookean
@@ -58,12 +64,14 @@ function hyperElasticity()
 
     RapidFEM.applyNLDirichletBC_on_Soln!(initSoln, DirichletFunction, dirchAttrib,
     mesh, problemDim)
-
+    solnNode = 3
+    
     vtkMeshData::VTKMeshData = RapidFEM.InitializeVTK("HyperElastic", mesh, [volAttrib], problemDim)
     RapidFEM.applyNLDirichletBC_on_Soln!(initSoln, DirichletFunction, dirchAttrib,
     mesh, problemDim)
     initSoln, convergenceData = RapidFEM.simpleNLsolve(assemble_f, assemble_J, initSoln;
        xtol = 1e-11, ftol = 1.e-5, relTol= 1e-8, iterations = 100, skipJacobian = 1 , printConvergence = true)
+       println("Soln at node $solnNode = ", initSoln[problemDim*(solnNode-1)+1:problemDim*solnNode])
     RapidFEM.vtkDataAdd!(vtkMeshData, (initSoln,), ("Displacement", ), float(i), i)
     plot(log10.(convergenceData.relNorm), linestyle= :dashdot)
 

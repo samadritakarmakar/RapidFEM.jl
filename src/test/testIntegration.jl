@@ -1,9 +1,10 @@
 using RapidFEM
 function testIntegration()
-    mesh::Mesh = RapidFEM.readMesh("OneElmntMsh/TetrahedralOrder2.msh")
+    #mesh::Mesh = RapidFEM.readMesh("OneElmntMsh/TetrahedralOrder2.msh")
+    mesh::Mesh = RapidFEM.readMesh("OneElmntMsh/HexahedralL3O1.msh")
     FeSpace = RapidFEM.createFeSpace()
     problemDim::Int64 = 1
-    volAttrib::Tuple{Int64, Int64} = (3,3)
+    volAttrib::Tuple{Int64, Int64} = (3,5)
     neumAttrib::Tuple{Int64, Int64} = (2,1)
     dirchAttrib::Tuple{Int64, Int64} = (2,2)
     activeDimensions::Array{Int64,1} = [1, 1, 1]
