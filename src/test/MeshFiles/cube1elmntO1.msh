@@ -1,0 +1,34 @@
+$MeshFormat
+2.2 0 8
+$EndMeshFormat
+$PhysicalNames
+7
+2 1 "lockedSurf"
+2 2 "moveSurf"
+2 3 "locked_y"
+2 4 "move_y"
+2 5 "locked_z"
+2 6 "move_z"
+3 7 "vol"
+$EndPhysicalNames
+$Nodes
+8
+1 0 0 0
+2 1 0 0
+3 1 1 0
+4 0 1 0
+5 0 1 1
+6 0 0 1
+7 1 0 1
+8 1 1 1
+$EndNodes
+$Elements
+7
+1 3 2 6 1 4 1 2 3
+2 3 2 1 2 4 5 6 1
+3 3 2 4 3 1 6 7 2
+4 3 2 2 4 2 7 8 3
+5 3 2 3 5 3 8 5 4
+6 3 2 5 6 5 6 7 8
+7 5 2 7 1 1 2 3 4 6 7 8 5
+$EndElements

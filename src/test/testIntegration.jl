@@ -24,7 +24,10 @@ function testIntegration()
     end
     write(f, str)
     close(f)
-    scalarFunction(x) = [1.0]
+    scalarFunction(x) = begin
+        println(x[2]^2, " ", x[3]^2)
+        [x[2]^2*x[3]^2]
+    end
     v1::Array{Float64,1} = RapidFEM.assembleScalar(scalarFunction, volAttrib, FeSpace, mesh, RapidFEM.localScalar!, problemDim, activeDimensions)
     v2::Array{Float64,1} = RapidFEM.assembleScalar(scalarFunction, neumAttrib, FeSpace, mesh, RapidFEM.localScalarNeumann!, problemDim, activeDimensions)
     return sum(v1), sum(v2)

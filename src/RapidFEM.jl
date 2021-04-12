@@ -8,7 +8,7 @@
 
 __precompile__()
 module RapidFEM
-using FEMSparse, SparseArrays, LinearAlgebra, WriteVTK
+using FEMSparse, FastGaussQuadrature, SparseArrays, LinearAlgebra, WriteVTK
 include("FEM/elements.jl")
 include("ShapeFunctions/shapeFunction.jl")
 include("FEM/boundaryCondition.jl")

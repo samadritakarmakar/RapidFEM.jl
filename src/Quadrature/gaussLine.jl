@@ -8,7 +8,7 @@
  
 function getQuadratureLine(order::Int64)
     n::Int64 = Int64(ceil((order+1.0)/2.0))
-    n1 =[2.0 0.0]
+    #=n1 =[2.0 0.0]
     n2 = [1.0000000000000000	-0.5773502691896257;
     1.0000000000000000	0.5773502691896257]
     n3 = [0.8888888888888888	0.0000000000000000;
@@ -43,6 +43,7 @@ function getQuadratureLine(order::Int64)
         toReturn = n6
     end
     w::Array{Float64} = toReturn[:,1]
-    ip::Array{Float64} = toReturn[:,2]
+    ip::Array{Float64} = toReturn[:,2]=#
+    ip, w = gausslegendre(n)
     return w, ip
 end
