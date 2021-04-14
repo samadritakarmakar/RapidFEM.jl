@@ -76,7 +76,7 @@ function applyDirichletBC!(b::Vector, A::SparseMatrixCSC,
     =#
     P::SparseMatrixCSC, Pzeros::SparseMatrixCSC =  getPermutionMatrix(vNodes, mesh, problemDim)
      A .= P'*A
-     A *= P
+    # A *= P
     A += Pzeros
     return A
     #return A .+ Pzeros

@@ -9,7 +9,7 @@
 function createElasticTensor(E::Float64, ν::Float64)
     λ = (ν*E)/((1+ν)*(1-2*ν))
     μ = E/(2*(1+ν))
-    C = λ*one(SymmetricTensor{2,3, Float64})⊗ one(SymmetricTensor{2,3, Float64})
+    C = λ*(one(SymmetricTensor{2,3, Float64})⊗ one(SymmetricTensor{2,3, Float64}))
     C +=2*μ*one(SymmetricTensor{4,3, Float64})
     return C
 end
@@ -24,24 +24,19 @@ function local_∇v_C_∇u_Tensor!(K::Array{Float64,2},
     dΩFunc::Function = getFunction_dΩ(element)
     noOfIpPoints::Int64 = length(shapeFunction)
     noOfNodes::Int64 = size(shapeFunction[1].∂ϕ_∂ξ,1)
-    ∂x_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[1].∂ϕ_∂ξ)
-    ∂ξ_dx::Array{Float64,2} = ∂ξ_∂xFunc(∂x_∂ξ)
-    x::Array{Float64, 1} = getInterpolated_x(coordArray, shapeFunction[1].ϕ)
-    dΩ::Float64 = dΩFunc(∂x_∂ξ, shapeFunction[1].ipData)
-    ∂ϕ_∂x::Array{Float64} = shapeFunction[1].∂ϕ_∂ξ*∂ξ_dx
-    #K::Array{Float64,2} = zeros(noOfNodes*problemDim, noOfNodes*problemDim)
+    println("No. of Ip Points = ", noOfIpPoints) 
     for ipNo::Int64 ∈ 1:noOfIpPoints
         ∂x_∂ξ = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
         ∂ξ_dx = ∂ξ_∂xFunc(∂x_∂ξ)
         x = getInterpolated_x(coordArray, shapeFunction[ipNo].ϕ)
         dΩ = dΩFunc(∂x_∂ξ, shapeFunction[ipNo].ipData)
-        ∂ϕ_∂x .= shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dx
+        ∂ϕ_∂x = shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dx
         for b::Int64 ∈ 1:noOfNodes
             for a::Int64 ∈ 1:noOfNodes
                 for l::Int64 ∈ 1:problemDim
-                    for k::Int64 ∈ 1:l
+                    for k::Int64 ∈ 1:problemDim
                         for j::Int64 ∈ 1:problemDim
-                            for i::Int64 ∈ 1:j
+                            for i::Int64 ∈ 1:problemDim
                                 K[problemDim*(a-1)+i,problemDim*(b-1)+k] += 0.25*∂ϕ_∂x[a,j]*C[i,j,k,l]*∂ϕ_∂x[b,l]*dΩ
                                 K[problemDim*(a-1)+j,problemDim*(b-1)+l] += 0.25*∂ϕ_∂x[a,i]*C[i,j,k,l]*∂ϕ_∂x[b,k]*dΩ
                                 K[problemDim*(a-1)+j,problemDim*(b-1)+k] += 0.25*∂ϕ_∂x[a,i]*C[i,j,k,l]*∂ϕ_∂x[b,l]*dΩ
@@ -66,10 +61,11 @@ function gaussianStress(tensorMapN_ElasticTensor::T,
     noOfIpPoints::Int64 = length(shapeFunction)
     noOfNodes::Int64 = size(shapeFunction[1].∂ϕ_∂ξ,1)
     σ_g::Array{Array{Float64,1},1} = Array{Array{Float64,1},1}(undef, noOfIpPoints)
-    ∂x_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[1].∂ϕ_∂ξ)
-    ∂ξ_dx::Array{Float64,2} = ∂ξ_∂xFunc(∂x_∂ξ)
-    ∂ϕ_∂x::Array{Float64} = shapeFunction[1].∂ϕ_∂ξ*∂ξ_dx
     for ipNo::Int64 ∈ 1:noOfIpPoints
+        ∂x_∂ξ = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
+        ∂ξ_dx = ∂ξ_∂xFunc(∂x_∂ξ)
+        x = getInterpolated_x(coordArray, shapeFunction[ipNo].ϕ)
+        ∂ϕ_∂x = shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dx
         σ_g[ipNo] = zeros(StressDim^2)
         for b::Int64 ∈ 1:noOfNodes
             for l::Int64 ∈ 1:problemDim
@@ -87,4 +83,38 @@ function gaussianStress(tensorMapN_ElasticTensor::T,
         end
     end
     return σ_g
+end
+
+
+function gaussianStrain(tensorMapN_ElasticTensor::T,
+    solAtNodes::Array{Float64,1}, problemDim::Int64,
+    element::AbstractElement, elementNo::Int64, shapeFunction::Array{ShapeFunction},
+    coordArray::Array{Float64,2}; kwargs4function...) where T
+    C = tensorMapN_ElasticTensor[1]
+    StressDim::Int64 = size(C,1)
+    ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
+    noOfIpPoints::Int64 = length(shapeFunction)
+    noOfNodes::Int64 = size(shapeFunction[1].∂ϕ_∂ξ,1)
+    eps_g::Array{Array{Float64,1},1} = Array{Array{Float64,1},1}(undef, noOfIpPoints)
+    ∂x_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[1].∂ϕ_∂ξ)
+    ∂ξ_dx::Array{Float64,2} = ∂ξ_∂xFunc(∂x_∂ξ)
+    ∂ϕ_∂x::Array{Float64} = shapeFunction[1].∂ϕ_∂ξ*∂ξ_dx
+    for ipNo::Int64 ∈ 1:noOfIpPoints
+        ∂x_∂ξ = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
+        ∂ξ_dx = ∂ξ_∂xFunc(∂x_∂ξ)
+        x = getInterpolated_x(coordArray, shapeFunction[ipNo].ϕ)
+        ∂ϕ_∂x = shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dx
+        eps_g[ipNo] = zeros(StressDim^2)
+        for b::Int64 ∈ 1:noOfNodes
+            ij = 1
+            for j::Int64 ∈ 1:problemDim
+                for i::Int64 ∈ 1:problemDim
+                    eps_g[ipNo][ij] += 0.5*∂ϕ_∂x[b,j]*solAtNodes[problemDim*(b-1)+i]
+                    eps_g[ipNo][ij] += 0.5*∂ϕ_∂x[b,i]*solAtNodes[problemDim*(b-1)+j]
+                    ij +=1
+                end
+            end
+        end
+    end
+    return eps_g
 end

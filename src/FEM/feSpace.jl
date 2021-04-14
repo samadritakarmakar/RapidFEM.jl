@@ -22,13 +22,13 @@ end
 """This function checks for the given element if the shape function has already been generated.
 If not generated, the a new set of shape functions are generated and returned to the FeSpace variable
 
-    shapeFunction::Array{ShapeFunction,1} = feSpace!(FeSpaceThreaded[currentThread], element, mesh, lagrange)
+    shapeFunction::Array{ShapeFunction,1} = feSpace!(FeSpaceThreaded[currentThread], element, mesh, reduction = 0, elementFunction=lagrange)
 """
-function feSpace!(FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}}, element::AbstractElement, mesh::Mesh, elementFunction::Function)::Array{ShapeFunction}
+function feSpace!(FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}}, element::AbstractElement, mesh::Mesh, reduction::Int64 = 0, elementFunction::Function=lagrange)::Array{ShapeFunction}
     #element::AbstractElement = mesh.Elements[attribute][elementNo]
     typeOfElement::DataType = typeof(element)
     if (typeOfElement, element.order, elementFunction) ∉ keys(FeSpace)
-        FeSpace[typeOfElement, element.order, elementFunction] = calculateShapeFunctions(element, elementFunction, mesh.meshSoftware)
+        FeSpace[typeOfElement, element.order, elementFunction] = calculateShapeFunctions(element, elementFunction, mesh.meshSoftware, reduction)
     end
     return FeSpace[typeOfElement, element.order, elementFunction]
 end

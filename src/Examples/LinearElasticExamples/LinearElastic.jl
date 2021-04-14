@@ -11,7 +11,8 @@ LinearAlgebra.BLAS.set_num_threads(Threads.nthreads())
 
 function LinearElastic()
     #mesh::Mesh = RapidFEM.readMesh("../../test/MeshFiles/BarFine.msh")
-    mesh::Mesh = RapidFEM.readMesh("../../test/MeshFiles/cubeTestO1.msh")
+    #mesh::Mesh = RapidFEM.readMesh("../../test/MeshFiles/cubeTestO1.msh")
+    mesh::Mesh = RapidFEM.readMesh("../../test/MeshFiles/cubeTestPntO1.msh")
     FeSpace = RapidFEM.createFeSpace()
     problemDim::Int64 = 3
     volAttrib::Tuple{Int64, Int64} = (3,5)
@@ -25,12 +26,21 @@ function LinearElastic()
     K::SparseMatrixCSC = RapidFEM.assembleMatrix((tensorMap, C), volAttrib, FeSpace, mesh, RapidFEM.local_∇v_C_∇u!, problemDim, activeDimensions)
     source(x, varArgs...) = [0.0, 0.0, 0.0]
     f::Vector = RapidFEM.assembleVector(source, volAttrib, FeSpace, mesh, RapidFEM.localSource!, problemDim, activeDimensions)
-    neumann(x; varArgs...) = [10.0, 0.0, 0.0]
+    neumann(x; varArgs...) = [0.0, 0.0, 0.0]
     f += RapidFEM.assembleVector(neumann, neumAttrib, FeSpace, mesh, RapidFEM.localNeumann!, problemDim, activeDimensions)
     DirichletFunction(x; varArgs...) = zeros(problemDim)
     K = RapidFEM.applyDirichletBC!(f, K, DirichletFunction, dirchAttrib, mesh, problemDim)
+    K = RapidFEM.applyDirichletBC!(f, K, DirichletFunction, dirchAttrib, mesh, problemDim)
+    DirichletFunction2(x; varArgs...) = begin
+      if (abs(x[1]-1.0)<1e-14 && abs(x[2]-1.0)<1e-14 && abs(x[3]-1.0)<1e-14)
+        return [0.1, 0.0, 0.0]
+      end
+      return zeros(3)
+    end
+    K = RapidFEM.applyDirichletBC!(f, K, DirichletFunction2, (0,6), mesh, problemDim)
     println(size(K))
     x::Vector = K\f
+    println(x)
     #x = cg(K,f)
     σTemp::Array{Float64,1} = RapidFEM.InvDistInterpolation([RapidFEM.gaussianStress],
     x, [(tensorMap, C)],  FeSpace, mesh,  [volAttrib],

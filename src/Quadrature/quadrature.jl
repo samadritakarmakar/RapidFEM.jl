@@ -9,13 +9,13 @@
 include("gaussTri.jl")
 include("gaussTet.jl")
 include("gaussHex.jl")
-
-function getQuadrature(element::LineElement)
-    return getQuadratureLine(element.order)
+"""Retrieves the Quadrature of the indivdual element. Reduction of order if any, is done here. For Quadrilateral and Hexahedral, the order is increased by 1 by default before retrieval."""
+function getQuadrature(element::LineElement, reduction::Int64 = 0)
+    return getQuadratureLine(element.order-reduction)
 end
 
-function getQuadrature(element::TriElement)
-    w::Array{Float64}, ip_base::Array{Float64} = getQuadratureTri(element.order)
+function getQuadrature(element::TriElement, reduction::Int64 =0)
+    w::Array{Float64}, ip_base::Array{Float64} = getQuadratureTri(element.order-reduction)
     ip::Array{Float64} = Array{Float64}(undef, size(ip_base,1), 3)
     ip[:, 1:2] = ip_base
     for i ∈ 1:size(ip,1)
@@ -24,14 +24,15 @@ function getQuadrature(element::TriElement)
     return w, ip
 end
 
-function getQuadrature(element::QuadElement)
+function getQuadrature(element::QuadElement, reduction::Int64 = 0)
     #order::Int64 = 2*element.order
-    order::Int64 = Int64(ceil((element.order +1)/2))
-    return getQuadratureQuad(order)
+    #order::Int64 = Int64(ceil((element.order +1)/2))
+    order::Int64 = element.order+1
+    return getQuadratureQuad(order-reduction)
 end
 
-function getQuadrature(element::TetElement)
-    w::Array{Float64}, ip_base::Array{Float64} = getQuadratureTet(element.order)
+function getQuadrature(element::TetElement, reduction::Int64 = 0)
+    w::Array{Float64}, ip_base::Array{Float64} = getQuadratureTet(element.order-reduction)
     ip::Array{Float64} = Array{Float64}(undef, size(ip_base,1), 4)
     ip[:, 1:3] = ip_base
     for i ∈ 1:size(ip,1)
@@ -40,8 +41,9 @@ function getQuadrature(element::TetElement)
     return w, ip
 end
 
-function getQuadrature(element::HexElement)
+function getQuadrature(element::HexElement, reduction::Int64 = 0)
     #order::Int64 = 3*element.order
-    order::Int64 = Int64(ceil((element.order +1)/2)+2)
-    return getQuadratureHex(order)
+    #order::Int64 = Int64(ceil((element.order +1)/2))
+    order::Int64 = element.order+1
+    return getQuadratureHex(order-reduction)
 end

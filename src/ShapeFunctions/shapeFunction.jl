@@ -52,10 +52,10 @@ end
 """This function is responsible for calculation of the shape function array, its gradients and
 the hessians at all the given integration points for that order of the element.
 
-    calculateShapeFunctions(element, elementFunction, meshSoftware)
+    calculateShapeFunctions(element, elementFunction, meshSoftware, reduction = 0)
 """
-function calculateShapeFunctions(element::T, elementFunction::Function, meshSoftware::String)::Array{ShapeFunction} where {T<:AbstractElement}
-    w::Array{Float64}, ip::Array{Float64} = getQuadrature(element)
+function calculateShapeFunctions(element::T, elementFunction::Function, meshSoftware::String, reduction::Int64 = 0)::Array{ShapeFunction} where {T<:AbstractElement}
+    w::Array{Float64}, ip::Array{Float64} = getQuadrature(element, reduction)
     shapeFunctionAtIp::Array{ShapeFunction} = []
     N::Function = elementFunction(element, meshSoftware)
     for ipNo ∈ 1:length(w)
