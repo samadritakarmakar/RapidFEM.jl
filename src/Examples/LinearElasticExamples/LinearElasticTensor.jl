@@ -21,25 +21,37 @@ function LinearElastic()
     neumAttrib::Tuple{Int64, Int64} = (2,2) #Force
     dirchAttrib::Tuple{Int64, Int64} = (2,1) #Lock
     activeDimensions::Array{Int64,1} = [1, 1, 1]
-    E::Float64 = 10 #MPa
+    E::Float64 = 1 #MPa
     ν::Float64 = 0.3
     C = createElasticTensor(E, ν)
     K::SparseMatrixCSC = RapidFEM.assembleMatrix!((C, ), volAttrib, FeSpace, mesh, local_∇v_C_∇u_Tensor!, problemDim, activeDimensions)
+    #println(Matrix(K))
+    stiffStringArray = string.(Matrix(K))
+    writeData = ""
+    for i ∈ 1:size(stiffStringArray,1)
+      for j ∈ 1:size(stiffStringArray,2)
+        writeData = writeData*stiffStringArray[i,j]*"  "
+      end
+      writeData = writeData*"\n"
+    end
+    file = open("stiffness", "w")
+    write(file, writeData)
+    close(file)
     source(x, varArgs...) = [0.0, 0.0, 0.0]
     f::Vector = RapidFEM.assembleVector!(source, volAttrib, FeSpace, mesh, RapidFEM.localSource!, problemDim, activeDimensions)
     neumann(x; varArgs...) = [0.0, 0.0, 0.0]
     f += RapidFEM.assembleVector!(neumann, neumAttrib, FeSpace, mesh, RapidFEM.localNeumann!, problemDim, activeDimensions)
     DirichletFunction(x; varArgs...) = zeros(problemDim)
-    K = RapidFEM.applyDirichletBC!(f, K, DirichletFunction, dirchAttrib, mesh, problemDim)
+    RapidFEM.applyDirichletBC!(f, K, DirichletFunction, dirchAttrib, mesh, problemDim)
     DirichletFunction2(x; varArgs...) = begin
       if (abs(x[1]-1.0)<1e-14 && abs(x[2]-1.0)<1e-14 && abs(x[3]-1.0)<1e-14)
         return [0.1, 0.1, 0.1]
       end
       return zeros(3)
     end
-    K = RapidFEM.applyDirichletBC!(f, K, DirichletFunction2, (0,6), mesh, problemDim)
-    
+    RapidFEM.applyDirichletBC!(f, K, DirichletFunction2, (0,6), mesh, problemDim)
     x::Vector = K\f
+    println(x)
     #x = cg(K,f)
     σ::Array{Float64,1} = RapidFEM.InvDistInterpolation([gaussianStress],
     x, [(C,)],  FeSpace, mesh,  [volAttrib],

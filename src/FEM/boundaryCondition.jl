@@ -51,6 +51,8 @@ function applyDirichletBC!(b::Vector, A::SparseMatrixCSC,
     problemDim::Int64,
     appliedDof::Array{Int64, 1} = ones(Int, problemDim), varArgs...)
 
+    x_dirchlet = zeros(length(b))
+    applied_vNodeArray = Array{Int64, 1}(undef, 0)
     lengthAppldDof::Int64 = getAppliedDofLength(problemDim, appliedDof)
     nodes::Array{Int64} = getUniqueNodes(attribute, mesh)
     vNodes::Array{Int64} = getVectorNodes(nodes, problemDim, appliedDof)
@@ -59,14 +61,16 @@ function applyDirichletBC!(b::Vector, A::SparseMatrixCSC,
         diricFunc::Array{Float64,1} = DirichletFunction(coordArray, varArgs...)
         for j ∈ 1:problemDim
             if appliedDof[j] == 1
-                b[vNodes[(nodeNo-1)*lengthAppldDof+sum(appliedDof[1:j])]] = diricFunc[j]
-                #b[vNodes[(nodeNo-1)*lengthAppldDof+sum(appliedDof[1:j])]]  = 0.0
+                applied_vNode = vNodes[(nodeNo-1)*lengthAppldDof+sum(appliedDof[1:j])]
+                x_dirchlet[applied_vNode]= diricFunc[j]
+                push!(applied_vNodeArray, applied_vNode)
             end
         end
         #b[vNodes[nodeNo:nodeNo+problemDim-1]] = DirichletFunction(coordArray, varArgs...)
         #b[vNodes[(nodeNo-1)*problemDim+1:nodeNo*problemDim]] = DirichletFunction(coordArray, varArgs...)
     end
-
+    b .-= A*x_dirchlet
+    b[applied_vNodeArray] .= x_dirchlet[applied_vNodeArray]
     #=A[:, vNodes] .= 0.0
     A[vNodes, :] .= 0.0
     Threads.@threads for vNode ∈ vNodes
@@ -75,9 +79,9 @@ function applyDirichletBC!(b::Vector, A::SparseMatrixCSC,
     return nothing
     =#
     P::SparseMatrixCSC, Pzeros::SparseMatrixCSC =  getPermutionMatrix(vNodes, mesh, problemDim)
-     A .= P'*A
-    # A *= P
-    A += Pzeros
+     A .= P*A
+     A .= A*P
+    A .+= Pzeros
     return A
     #return A .+ Pzeros
 end
@@ -106,9 +110,9 @@ function applyNLDirichletBC_on_J!(J::SparseMatrixCSC,
     nodes::Array{Int64} = getUniqueNodes(attribute, mesh)
     vNodes::Array{Int64} = getVectorNodes(nodes, problemDim, appliedDof)
     P::SparseMatrixCSC, Pzeros::SparseMatrixCSC =  getPermutionMatrix(vNodes, mesh, problemDim)
-     J .= P'*J
-     J *= P
-    J += Pzeros
+     J .= P*J
+     J .= J*P
+    J .+= Pzeros
     return J
 end
 
@@ -176,8 +180,8 @@ function applyDynamicDirichletBC!(Soln::Array{Array{Float64,1},1},
         #b[vNodes[(nodeNo-1)*problemDim+1:nodeNo*problemDim]] .= 0.0
     end
     P::SparseMatrixCSC, Pzeros::SparseMatrixCSC =  getPermutionMatrix(vNodes, mesh, problemDim)
-     A .= P'*A
-     A *= P
-    A += Pzeros
+     A .= P*A
+     A .= A*P
+    A .+= Pzeros
     return A
 end

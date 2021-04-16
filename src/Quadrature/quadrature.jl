@@ -25,9 +25,9 @@ function getQuadrature(element::TriElement, reduction::Int64 =0)
 end
 
 function getQuadrature(element::QuadElement, reduction::Int64 = 0)
-    #order::Int64 = 2*element.order
+    order::Int64 = 2*element.order
     #order::Int64 = Int64(ceil((element.order +1)/2))
-    order::Int64 = element.order+1
+    #order::Int64 = element.order+1
     return getQuadratureQuad(order-reduction)
 end
 
@@ -44,6 +44,6 @@ end
 function getQuadrature(element::HexElement, reduction::Int64 = 0)
     #order::Int64 = 3*element.order
     #order::Int64 = Int64(ceil((element.order +1)/2))
-    order::Int64 = element.order+1
+    order::Int64 = 2*element.order
     return getQuadratureHex(order-reduction)
 end
