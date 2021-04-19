@@ -7,9 +7,9 @@
  =====================================================================#
  
 """This function creates a Dict of ShapeFunctions arrays. Since the library
-uses isoparametric elements, the shape functions for a certain element are
+uses isoparametric elements, the shape functions for any type of element is
 calculated just once and used all over the domain. The returned Dict variable
-keeps a list of the shape functions used in the whole domian. A new Dict variable
+keeps a list of the shape functions, it's gradients and hessians used in the whole domian. A new Dict variable
 may be generated in the below manner:
 
     FeSpace = RapidFEM.createFeSpace()
@@ -33,8 +33,8 @@ function feSpace!(FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction
     return FeSpace[typeOfElement, element.order, elementFunction]
 end
 
-"""This function return an interpolated value of the position x, a set of shape function
-values for certain set of integration points.
+"""This function return an interpolated value of the position x in the element. This is the value of x at the integration point.
+A set of shape functions at a certain integration point is used to calculate it.
 
     x::Array{Float64, 1} = getInterpolated_x(coordArray, shapeFunction[ipNo].ϕ)
 """
