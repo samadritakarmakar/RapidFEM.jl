@@ -65,7 +65,7 @@ function checkGmshFileVersion(version::Float64)
     end
 end
 
-function getPhysicalGroupData!(attributes::Array{Tuple{Int64, Int64},1}, AttributeName::Dict{Any,Any}, readPosition::Int64, meshData::String)
+function getPhysicalGroupData!(attributes::Array{Tuple{Int64, Int64},1}, AttributeName::Dict{Tuple{Int64,Int64},String}, readPosition::Int64, meshData::String)
     #Reading dimension
     #AttributeName = Dict()
     noOfAttribChar::Array{Char}, readPosition = getNextWord(readPosition, meshData)
@@ -85,7 +85,7 @@ function getPhysicalGroupData!(attributes::Array{Tuple{Int64, Int64},1}, Attribu
     return noOfAttrib, readPosition
 end
 
-function getNodesData!(Nodes::Dict{Any,Any}, readPosition::Int64, meshData::String)
+function getNodesData!(Nodes::Dict{Int64, Array{Float64, 1}}, readPosition::Int64, meshData::String)
     NoOfNodeChar::Array{Char}, readPosition = getNextWord(readPosition, meshData)
     noOfNodes::Int64 = parse(Int64, String(NoOfNodeChar))
     for Node ∈ 1:noOfNodes
@@ -103,8 +103,8 @@ function getNodesData!(Nodes::Dict{Any,Any}, readPosition::Int64, meshData::Stri
     return noOfNodes, readPosition
 end
 
-function getElementTypeProperty(gmshElmentType::Int64)
-    elementType::Dict{Int64, Any} = Dict()
+function initializeSupportedElementData()
+    elementType::Dict{Int64, String} = Dict{Int64, String}()
     elementType[15] = "Point"
     elementType[1] = "Line"
     elementType[8] = "Line"
@@ -122,7 +122,7 @@ function getElementTypeProperty(gmshElmentType::Int64)
     elementType[11] = "Tet"
     elementType[29] = "Tet"
 
-    order::Dict{Int64, Any} = Dict()
+    order::Dict{Int64, Int64} = Dict{Int64, Int64}()
     order[15] = 0
     order[1] = 1
     order[2] = 1
@@ -139,7 +139,7 @@ function getElementTypeProperty(gmshElmentType::Int64)
     order[29] = 3
     order[92] = 3
     order[36] = 3
-    dim::Dict{Int64, Any} = Dict()
+    dim::Dict{Int64, Int64} = Dict{Int64, Int64}()
     dim[15] = 0
     dim[1] = 1
     dim[8] = 1
@@ -156,7 +156,7 @@ function getElementTypeProperty(gmshElmentType::Int64)
     dim[4] = 3
     dim[11] = 3
     dim[29] = 3
-    noOfElmntNodes::Dict{Int64, Any} = Dict()
+    noOfElmntNodes::Dict{Int64, Int64} = Dict{Int64, Int64}()
     noOfElmntNodes[15] = 1
     noOfElmntNodes[1] = 2
     noOfElmntNodes[8] = 3
@@ -173,6 +173,13 @@ function getElementTypeProperty(gmshElmentType::Int64)
     noOfElmntNodes[4] = 4
     noOfElmntNodes[11] = 10
     noOfElmntNodes[29] = 20
+    return dim, elementType, order, noOfElmntNodes
+end
+    
+
+function getElementTypeProperty(supportedElementData::Tuple, gmshElmentType::Int64)
+    
+    dim, elementType, order, noOfElmntNodes = supportedElementData
     if gmshElmentType ∉ keys(elementType)
         error("The gmsh element type "*string(gmshElmentType)*" is not supported yet")
     end
@@ -181,21 +188,30 @@ function getElementTypeProperty(gmshElmentType::Int64)
 end
 
 
-function getElementData!(Elements::Dict{Any,Any}, readPosition::Int64, meshData::String)
+function getElementData!(Elements::Dict{Tuple{Int64, Int64}, Array{AbstractElement, 1}}, 
+    readPosition::Int64, meshData::String)
+
     noOfElementsString::Array{Char}, readPosition = getNextWord(readPosition, meshData)
     noOfElements::Int64 = parse(Int64, String(noOfElementsString))
     dim0elements::Int64 = 0
     dim1elements::Int64 = 0
     dim2elements::Int64 = 0
     dim3elements::Int64 = 0
+    supportedElementData = initializeSupportedElementData()
     for ElementNo ∈ 1:noOfElements
+
         labelString::Array{Char}, readPosition = getNextWord(readPosition, meshData)
+        
         label::Int64 = parse(Int64, String(labelString))
+        
         elementTypeNoString::Array{Char}, readPosition = getNextWord(readPosition, meshData)
+        
         elementTypeNo::Int64 = parse(Int64, String(elementTypeNoString))
+
         dim::Int64, elementType::String,
         order::Int64, noOfElmntNodes::Int64 =
-        getElementTypeProperty(elementTypeNo)
+        getElementTypeProperty(supportedElementData, elementTypeNo)
+        
         noOfTagsString::Array{Char}, readPosition = getNextWord(readPosition, meshData)
         noOfTags::Int64 = parse(Int64, String(noOfTagsString))
         attributes::Array{Int64, 1} = []
@@ -275,7 +291,9 @@ end
 
 
 function readGmshFile!(gmshFileName::String, attributes::Array{Tuple{Int64, Int64},1},
-    AttributeName::Dict{Any,Any}, Nodes::Dict{Any,Any}, Elements::Dict{Any, Any})
+    AttributeName::Dict{Tuple{Int64, Int64},String}, Nodes::Dict{Int64, Array{Float64, 1}}, 
+    Elements::Dict{Tuple{Int64, Int64}, Array{AbstractElement, 1}})
+
     io::IOStream = open(gmshFileName)
     meshData::String = read(io, String)
     dataLength::Int64 = length(meshData)

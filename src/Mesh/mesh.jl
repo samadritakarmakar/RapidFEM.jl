@@ -28,9 +28,10 @@ mesh files but as of now it only support Gmsh ASCII files of version 2.02
 """
 function readMesh(meshFileName::String)
     attributes::Array{Tuple{Int64, Int64},1} = []
-    AttributeName::Dict{Any,Any} = Dict()
-    Nodes::Dict{Any,Any} = Dict()
-    Elements::Dict{Any, Any} = Dict()
+    AttributeName::Dict{Tuple{Int64, Int64},String} = Dict{Tuple{Int64, Int64},String}()
+    Nodes::Dict{Int64, Array{Float64, 1}} = Dict{Int64, Array{Float64, 1}}()
+    Elements::Dict{Tuple{Int64, Int64}, Array{AbstractElement, 1}}=
+     Dict{Tuple{Int64, Int64}, Array{AbstractElement, 1}}()
     noOfAttrib::Int64 = 0
     noOfNodes::Int64 = 0
     noOfElements::Int64 = 0
