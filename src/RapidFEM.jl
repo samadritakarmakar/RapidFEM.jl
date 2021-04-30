@@ -43,7 +43,7 @@ include("Output/WriteToVTK.jl")
 ##postProcess
     export InvDistInterpolation, voigtToTensor, getSolAtElement
 #From Mesh
-export Mesh, readMesh, getNoOfElements, getCoordArray
+export Mesh, readMesh, getNoOfElements, getCoordArray, updateNodePositions!
 #From Quadrature
 export getQuadrature
 #From ShapeFunction

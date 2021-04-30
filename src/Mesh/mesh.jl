@@ -78,3 +78,14 @@ function getCoordArray(mesh::Mesh,element::AbstractElement)::Array{Float64,2}
     end
     return CoordArray
 end
+
+function updateNodePositions!(mesh::Mesh, changeInPoistion::Array{Float64, 1}, activeDimensions = [1,1,1])
+    nodes = sort(collect(keys(mesh.Nodes)))
+    rangeDim = createDimRange()
+    problemDim = sum(activeDimensions)
+    range = getRange(rangeDim, activeDimensions)
+    for node ∈ nodes
+        mesh.Nodes[node][range] = mesh.Nodes[node][range] + changeInPoistion[problemDim*(node-1)+1:problemDim*node]
+    end
+    return nothing
+end
