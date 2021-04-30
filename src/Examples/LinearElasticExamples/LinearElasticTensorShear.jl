@@ -18,11 +18,12 @@ function LinearElastic()
     FeSpace = RapidFEM.createFeSpace()
     problemDim::Int64 = 3
     volAttrib::Tuple{Int64, Int64} = (3,7)
-    #move_x::Tuple{Int64, Int64} = (2,2) #Force
+    #move_x2::Tuple{Int64, Int64} = (2,2) #Force
     #dirchAttribx::Tuple{Int64, Int64} = (2,1) #Lockx
     dirchAttriby::Tuple{Int64, Int64} = (2,4) #move_y #Completely lock this
     move_x::Tuple{Int64, Int64} = (2,3) #Locky #Move this in Y, lock others
-    #dirchAttribz::Tuple{Int64, Int64} = (2,5) #Lockz
+    move_z2::Tuple{Int64, Int64} = (2,5) #Lockz
+    move_z::Tuple{Int64, Int64} = (2,6) #move_z
     activeDimensions::Array{Int64,1} = [1, 1, 1]
     E::Float64 = 10 #MPa
     ν::Float64 = 0.3
@@ -30,11 +31,16 @@ function LinearElastic()
     K::SparseMatrixCSC = RapidFEM.assembleMatrix((C, ), volAttrib, FeSpace, mesh, local_∇v_C_∇u_Tensor!, problemDim, activeDimensions)
     source(x, varArgs...) = [0.0, 0.0, 0.0]
     f::Vector = RapidFEM.assembleVector(source, volAttrib, FeSpace, mesh, RapidFEM.localSource!, problemDim, activeDimensions)
-    neumann(x; varArgs...) = [1.0, 0.0, 0.0]
-    f += RapidFEM.assembleVector(neumann, move_x, FeSpace, mesh, RapidFEM.localNeumann!, problemDim, activeDimensions)
+    neumann1(x; varArgs...) = [0.0, 0.0, 1.0]
+    f += RapidFEM.assembleVector(neumann1, move_x, FeSpace, mesh, RapidFEM.localNeumann!, problemDim, activeDimensions)
+    neumann2(x; varArgs...) = [0.0, 1.0, 0.0]
+    f += RapidFEM.assembleVector(neumann2, move_z2, FeSpace, mesh, RapidFEM.localNeumann!, problemDim, activeDimensions)
+    neumann3(x; varArgs...) = [0.0, -1.0, 0.0]
+    f += RapidFEM.assembleVector(neumann3, move_z, FeSpace, mesh, RapidFEM.localNeumann!, problemDim, activeDimensions)
     DirichletFunction(x; varArgs...) = zeros(problemDim)
-    K = RapidFEM.applyDirichletBC!(f, K, DirichletFunction, dirchAttriby, mesh, problemDim, [1,1,1])
-    K = RapidFEM.applyDirichletBC!(f, K, DirichletFunction, move_x, mesh, problemDim, [0,1,1])
+    RapidFEM.applyDirichletBC!(f, K, DirichletFunction, dirchAttriby, mesh, problemDim, [1,1,1])
+    #RapidFEM.applyDirichletBC!(f, K, DirichletFunction, move_x, mesh, problemDim, [1,0,0])
+
     println(size(K))
     
     x::Vector = K\f

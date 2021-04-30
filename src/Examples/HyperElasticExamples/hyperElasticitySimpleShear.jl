@@ -4,18 +4,18 @@ include("../hyperElasticLocalAssembly/hyperElastic.jl")
 function hyperElasticity()
     #mesh::Mesh = RapidFEM.readMesh("../../test/OneElmntMsh/HexahedralOrder2.msh")
     #mesh::Mesh = RapidFEM.readMesh("../../test/MeshFiles/cubeTest.msh")
-    mesh::Mesh = RapidFEM.readMesh("../../test/MeshFiles/cube1elmnt.msh")
+    mesh::Mesh = RapidFEM.readMesh("../../test/MeshFiles/cube1elmntTet.msh")
     #mesh::Mesh = RapidFEM.readMesh("../../test/MeshFiles/wedge.msh")
     FeSpace = RapidFEM.createFeSpace()
     problemDim::Int64 = 3
     volAttrib::Tuple{Int64, Int64} = (3,7)
 
-    dirchAttribx::Tuple{Int64, Int64} = (2,1) #Lockx # Move this!!!!
-    dirchAttribx_move::Tuple{Int64, Int64} = (2,2) #moveSurf # Move this!!!!
-    dirchAttriby::Tuple{Int64, Int64} = (2,3) #Locky # Move this!!!!
-    dirchAttriby_lock::Tuple{Int64, Int64} = (2,4) #Move_y #Lock this!!!
-    dirchAttribz::Tuple{Int64, Int64} = (2,5) #locked_z #Lock this!!!
-    dirchAttribz_lock::Tuple{Int64, Int64} = (2,6) #move_z #Lock this!!!
+    dirchAttribx::Tuple{Int64, Int64} = (2,1) #Lockx # Lock this!!!
+    neumannAttribx::Tuple{Int64, Int64} = (2,2) #moveSurf # Move this!!!!
+    #dirchAttriby::Tuple{Int64, Int64} = (2,3) #Locky # Move this!!!!
+    #dirchAttriby_lock::Tuple{Int64, Int64} = (2,4) #Move_y #Lock this!!!
+    #dirchAttribz::Tuple{Int64, Int64} = (2,5) #locked_z #Lock this!!!
+    #dirchAttribz_lock::Tuple{Int64, Int64} = (2,6) #move_z #Lock this!!!
     activeDimensions::Array{Int64,1} = [1, 1, 1]
     E::Float64 = 10.0 #MPa
     ν::Float64 = 0.3
@@ -27,8 +27,14 @@ function hyperElasticity()
     println("λ = ", λ, " μ = ", μ)
 
 
-    Dx = 0.5
-    noOfSteps = 5
+    Fx::Float64 = 0.0
+    Fy::Float64 = 0.0
+    Fz::Float64 = 0.0
+
+    Fx_max::Float64 = 0.0
+    Fy_max::Float64 = 1.0
+    Fz_max::Float64 = 0.0
+    noOfSteps = 1
 
     b = [0.0, 0.0, 0.0]
     γ = zeros(noOfSteps)
@@ -50,6 +56,11 @@ function hyperElasticity()
          volAttrib, FeSpace, mesh, localReferenceSource!, problemDim, activeDimensions)
         #println("Fx = ", Fx)
 
+        
+        neumann(x; varArgs ...) = [Fx, Fy, Fz]
+        f -= RapidFEM.assembleVector!((neumann, initSoln), neumannAttribx, FeSpace,
+        mesh, localReferenceNeumann!, problemDim, activeDimensions)
+
         hyperElasticParameters = (hyperModel, modelParams, initSoln)
          fσ::Array{Float64,1} = RapidFEM.assembleVector!(hyperElasticParameters,
          volAttrib, FeSpace, mesh, local_δE_S_Vector!, problemDim, activeDimensions)
@@ -58,16 +69,8 @@ function hyperElasticity()
          f+= fσ
          RapidFEM.applyNLDirichletBC_on_f!(f, dirchAttribx, mesh,
          problemDim, [1,1,1])
-         RapidFEM.applyNLDirichletBC_on_f!(f, dirchAttribx_move, mesh,
-         problemDim, [1,1,1])
-         RapidFEM.applyNLDirichletBC_on_f!(f, dirchAttriby, mesh,
-         problemDim, [1,1,1])
-         RapidFEM.applyNLDirichletBC_on_f!(f, dirchAttriby_lock,
-         mesh, problemDim, [1, 1, 1])
-         RapidFEM.applyNLDirichletBC_on_f!(f, dirchAttribz,
-         mesh, problemDim, [0, 0, 1])
-         RapidFEM.applyNLDirichletBC_on_f!(f, dirchAttribz_lock,
-         mesh, problemDim, [0, 0, 1])
+         RapidFEM.applyNLDirichletBC_on_f!(f, neumannAttribx, mesh,
+         problemDim, [1,0,1])
         elasped = time() - start
         #println("Time for vector Assembly = ", elasped)
         return f
@@ -79,18 +82,10 @@ function hyperElasticity()
          J::SparseMatrixCSC = RapidFEM.assembleMatrix!(hyperElasticParameters,
          volAttrib, FeSpace, mesh, local_δE_Cᵀ_ΔE!, problemDim, activeDimensions)
 
-        J = RapidFEM.applyNLDirichletBC_on_J!(J, dirchAttribx,
+        RapidFEM.applyNLDirichletBC_on_J!(J, dirchAttribx,
         mesh, problemDim, [1, 1, 1])
-        J = RapidFEM.applyNLDirichletBC_on_J!(J, dirchAttribx_move,
-        mesh, problemDim, [1, 1, 1])
-        J = RapidFEM.applyNLDirichletBC_on_J!(J, dirchAttriby,
-        mesh, problemDim, [1, 1, 1])
-        J = RapidFEM.applyNLDirichletBC_on_J!(J, dirchAttriby_lock,
-        mesh, problemDim, [1, 1, 1])
-        J = RapidFEM.applyNLDirichletBC_on_J!(J, dirchAttribz,
-        mesh, problemDim, [0, 0, 1])
-        J = RapidFEM.applyNLDirichletBC_on_J!(J, dirchAttribz_lock,
-        mesh, problemDim, [0, 0, 1])
+        RapidFEM.applyNLDirichletBC_on_J!(J, neumannAttribx,
+        mesh, problemDim, [1, 0, 1])
         elasped = time() - start
         #println("J = ", Matrix(J))
         #println("Time for Matrix Assembly = ", elasped)
@@ -102,23 +97,16 @@ function hyperElasticity()
     for i ∈ 1:noOfSteps
 
         γ[i] = (i/noOfSteps)#^0.45
+        Fx = γ[i]*Fx_max
+        Fy = γ[i]*Fy_max
+        Fz = γ[i]*Fz_max
 
-        println("i = ", i, " Dx = ", Dx)
-        DirichletFunction_x(x; varArgs...) = [γ[i]*x[2]*Dx, 0.0, 0.0]
-        DirichletFunction_Top(x; varArgs...) = [γ[i]*Dx, 0.0, 0.0]
+        println("Fx = ", Fx, " Fy = ", Fy, " Fz =", Fz)
 
-        RapidFEM.applyNLDirichletBC_on_Soln!(initSoln, DirichletFunction_x,
+        RapidFEM.applyNLDirichletBC_on_Soln!(initSoln, DirichletFunction1,
         dirchAttribx, mesh, problemDim, [1,1,1])
-        RapidFEM.applyNLDirichletBC_on_Soln!(initSoln, DirichletFunction_x,
-        dirchAttribx_move, mesh, problemDim, [1,1,1])
-        RapidFEM.applyNLDirichletBC_on_Soln!(initSoln, DirichletFunction_Top,
-        dirchAttriby, mesh, problemDim, [1,1,1])
         RapidFEM.applyNLDirichletBC_on_Soln!(initSoln, DirichletFunction1,
-        dirchAttriby_lock, mesh, problemDim, [1,1,1])
-        RapidFEM.applyNLDirichletBC_on_Soln!(initSoln, DirichletFunction1,
-        dirchAttribz, mesh, problemDim, [0,0,1])
-        RapidFEM.applyNLDirichletBC_on_Soln!(initSoln, DirichletFunction1,
-        dirchAttribz_lock, mesh, problemDim, [0,0,1])
+        neumannAttribx, mesh, problemDim, [1,0,1])
 
          #initSoln, convergenceData = RapidFEM.simpleNLsolve(assemble_f, assemble_J, initSoln;
         #    xtol = 1e-11, ftol = 1.e-5, relTol= 1e-8, iterations = 100, skipJacobian = 1 , printConvergence = true)

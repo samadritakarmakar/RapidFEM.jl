@@ -1,6 +1,6 @@
 using RapidFEM, SparseArrays, WriteVTK, FEMSparse
 
-meshFile = "../../test/MeshFiles/cubeFullDirichletR1O1.msh"
+meshFile = "../../test/MeshFiles/cubeFullDirichletR3O1.msh"
 
 #actualSolution(x) = return [sum(x.^2)+x[1]*x[2]*x[3]]
 actualSolution(x) = [sum(sin.(x))]

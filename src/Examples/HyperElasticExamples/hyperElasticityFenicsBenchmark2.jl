@@ -11,7 +11,7 @@ function hyperElasticity()
     volAttrib::Tuple{Int64, Int64} = (3,4)
     neumAttrib::Tuple{Int64, Int64} = (2,2) #Force
     dirchAttrib1::Tuple{Int64, Int64} = (2,1) #Lock
-    #dirchAttrib2::Tuple{Int64, Int64} = (2,2) #move
+    dirchAttrib2::Tuple{Int64, Int64} = (2,3) #sides
     activeDimensions::Array{Int64,1} = [1, 1, 1]
     E::Float64 = 10.0 #MPa
     ν::Float64 = 0.3
@@ -68,7 +68,7 @@ function hyperElasticity()
         end
 
         #println("initSoln = ", initSoln)
-         f -= RapidFEM.assembleVector((neumann, initSoln), neumAttrib, FeSpace,
+         f -= RapidFEM.assembleVector!((neumann, initSoln), neumAttrib, FeSpace,
         mesh, localReferenceNeumann!, problemDim, activeDimensions)
         #println("external = ", f)
 
@@ -79,6 +79,7 @@ function hyperElasticity()
 
          f+= fσ
         RapidFEM.applyNLDirichletBC_on_f!(f, dirchAttrib1, mesh, problemDim)
+        #RapidFEM.applyNLDirichletBC_on_f!(f, dirchAttrib2, mesh, problemDim, [0, 1, 1])
         #println("f =", f)
         elasped = time() - start
         #println("Time for vector Assembly = ", elasped)
@@ -91,7 +92,8 @@ function hyperElasticity()
          J::SparseMatrixCSC = RapidFEM.assembleMatrix!(hyperElasticParameters, volAttrib, FeSpace,
         mesh, local_δE_Cᵀ_ΔE!, problemDim, activeDimensions)
 
-         J = RapidFEM.applyNLDirichletBC_on_J!(J, dirchAttrib1, mesh, problemDim)
+        RapidFEM.applyNLDirichletBC_on_J!(J, dirchAttrib1, mesh, problemDim)
+        #RapidFEM.applyNLDirichletBC_on_J!(J, dirchAttrib2, mesh, problemDim, [0, 1, 1])
         #println("J =", Matrix(J))
         elasped = time() - start
         #println("Time for Matrix Assembly = ", elasped)
@@ -113,6 +115,7 @@ function hyperElasticity()
         println("i = ", i, " Fx = ", Fx, " Fy = ", Fy, " Fz = ", Fz)
 
         RapidFEM.applyNLDirichletBC_on_Soln!(initSoln, DirichletFunction1, dirchAttrib1, mesh, problemDim)
+        #RapidFEM.applyNLDirichletBC_on_Soln!(initSoln, DirichletFunction1, dirchAttrib2, mesh, problemDim, [0, 1, 1])
 
         #initSoln, convergenceData = RapidFEM.simpleNLsolve(assemble_f, assemble_J, initSoln;
         #    xtol = 1e-11, ftol = 1.e-5, relTol= 1e-8, iterations = 100, skipJacobian = 1 , printConvergence = true)

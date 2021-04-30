@@ -22,21 +22,10 @@ function LinearElastic()
     dirchAttrib::Tuple{Int64, Int64} = (2,1) #Lock
     activeDimensions::Array{Int64,1} = [1, 1, 1]
     E::Float64 = 1 #MPa
-    ν::Float64 = 0.3
+    ν::Float64 = 0.0
     C = createElasticTensor(E, ν)
     K::SparseMatrixCSC = RapidFEM.assembleMatrix!((C, ), volAttrib, FeSpace, mesh, local_∇v_C_∇u_Tensor!, problemDim, activeDimensions)
-    #println(Matrix(K))
     stiffStringArray = string.(Matrix(K))
-    writeData = ""
-    for i ∈ 1:size(stiffStringArray,1)
-      for j ∈ 1:size(stiffStringArray,2)
-        writeData = writeData*stiffStringArray[i,j]*"  "
-      end
-      writeData = writeData*"\n"
-    end
-    file = open("stiffness", "w")
-    write(file, writeData)
-    close(file)
     source(x, varArgs...) = [0.0, 0.0, 0.0]
     f::Vector = RapidFEM.assembleVector!(source, volAttrib, FeSpace, mesh, RapidFEM.localSource!, problemDim, activeDimensions)
     neumann(x; varArgs...) = [0.0, 0.0, 0.0]
@@ -51,7 +40,7 @@ function LinearElastic()
     end
     RapidFEM.applyDirichletBC!(f, K, DirichletFunction2, (0,6), mesh, problemDim)
     x::Vector = K\f
-    println(x)
+    #println(x)
     #x = cg(K,f)
     σ::Array{Float64,1} = RapidFEM.InvDistInterpolation([gaussianStress],
     x, [(C,)],  FeSpace, mesh,  [volAttrib],
@@ -63,5 +52,5 @@ function LinearElastic()
     vtkMeshData::VTKMeshData = RapidFEM.InitializeVTK("LinearElasticR0O1", mesh, [volAttrib], problemDim)
     RapidFEM.vtkDataAdd!(vtkMeshData, (x, σ, ϵ), ("Displacement", "Stress","Strain"))
     RapidFEM.vtkSave(vtkMeshData)
-    return nothing
+    return K2
 end
