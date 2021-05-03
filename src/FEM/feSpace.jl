@@ -149,6 +149,12 @@ end
 function getFunction_dS(element::LineElement)::Function
     return get_dL
 end
+
+function getFunction_dS(element::AbstractElement)::Function
+    foo_surface(∂x_∂ξ::Array{Float64}, ipData::IpPoint) = 
+    error("Surface Integral for this element does not exist!")
+    return foo_surface
+end
 """This function returns the dL for integrating over a line in the boundary
 
     dLFunc::Function = getFunction_dL(element)
