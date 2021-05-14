@@ -67,5 +67,5 @@ export get_SSpj_A_meanU_f, SSpj_getFinal_A_b, updateSolution!, update_f!
 #    export local_∇v_Cᵀ_∇u!, local_∇v_σ_Vector!, j2Model, initParams_j2
 #    export updateStateDict4rmBuffer
 #From WriteToVTK
-    export VTKMeshData, InitializeVTK, vtkSave, vtkDataAdd!
+    export VTKMeshData, InitializeVTK, vtkSave, vtkDataAdd!, createVTKFile
 end # module
