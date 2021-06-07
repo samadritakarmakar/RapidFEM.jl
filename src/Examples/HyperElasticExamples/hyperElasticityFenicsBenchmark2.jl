@@ -25,8 +25,8 @@ function hyperElasticity()
     Fz::Float64 = 0.0
 
     Fx_max::Float64 = 0.0
-    Fy_max::Float64 = 0.5
-    Fz_max::Float64 = 0.5
+    Fy_max::Float64 = 5.0
+    Fz_max::Float64 = 5.0
 
     disp_max(X) = begin
         x, y, z = X
@@ -36,7 +36,7 @@ function hyperElasticity()
         L/2 - y + (y-L/2)*cos(θ) - (z-L/2)*sin(θ),
         L/2 - z + (y-L/2)*sin(θ) + (z-L/2)*cos(θ)]
     end
-    noOfSteps = 1
+    noOfSteps = 10
 
     b_max = [0.0, 0.0, 0.0]
 

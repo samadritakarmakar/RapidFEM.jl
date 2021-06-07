@@ -32,7 +32,7 @@ function LinearElastic()
     K = RapidFEM.applyDirichletBC!(f, K, DirichletFunction, dirchAttrib, mesh, problemDim)
     println(size(K))
     x::Vector = K\f
-    println(x)
+    #println(x)
     #x = cg(K,f)
     σTemp::Array{Float64,1} = RapidFEM.InvDistInterpolation([RapidFEM.gaussianStress],
     x, [(tensorMap, C)],  FeSpace, mesh,  [volAttrib],

@@ -12,11 +12,11 @@ it's properties."""
 mutable struct Mesh
     noOfAttrib::Int64
     attributes::Array{Tuple{Int64, Int64},1}
-    AttributeName::Dict{Any, Any}
+    AttributeName::Dict{Tuple{Int64, Int64},String}
     noOfNodes::Int64
-    Nodes::Dict{Any,Any}
+    Nodes::Dict{Int64, Array{Float64, 1}}
     noOfElements::Int64
-    Elements::Dict{Any,Any}
+    Elements::Dict{Tuple{Int64, Int64}, Array{AbstractElement, 1}}
     meshSoftware::String
 end
 
