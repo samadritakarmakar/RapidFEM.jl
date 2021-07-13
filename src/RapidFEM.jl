@@ -35,6 +35,7 @@ include("Output/WriteToVTK.jl")
     export applyDirichletBC!, applyDynamicDirichletBC!
     export applyNLDirichletBC_on_J!, applyNLDirichletBC_on_Soln!
     export applyNLDirichletBC_on_f!
+    export getUniqueNodes
 ##assembly
     export assembleVector, assembleMatrix, assembleScalar
     export assembleVector!, assembleMatrix!, assembleScalar!
