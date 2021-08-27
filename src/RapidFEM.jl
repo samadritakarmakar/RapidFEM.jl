@@ -25,6 +25,8 @@ include("Models/linearElasticity.jl")
 include("Models/convectionFluid.jl")
 #include("Models/smallStrainPlasticity.jl")
 include("Output/WriteToVTK.jl")
+include("Output/WriteToMesh.jl")
+
 
 
 #From FEM
@@ -69,4 +71,6 @@ export get_SSpj_A_meanU_f, SSpj_getFinal_A_b, updateSolution!, update_f!
 #    export updateStateDict4rmBuffer
 #From WriteToVTK
     export VTKMeshData, InitializeVTK, vtkSave, vtkDataAdd!, createVTKFile
+#From WriteToMesh
+    export getGmshElementTypeNo, writeMesh
 end # module
