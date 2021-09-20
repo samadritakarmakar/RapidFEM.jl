@@ -4,7 +4,7 @@ function addGmshPhysicalNames!(returnChar::Array{Char, 1}, mesh::RapidFEM.Mesh)
     append!(returnChar, collect(string(length(keys(attribNames)))*"\n"))
     attribString = ""
     for attrib ∈ sort!(collect(keys(attribNames)))
-        attribString *= string(attrib[2])*""" """*string(attrib[2])*""" """*"\""*string(attribNames[attrib])*"\""*"\n"
+        attribString *= string(attrib[1])*""" """*string(attrib[2])*""" """*"\""*string(attribNames[attrib])*"\""*"\n"
     end
     append!(returnChar, attribString)
     append!(returnChar, collect("\$EndPhysicalNames\n"))
@@ -85,9 +85,10 @@ function addGmshElements!(returnChar::Array{Char, 1}, mesh::RapidFEM.Mesh)
         for element ∈ mesh.Elements[attrib...]
             append!(returnChar, collect("$elNo $(getGmshElementTypeNo(element))"))
             append!(returnChar, collect(" $(length(attrib))"))
-            for attribPart ∈ attrib
-                append!(returnChar, collect(" $attribPart"))
-            end
+            #for attribPart ∈ attrib
+            #    append!(returnChar, collect(" $attribPart"))
+            #end
+            append!(returnChar, collect("$(attrib[2]) $(attrib[2])"))
             for nodeTag ∈ element.nodeTags
                 append!(returnChar, collect(" $nodeTag"))
             end
