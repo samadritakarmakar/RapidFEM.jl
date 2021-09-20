@@ -4,7 +4,7 @@ function addGmshPhysicalNames!(returnChar::Array{Char, 1}, mesh::RapidFEM.Mesh)
     append!(returnChar, collect(string(length(keys(attribNames)))*"\n"))
     attribString = ""
     for attrib ∈ sort!(collect(keys(attribNames)))
-        attribString *= string(attrib[1])*""" """*string(attrib[2])*""" """*"\""*string(attribNames[attrib])*"\""*"\n"
+        attribString *= string(attrib[2])*""" """*string(attrib[2])*""" """*"\""*string(attribNames[attrib])*"\""*"\n"
     end
     append!(returnChar, attribString)
     append!(returnChar, collect("\$EndPhysicalNames\n"))
