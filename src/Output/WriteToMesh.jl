@@ -88,7 +88,7 @@ function addGmshElements!(returnChar::Array{Char, 1}, mesh::RapidFEM.Mesh)
             #for attribPart ∈ attrib
             #    append!(returnChar, collect(" $attribPart"))
             #end
-            append!(returnChar, collect("$(attrib[2]) $(attrib[2])"))
+            append!(returnChar, collect(" $(attrib[2]) $(attrib[2])"))
             for nodeTag ∈ element.nodeTags
                 append!(returnChar, collect(" $nodeTag"))
             end
