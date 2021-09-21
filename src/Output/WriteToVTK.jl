@@ -89,8 +89,52 @@ function InitializeVTK_Collection(fileName::String)::WriteVTK.CollectionFile
     return WriteVTK.paraview_collection(fileName)
 end
 
-function InitializeVTK(fileName::String, mesh::Mesh, attributeArray::Array{Tuple{Int64, Int64},1}, problemDim::Int64)::VTKMeshData
+function getAllAttribLengths(mesh::Mesh, attributeArray::Array{Tuple{Int64, Int64},1})
     endElementNo::Array{Int64,1} = Array{Int64,1}(undef, length(attributeArray))
+    attributeNo::Int64 = 1
+
+    lastElement::Int64 = 0
+    for attribute ∈ attributeArray
+        endElementNo[attributeNo] = length(mesh.Elements[attribute...])
+        attributeNo += 1
+    end
+    return endElementNo
+end
+
+function getVtkCells(mesh::Mesh, attributeArray::Array{Tuple{Int64, Int64},1}, endElementNo::Array{Int64,1})
+    cells::Array{MeshCell,1} = Array{MeshCell,1}(undef, sum(endElementNo))
+     nodeTagDict::Dict{Tuple{DataType, Int64, String}, Array{Int64}} = getNodeTagDict()
+     elementNo::Int64 = 1
+     attributeNo = 1
+     lastElement::Int64 = 0
+    for attribute ∈ attributeArray
+        Threads.@threads for elementNo ∈ 1:endElementNo[attributeNo]
+            element::AbstractElement = mesh.Elements[attribute...][elementNo]
+            tagArray::Array{Int64,1} = nodeTagDict[typeof(element), element.order, mesh.meshSoftware]
+            addCell!(cells, element, tagArray, lastElement+elementNo)
+        end
+        lastElement = endElementNo[attributeNo]
+        attributeNo += 1
+    end
+    return cells
+end
+
+function getVTKPointData(mesh::Mesh)
+    Nodes = mesh.Nodes
+    noOfNodes::Int64 = mesh.noOfNodes
+    pointData::Array{Float64, 2} = Array{Float64, 2}(undef, 3, noOfNodes)
+    Threads.@threads for nodeNo ∈ 1:noOfNodes
+        pointData[1:3, nodeNo] = Nodes[nodeNo]'
+    end
+    return pointData
+end
+
+function InitializeVTK(fileName::String, mesh::Mesh, attributeArray::Array{Tuple{Int64, Int64},1}, problemDim::Int64)::VTKMeshData
+
+    endElementNo = getAllAttribLengths(mesh, attributeArray)
+    cells = getVtkCells(mesh, attributeArray, endElementNo)
+    pointData = getVTKPointData(mesh)
+    #=endElementNo::Array{Int64,1} = Array{Int64,1}(undef, length(attributeArray))
     attributeNo::Int64 = 1
 
     lastElement::Int64 = 0
@@ -111,12 +155,12 @@ function InitializeVTK(fileName::String, mesh::Mesh, attributeArray::Array{Tuple
         lastElement = endElementNo[attributeNo]
         attributeNo += 1
     end
-    Nodes::Dict{Any,Any} = mesh.Nodes
+    Nodes = mesh.Nodes
     noOfNodes::Int64 = mesh.noOfNodes
     pointData::Array{Float64, 2} = Array{Float64, 2}(undef, 3, noOfNodes)
     Threads.@threads for nodeNo ∈ 1:noOfNodes
         pointData[1:3, nodeNo] = Nodes[nodeNo]'
-    end
+    end=#
     return VTKMeshData(fileName, mesh, pointData, cells, InitializeVTK_Collection(fileName*"/"*fileName))
 end
 
@@ -144,3 +188,15 @@ function vtkDataAdd!(vtkMeshData::VTKMeshData, dataTuple::T1, dataNameTuple::T2,
     vtkMeshData.vtkCollectionFile[time] = vtkFile
     return nothing
 end
+
+function vtkDataAdd!(mesh::Mesh, vtkMeshData::VTKMeshData, dataTuple::T1, dataNameTuple::T2, time::Float64 = 0.0, step::Int64=1) where {T1, T2}
+
+    endElementNo = getAllAttribLengths(mesh, attributeArray)
+    cells = getVtkCells(mesh, attributeArray, endElementNo)
+    pointData = getVTKPointData(mesh)
+    vtkMeshData.cells = cells
+    vtkMeshData.pointData = pointData
+    vtkMeshData.mesh = mesh
+    vtkDataAdd!(vtkMeshData, dataTuple, dataNameTuple, time, step)
+    return nothing
+end   
