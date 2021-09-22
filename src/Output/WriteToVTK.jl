@@ -189,7 +189,7 @@ function vtkDataAdd!(vtkMeshData::VTKMeshData, dataTuple::T1, dataNameTuple::T2,
     return nothing
 end
 
-function vtkDataAdd!(mesh::Mesh, vtkMeshData::VTKMeshData, dataTuple::T1, dataNameTuple::T2, time::Float64 = 0.0, step::Int64=1) where {T1, T2}
+function vtkDataAdd!(mesh::Mesh,  attributeArray::Array{Tuple{Int64, Int64},1}, vtkMeshData::VTKMeshData, dataTuple::T1, dataNameTuple::T2, time::Float64 = 0.0, step::Int64=1) where {T1, T2}
 
     endElementNo = getAllAttribLengths(mesh, attributeArray)
     cells = getVtkCells(mesh, attributeArray, endElementNo)

@@ -52,5 +52,5 @@ function LinearElastic()
     vtkMeshData::VTKMeshData = RapidFEM.InitializeVTK("LinearElasticR0O1", mesh, [volAttrib], problemDim)
     RapidFEM.vtkDataAdd!(vtkMeshData, (x, σ, ϵ), ("Displacement", "Stress","Strain"))
     RapidFEM.vtkSave(vtkMeshData)
-    return K2
+    #return K2
 end
