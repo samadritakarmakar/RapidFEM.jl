@@ -10,6 +10,9 @@ __precompile__()
 module RapidFEM
 using FEMSparse, FastGaussQuadrature, SparseArrays, LinearAlgebra, WriteVTK
 include("FEM/elements.jl")
+include("Mesh/mesh.jl")
+include("Quadrature/quadrature.jl")
+include("ShapeFunctions/langrange.jl")
 include("ShapeFunctions/shapeFunction.jl")
 include("FEM/boundaryCondition.jl")
 include("FEM/assembly.jl")
@@ -30,7 +33,7 @@ include("Output/WriteToMesh.jl")
 
 
 #From FEM
-    export AbstractElement, LineElement, TriElement, QuadElement, TetElement,HexElement, shapeFunction, ipPoint
+    export AbstractElement, LineElement, TriElement, QuadElement, TetElement, HexElement, PointElement, shapeFunction, ipPoint
 ##feSpace
     export createFeSpace, feSpace!, lagrange, get_∂x_∂ξ, getFunction_dΩ, getFunction_dS, getFunction_dL, getFunction_∂ξ_∂x, getInterpolated_x, getNodes, getVectorNodes
 ##boundaryCondition
@@ -46,7 +49,10 @@ include("Output/WriteToMesh.jl")
 ##postProcess
     export InvDistInterpolation, voigtToTensor, getSolAtElement
 #From Mesh
-export Mesh, readMesh, getNoOfElements, getCoordArray, updateNodePositions!
+    #mesh.jl
+    export Mesh, readMesh, getNoOfElements, getCoordArray, updateNodePositions!
+    #aspectRatio.jl
+    export getAspectRatioOfElement, getAspectRatios
 #From Quadrature
 export getQuadrature
 #From ShapeFunction
