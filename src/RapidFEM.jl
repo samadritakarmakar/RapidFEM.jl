@@ -11,6 +11,7 @@ module RapidFEM
 using FEMSparse, FastGaussQuadrature, SparseArrays, LinearAlgebra, WriteVTK
 include("FEM/elements.jl")
 include("Mesh/mesh.jl")
+include("Mesh/aspectRatio.jl")
 include("Quadrature/quadrature.jl")
 include("ShapeFunctions/langrange.jl")
 include("ShapeFunctions/shapeFunction.jl")
