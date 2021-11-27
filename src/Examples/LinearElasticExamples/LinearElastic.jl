@@ -11,7 +11,7 @@ LinearAlgebra.BLAS.set_num_threads(Threads.nthreads())
 
 function LinearElastic()
     #mesh::Mesh = RapidFEM.readMesh("../../test/MeshFiles/Bar.msh")
-    mesh::Mesh = RapidFEM.readMesh("../../test/MeshFiles/BarNew1_R2_O2.msh")
+    mesh::Mesh = RapidFEM.readMesh("../../test/MeshFiles/BarO1.msh")
     
     #mesh::Mesh = RapidFEM.readMesh("../../test/MeshFiles/cubeTestO1.msh")
     #mesh::Mesh = RapidFEM.readMesh("../../test/MeshFiles/cubeTestPntO1.msh")
@@ -38,7 +38,7 @@ function LinearElastic()
     #x = cg(K,f)
     σTemp::Array{Float64,1} = RapidFEM.InvDistInterpolation([RapidFEM.gaussianStress],
     x, [(tensorMap, C)],  FeSpace, mesh,  [volAttrib],
-    problemDim, activeDimensions, kwargs=0)
+    problemDim, activeDimensions)
     σ::Array{Float64,1} = RapidFEM.voigtToTensor(σTemp, mesh)
     vtkMeshData::VTKMeshData = RapidFEM.InitializeVTK("LinearElastic",mesh, [volAttrib], problemDim)
     RapidFEM.vtkDataAdd!(vtkMeshData, (x, σ), ("Displacement", "Stress"))

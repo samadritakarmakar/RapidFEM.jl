@@ -54,8 +54,10 @@ the hessians at all the given integration points for that order of the element.
 
     calculateShapeFunctions(element, elementFunction, meshSoftware, reduction = 0)
 """
-function calculateShapeFunctions(element::T, elementFunction::Function, meshSoftware::String, reduction::Int64 = 0)::Array{ShapeFunction} where {T<:AbstractElement}
-    w::Array{Float64}, ip::Array{Float64} = getQuadrature(element, reduction)
+function calculateShapeFunctions(element::T, meshSoftware::String; elementFunction::Function = lagrange, 
+    reduction::Int64 = 0, quadrature::Function = gauss) where {T<:AbstractElement}
+
+    w::Array{Float64}, ip::Array{Float64} = quadrature(element, reduction = reduction)
     shapeFunctionAtIp::Array{ShapeFunction} = []
     N::Function = elementFunction(element, meshSoftware)
     for ipNo ∈ 1:length(w)

@@ -24,11 +24,11 @@ If not generated, the a new set of shape functions are generated and returned to
 
     shapeFunction::Array{ShapeFunction,1} = feSpace!(FeSpaceThreaded[currentThread], element, mesh, reduction = 0, elementFunction=lagrange)
 """
-function feSpace!(FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}}, element::AbstractElement, mesh::Mesh, reduction::Int64 = 0, elementFunction::Function=lagrange)::Array{ShapeFunction}
+function feSpace!(FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}}, element::AbstractElement, mesh::Mesh; reduction::Int64 = 0, elementFunction::Function=lagrange, quadrature::Function = gauss)::Array{ShapeFunction}
     #element::AbstractElement = mesh.Elements[attribute][elementNo]
     typeOfElement::DataType = typeof(element)
     if (typeOfElement, element.order, elementFunction) ∉ keys(FeSpace)
-        FeSpace[typeOfElement, element.order, elementFunction] = calculateShapeFunctions(element, elementFunction, mesh.meshSoftware, reduction)
+        FeSpace[typeOfElement, element.order, elementFunction] = calculateShapeFunctions(element, mesh.meshSoftware; elementFunction = elementFunction, reduction = reduction, quadrature = quadrature)
     end
     return FeSpace[typeOfElement, element.order, elementFunction]
 end

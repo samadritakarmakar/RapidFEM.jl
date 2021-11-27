@@ -15,9 +15,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 =#
 
-#Edited by Samadrita Karmakar samadritakarmakar@gmail.com 08/07/2020
+#Edited by Samadrita Karmakar samadritakarmakar@gmail.com 08/07/2020, 27/11/2021
 
-function getQuadratureTri(order::Int)
+function gaussTri(order::Int)
     n::Int64 = order
     if (n == 1)
     xw=[0.3333333333333333 0.3333333333333333 1.00000000000000 / 2.0];

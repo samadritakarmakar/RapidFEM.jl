@@ -55,7 +55,7 @@ include("Output/WriteToMesh.jl")
     #aspectRatio.jl
     export getAspectRatioOfElement, getAspectRatios
 #From Quadrature
-export getQuadrature
+export gauss
 #From ShapeFunction
 export IpPoint, ShapeFunction, calculateShapeFunctions
 #From NonLinear

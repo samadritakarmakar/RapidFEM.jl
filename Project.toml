@@ -1,7 +1,7 @@
 name = "RapidFEM"
 uuid = "845bbcf8-0925-49a4-8eb3-5fd4eb0a75d5"
 authors = ["sam "]
-version = "0.2.2"
+version = "0.3.2"
 
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"

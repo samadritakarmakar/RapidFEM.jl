@@ -17,7 +17,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 
 
-function getQuadratureTet(order::Int)
+function gaussTet(order::Int)
     n::Int64 = order
     if n == 1
         a = 1. / 4.

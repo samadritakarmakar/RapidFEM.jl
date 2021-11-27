@@ -99,7 +99,7 @@ See src/Examples/LinearElastic2Material.jl example.
 function InvDistInterpolation(postProcessFunctionArray::Array{func, 1}, sol::Array{Float64,1},
     parametersDataArray::Array{T, 1},  FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}},
     mesh::Mesh,  attributeArray::Array{Tuple{Int64, Int64},1}, problemDim::Int64,
-    activeDimensions::Array{Int64,1}=[1, 1, 1], pow::Float64=14.0, reduction::Int64 = 0, elementFunction = lagrange; varArgs...) where {func, T}
+    activeDimensions::Array{Int64,1}=[1, 1, 1], varArgs...; pow::Float64=14.0, reduction::Int64 = 0, elementFunction = lagrange, quadrature = gauss) where {func, T}
     @assert length(postProcessFunctionArray)==length(attributeArray) "Length of postProcessFunctionArray should be equal to attributeArray."
     @assert length(parametersDataArray)==length(attributeArray) "Length of parametersDataArray should be equal to attributeArray."
     f::Array{Float64,1} = []
@@ -116,7 +116,8 @@ function InvDistInterpolation(postProcessFunctionArray::Array{func, 1}, sol::Arr
             solAtNodes::Array{Float64, 1} = getSolAtElement(sol, element, problemDim)
             coordArrayTemp::Array{Float64,2} = getCoordArray(mesh, element)
             coordArray::Array{Float64,2} = coordArrayTemp[dimRange,:]
-            shapeFunction::Array{ShapeFunction,1} = feSpace!(FeSpace, element, mesh, reduction, elementFunction)
+            shapeFunction::Array{ShapeFunction,1} = feSpace!(FeSpace, element, mesh, reduction = reduction, 
+            elementFunction = elementFunction, quadrature = quadrature)
             InvDists::Array{Array{Float64,1},1} = findInvDistances(coordArray, shapeFunction, pow)
             f_g::Array{Array{Float64,1},1} = postProcessFunction(parametersData,
             solAtNodes, problemDim, element, elementNo, shapeFunction, coordArray; varArgs...)
