@@ -37,6 +37,7 @@ include("Output/WriteToMesh.jl")
     export AbstractElement, LineElement, TriElement, QuadElement, TetElement, HexElement, PointElement, shapeFunction, ipPoint
 ##feSpace
     export createFeSpace, feSpace!, lagrange, get_∂x_∂ξ, getFunction_dΩ, getFunction_dS, getFunction_dL, getFunction_∂ξ_∂x, getInterpolated_x, getNodes, getVectorNodes
+    export get_dΩ, get_∂ξ_∂x, get_dS, get_dL, get_∂ϕ_∂x, get_ϕ, getNoOfElementNodes, getNoOfElementIpPoints
 ##boundaryCondition
     export applyDirichletBC!, applyDynamicDirichletBC!
     export applyNLDirichletBC_on_J!, applyNLDirichletBC_on_Soln!

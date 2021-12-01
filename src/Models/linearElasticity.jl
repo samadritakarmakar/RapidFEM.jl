@@ -43,22 +43,14 @@ function local_∇v_C_∇u!(K::Array{Float64,2},
     coordArray::Array{Float64,2}; kwargs4function...)
     mapDict::Dict{Int64, Int64} = tensorMapN_ElasticTensor[1]
     C::Array{Float64, 2} = tensorMapN_ElasticTensor[2]
-    ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
-    dΩFunc::Function = getFunction_dΩ(element)
-    noOfIpPoints::Int64 = length(shapeFunction)
-    noOfNodes::Int64 = size(shapeFunction[1].∂ϕ_∂ξ,1)
-    ∂x_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[1].∂ϕ_∂ξ)
-    ∂ξ_dx::Array{Float64,2} = ∂ξ_∂xFunc(∂x_∂ξ)
-    x::Array{Float64, 1} = getInterpolated_x(coordArray, shapeFunction[1].ϕ)
-    dΩ::Float64 = dΩFunc(∂x_∂ξ, shapeFunction[1].ipData)
-    ∂ϕ_∂x::Array{Float64} = shapeFunction[1].∂ϕ_∂ξ*∂ξ_dx
-    #K::Array{Float64,2} = zeros(noOfNodes*problemDim, noOfNodes*problemDim)
+    
+    noOfIpPoints::Int64 = getNoOfElementIpPoints(shapeFunction)
+    noOfNodes::Int64 = getNoOfElementNodes(shapeFunction)
     for ipNo::Int64 ∈ 1:noOfIpPoints
-        ∂x_∂ξ = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
-        ∂ξ_dx = ∂ξ_∂xFunc(∂x_∂ξ)
-        x = getInterpolated_x(coordArray, shapeFunction[ipNo].ϕ)
-        dΩ = dΩFunc(∂x_∂ξ, shapeFunction[ipNo].ipData)
-        ∂ϕ_∂x .= shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dx
+        ∂x_∂ξ = get_∂x_∂ξ(coordArray, shapeFunction, ipNo)
+        x = getInterpolated_x(coordArray, shapeFunction, ipNo)
+        dΩ = get_dΩ(element, ∂x_∂ξ, shapeFunction, ipNo)
+        ∂ϕ_∂x = get_∂ϕ_∂x(element, ∂x_∂ξ, shapeFunction, ipNo)
         for b::Int64 ∈ 1:noOfNodes
             for a::Int64 ∈ 1:noOfNodes
                 for l::Int64 ∈ 1:problemDim

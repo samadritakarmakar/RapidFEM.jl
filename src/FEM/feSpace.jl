@@ -42,6 +42,10 @@ function getInterpolated_x(CoordArray::Array{Float64,2}, ϕ::Array{Float64,1})::
     return CoordArray*ϕ
 end
 
+function getInterpolated_x(coordArray::Array{Float64,2}, shapeFunction::Array{ShapeFunction}, ipNo::Int64)::Array{Float64,1}
+    return getInterpolated_x(coordArray, shapeFunction[ipNo].ϕ)
+end
+
 """As the function name suggests, it returns the value of ∂x_∂ξ
 
     ∂x_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
@@ -50,6 +54,10 @@ where ipNo is the integartion point number.
 """
 function get_∂x_∂ξ(CoordArray::Array{Float64,2}, ∂ϕ_∂ξ::Array{Float64})::Array{Float64}
     return CoordArray*∂ϕ_∂ξ
+end
+
+function get_∂x_∂ξ(coordArray::Array{Float64,2}, shapeFunction::Array{ShapeFunction}, ipNo::Int64)::Array{Float64}
+    return get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
 end
 
 function get_∂ξ_∂x_Normalized(∂x_∂ξ::Array{Float64})::Array{Float64}
@@ -79,6 +87,14 @@ end
 
 function getFunction_∂ξ_∂x(element::TetElement)::Function
     return get_∂ξ_∂x_TriTet
+end
+
+function get_∂ξ_∂x(element::Union{LineElement, QuadElement, HexElement}, ∂x_∂ξ::Array{Float64})::Array{Float64}
+    return get_∂ξ_∂x_Normalized(∂x_∂ξ)
+end
+
+function get_∂ξ_∂x(element::Union{TriElement, TetElement}, ∂x_∂ξ::Array{Float64})::Array{Float64}
+    return get_∂ξ_∂x_TriTet(∂x_∂ξ)
 end
 
 function get_dΩ_Nomalized(∂x_∂ξ::Array{Float64}, ipData::IpPoint)::Float64
@@ -117,6 +133,23 @@ end
 
 function getFunction_dΩ(element::TetElement)::Function
     return get_dΩ_Tet
+end
+
+
+"""Using multiple dispatch, dΩ can now be directly calculated using get_dΩ
+    
+    get_dΩ(element, ∂x_∂ξ, shapeFunction, ipNo)
+"""
+function get_dΩ(element::Union{LineElement, QuadElement, HexElement}, ∂x_∂ξ::Array{Float64}, shapeFunction::Array{ShapeFunction}, ipNo::Int64)
+    return get_dΩ_Nomalized(∂x_∂ξ, shapeFunction[ipNo].ipData)
+end
+
+function get_dΩ(element::TriElement, ∂x_∂ξ::Array{Float64}, shapeFunction::Array{ShapeFunction}, ipNo::Int64)
+    return get_dΩ_Tri(∂x_∂ξ, shapeFunction[ipNo].ipData)
+end
+
+function get_dΩ(element::TetElement, ∂x_∂ξ::Array{Float64}, shapeFunction::Array{ShapeFunction}, ipNo::Int64)
+    return get_dΩ_Tet(∂x_∂ξ, shapeFunction[ipNo].ipData)
 end
 
 function get_dS_Tri(∂x_∂ξ::Array{Float64}, ipData::IpPoint)::Float64
@@ -162,3 +195,39 @@ end
 function getFunction_dL(element::LineElement)::Function
     return get_dL
 end
+
+"""Using multiple dispatch, dS can now be directly calculated using get_dS
+    
+    get_dS(element, ∂x_∂ξ, shapeFunction, ipNo)
+"""
+function get_dS(element::QuadElement, ∂x_∂ξ::Array{Float64}, shapeFunction::Array{ShapeFunction}, ipNo::Int64)
+    return get_dS_Normalized(∂x_∂ξ, shapeFunction[ipNo].ipData)
+end
+
+function get_dS(element::TriElement, ∂x_∂ξ::Array{Float64}, shapeFunction::Array{ShapeFunction}, ipNo::Int64)
+    return get_dS_Tri(∂x_∂ξ, shapeFunction[ipNo].ipData)
+end
+
+function get_dS(element::LineElement, ∂x_∂ξ::Array{Float64}, shapeFunction::Array{ShapeFunction}, ipNo::Int64)
+    return get_dL(∂x_∂ξ, shapeFunction[ipNo].ipData)
+end
+
+function get_dL(element::LineElement, ∂x_∂ξ::Array{Float64}, shapeFunction::Array{ShapeFunction}, ipNo::Int64)
+    get_dL(∂x_∂ξ, shapeFunction[ipNo].ipData)
+end
+
+"""This function returns the ∂ϕ_∂x based on the ∂x_∂ξ returned from the get_∂x_∂ξ function"""
+function get_∂ϕ_∂x(element::T, ∂x_∂ξ::Array{Float64}, shapeFunction::Array{ShapeFunction}, ipNo::Int64) where{T<:AbstractElement}
+    return shapeFunction[ipNo].∂ϕ_∂ξ*get_∂ξ_∂x(element, ∂x_∂ξ)
+end
+
+"""This returns the shape Function ϕ at a certain Integration point
+
+    get_ϕ(shapeFunction, ipNo)
+"""
+get_ϕ(shapeFunction::Array{ShapeFunction}, ipNo::Int64) = shapeFunction[ipNo].ϕ
+
+getNoOfElementIpPoints(shapeFunction::Array{ShapeFunction}) = length(shapeFunction)
+
+
+getNoOfElementNodes(shapeFunction::Array{ShapeFunction}) = size(shapeFunction[1].∂ϕ_∂ξ,1) 

@@ -10,8 +10,8 @@ using RapidFEM, SparseArrays, WriteVTK, LinearAlgebra, IterativeSolvers
 LinearAlgebra.BLAS.set_num_threads(Threads.nthreads())
 
 function LinearElastic()
-    #mesh::Mesh = RapidFEM.readMesh("../../test/MeshFiles/Bar.msh")
-    mesh::Mesh = RapidFEM.readMesh("../../test/MeshFiles/BarO1.msh")
+    mesh::Mesh = RapidFEM.readMesh("../../test/MeshFiles/Bar.msh")
+    #mesh::Mesh = RapidFEM.readMesh("../../test/MeshFiles/BarO1.msh")
     
     #mesh::Mesh = RapidFEM.readMesh("../../test/MeshFiles/cubeTestO1.msh")
     #mesh::Mesh = RapidFEM.readMesh("../../test/MeshFiles/cubeTestPntO1.msh")

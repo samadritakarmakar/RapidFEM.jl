@@ -44,10 +44,10 @@ function LinearElastic()
     #x = cg(K,f)
     σ::Array{Float64,1} = RapidFEM.InvDistInterpolation([gaussianStress],
     x, [(C,)],  FeSpace, mesh,  [volAttrib],
-    problemDim, activeDimensions, kwargs=0)
+    problemDim, activeDimensions)
     ϵ::Array{Float64,1} = RapidFEM.InvDistInterpolation([gaussianStrain],
     x, [(C,)],  FeSpace, mesh,  [volAttrib],
-    problemDim, activeDimensions, kwargs=0)
+    problemDim, activeDimensions)
 
     vtkMeshData::VTKMeshData = RapidFEM.InitializeVTK("LinearElasticR0O1", mesh, [volAttrib], problemDim)
     RapidFEM.vtkDataAdd!(vtkMeshData, (x, σ, ϵ), ("Displacement", "Stress","Strain"))
