@@ -47,7 +47,7 @@ include("Output/WriteToMesh.jl")
     export assembleVector, assembleMatrix, assembleScalar
     export assembleVector!, assembleMatrix!, assembleScalar!
 ##utils
-    export elmntSizeAlongVel
+    export elmntSizeAlongVel, get_∂u_∂x!, get_∂u_∂x, get_u!, get_u, getCurrentCoordArray!, getCurrentCoordArray
 ##postProcess
     export InvDistInterpolation, voigtToTensor, getSolAtElement
 #From Mesh

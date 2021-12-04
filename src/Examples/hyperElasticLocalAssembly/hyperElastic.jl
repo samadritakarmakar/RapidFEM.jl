@@ -1,7 +1,8 @@
+using RapidFEM
 function get_∂u_∂X!(∂u_∂X::Array{Float64, 2}, solAtNodes::Array{Float64, 1}, ∂ϕ_∂X::Array{Float64,2}, problemDim::Int64)
     fill!(∂u_∂X, 0.0)
     for a ∈ 1:size(∂ϕ_∂X, 1)
-        for J ∈ 1:problemDim
+        for J ∈ 1:size(∂ϕ_∂X, 2)
             for i ∈ 1:problemDim
                 ∂u_∂X[i,J] += ∂ϕ_∂X[a,J]*solAtNodes[problemDim*(a-1)+i]
             end
@@ -19,18 +20,14 @@ function local_δE_S_Vector!(f::Vector, hyperElasticData::T, problemDim::Int64,
     lastSoln::Array{Float64, 1} = hyperElasticData[3]
 
     solAtNodes::Array{Float64, 1} = getSolAtElement(lastSoln, element, problemDim)
-    ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
-    dΩFunc::Function = getFunction_dΩ(element)
-    noOfIpPoints::Int64 = length(shapeFunction)
-    noOfNodes::Int64 = size(shapeFunction[1].∂ϕ_∂ξ,1)
+
+    noOfIpPoints::Int64 = RapidFEM.getNoOfElementIpPoints(shapeFunction)
+    noOfNodes::Int64 = RapidFEM.getNoOfElementNodes(shapeFunction)
     ∂u_∂X_array::Array{Float64, 2} = zeros(problemDim, problemDim)
     for ipNo::Int64 ∈ 1:noOfIpPoints
-        ∂X_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
-        ∂ξ_dX::Array{Float64,2} = ∂ξ_∂xFunc(∂X_∂ξ)
-        dΩ::Float64 = dΩFunc(∂X_∂ξ, shapeFunction[ipNo].ipData)
-        ϕ::Array{Float64,1} = shapeFunction[ipNo].ϕ
-        #X::Array{Float64,1} = getInterpolated_x(coordArray, ϕ)
-        ∂ϕ_∂X_array::Array{Float64} = shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dX
+        ∂X_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction, ipNo)
+        dΩ = get_dΩ(element, ∂X_∂ξ, shapeFunction, ipNo)
+        ∂ϕ_∂X_array::Array{Float64} = get_∂ϕ_∂x(element, ∂X_∂ξ, shapeFunction, ipNo)
         ∂ϕ_∂X = LargeDefs.get1DTensor(∂ϕ_∂X_array')
         get_∂u_∂X!(∂u_∂X_array, solAtNodes, ∂ϕ_∂X_array, problemDim)
         ∂u_∂X = LargeDefs.get_∂u_∂X_Tensor(∂u_∂X_array)
@@ -59,25 +56,15 @@ function local_δE_Cᵀ_ΔE!(𝕂::Array{Float64,2}, hyperElasticData::T,
     lastSoln::Array{Float64, 1} = hyperElasticData[3]
 
     solAtNodes::Array{Float64, 1} = getSolAtElement(lastSoln, element, problemDim)
-    ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
-    dΩFunc::Function = getFunction_dΩ(element)
-    noOfIpPoints::Int64 = length(shapeFunction)
-    noOfNodes::Int64 = size(shapeFunction[1].∂ϕ_∂ξ,1)
-    #ϵ::Array{Float64, 1} = zeros(model.ϵVoigtSize)
+    noOfIpPoints::Int64 = RapidFEM.getNoOfElementIpPoints(shapeFunction)
+    noOfNodes::Int64 = RapidFEM.getNoOfElementNodes(shapeFunction)
     ∂u_∂X_array::Array{Float64, 2} = zeros(problemDim, problemDim)
-    ∂X_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[1].∂ϕ_∂ξ)
-    ∂ξ_dX::Array{Float64,2} = ∂ξ_∂xFunc(∂X_∂ξ)
-    dΩ::Float64 = dΩFunc(∂X_∂ξ, shapeFunction[1].ipData)
-    ϕ::Array{Float64,1} = shapeFunction[1].ϕ
-    #X::Array{Float64,1} = getInterpolated_x(coordArray, ϕ)
-    ∂ϕ_∂X_array::Array{Float64} = shapeFunction[1].∂ϕ_∂ξ*∂ξ_dX
     for ipNo::Int64 ∈ 1:noOfIpPoints
-        ∂X_∂ξ = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
-        ∂ξ_dX = ∂ξ_∂xFunc(∂X_∂ξ)
-        dΩ = dΩFunc(∂X_∂ξ, shapeFunction[ipNo].ipData)
-        ϕ = shapeFunction[ipNo].ϕ
+        ∂X_∂ξ = get_∂x_∂ξ(coordArray, shapeFunction, ipNo)
+        dΩ = RapidFEM.get_dΩ(element, ∂X_∂ξ, shapeFunction, ipNo)
+        #ϕ = shapeFunction[ipNo].ϕ
         #X::Array{Float64,1} = getInterpolated_x(coordArray, ϕ)
-        ∂ϕ_∂X_array = shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dX
+        ∂ϕ_∂X_array = RapidFEM.get_∂ϕ_∂x(element, ∂X_∂ξ, shapeFunction, ipNo)
         ∂ϕ_∂X = LargeDefs.get1DTensor(∂ϕ_∂X_array')
         get_∂u_∂X!(∂u_∂X_array, solAtNodes, ∂ϕ_∂X_array, problemDim)
         ∂u_∂X = LargeDefs.get_∂u_∂X_Tensor(∂u_∂X_array)
@@ -114,21 +101,16 @@ function localReferenceSource!(S::Vector, hyperElasticData::T, problemDim::Int64
     element::AbstractElement, elementNo::Int64, shapeFunction::Array{ShapeFunction},
     coordArray::Array{Float64,2}; kwargs4function...) where T
 
-
     sourceFunc = hyperElasticData[1]
     lastSoln::Array{Float64, 1} = hyperElasticData[2]
 
-    ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
-    dΩFunc::Function = getFunction_dΩ(element)
-    noOfIpPoints::Int64 = length(shapeFunction)
-    noOfNodes::Int64 = size(shapeFunction[1].∂ϕ_∂ξ,1)
+    noOfIpPoints::Int64 = RapidFEM.getNoOfElementIpPoints(shapeFunction)
+    noOfNodes::Int64 = RapidFEM.getNoOfElementNodes(shapeFunction)
     #S::Vector = zeros(noOfNodes*problemDim)
     for ipNo ∈ 1:noOfIpPoints
-        ∂X_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
-        ∂ξ_dX::Array{Float64,2} = ∂ξ_∂xFunc(∂X_∂ξ)
-        dΩ::Float64 = dΩFunc(∂X_∂ξ, shapeFunction[ipNo].ipData)
-        ϕ::Array{Float64,1} = shapeFunction[ipNo].ϕ
-        ∂ϕ_∂X::Array{Float64} = shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dX
+        ∂X_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction, ipNo)
+        dΩ::Float64 = RapidFEM.get_dΩ(element, ∂X_∂ξ, shapeFunction, ipNo)
+        ϕ::Array{Float64,1} = RapidFEM.get_ϕ(shapeFunction, ipNo)
         X::Array{Float64,1} = getInterpolated_x(coordArray, ϕ)
         s::Array{Float64,1} = sourceFunc(X; kwargs4function...)
         for a ∈ 1:noOfNodes
@@ -148,13 +130,12 @@ function localReferenceNeumann!(Nm::Vector, hyperElasticData::T,
     neumannFunc = hyperElasticData[1]
     lastSoln::Array{Float64, 1} = hyperElasticData[2]
 
-    dSFunc::Function = getFunction_dS(element)
-    noOfIpPoints::Int64 = length(shapeFunction)
-    noOfNodes::Int64 = size(shapeFunction[1].∂ϕ_∂ξ,1)
+    noOfIpPoints::Int64 = RapidFEM.getNoOfElementIpPoints(shapeFunction)
+    noOfNodes::Int64 = RapidFEM.getNoOfElementNodes(shapeFunction)
     #Nm::Vector = zeros(noOfNodes*problemDim)
     for ipNo ∈ 1:noOfIpPoints
-        ∂X_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
-        dS::Float64 = dSFunc(∂X_∂ξ, shapeFunction[ipNo].ipData)
+        ∂X_∂ξ::Array{Float64,2} =  get_∂x_∂ξ(coordArray, shapeFunction, ipNo)
+        dS::Float64 = RapidFEM.get_dS(element, ∂X_∂ξ,  shapeFunction, ipNo)
         ϕ::Array{Float64,1} = shapeFunction[ipNo].ϕ
         X::Array{Float64,1} = getInterpolated_x(coordArray, ϕ)
         nm::Array{Float64,1} = neumannFunc(X; kwargs4function...)
@@ -174,19 +155,16 @@ function gaussianSecondPiolaStress(hyperElasticData::T, solAtNodes::Array{Float6
     model::HyperElasticModel = hyperElasticData[1]
     modelParams::Tuple  = hyperElasticData[2]
 
-    ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
-    dΩFunc::Function = getFunction_dΩ(element)
-    noOfIpPoints::Int64 = length(shapeFunction)
-    noOfNodes::Int64 = size(shapeFunction[1].∂ϕ_∂ξ,1)
+    
+    noOfIpPoints::Int64 = RapidFEM.getNoOfElementIpPoints(shapeFunction)
+    noOfNodes::Int64 = RapidFEM.getNoOfElementNodes(shapeFunction)
     ∂u_∂X_array::Array{Float64, 2} = zeros(problemDim, problemDim)
     S_g::Array{Array{Float64,1},1} = Array{Array{Float64,1},1}(undef, noOfIpPoints)
     for ipNo::Int64 ∈ 1:noOfIpPoints
-        ∂X_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
-        ∂ξ_dX::Array{Float64,2} = ∂ξ_∂xFunc(∂X_∂ξ)
-        dΩ::Float64 = dΩFunc(∂X_∂ξ, shapeFunction[ipNo].ipData)
-        ϕ::Array{Float64,1} = shapeFunction[ipNo].ϕ
+        ∂X_∂ξ::Array{Float64,2} =  get_∂x_∂ξ(coordArray, shapeFunction, ipNo)
+        
         #X::Array{Float64,1} = getInterpolated_x(coordArray, ϕ)
-        ∂ϕ_∂X_array::Array{Float64} = shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dX
+        ∂ϕ_∂X_array::Array{Float64} = get_∂ϕ_∂x(element, ∂X_∂ξ, shapeFunction, ipNo)
         ∂ϕ_∂X = LargeDefs.get1DTensor(∂ϕ_∂X_array')
         get_∂u_∂X!(∂u_∂X_array, solAtNodes, ∂ϕ_∂X_array, problemDim)
         ∂u_∂X = LargeDefs.get_∂u_∂X_Tensor(∂u_∂X_array)
@@ -212,20 +190,16 @@ function gaussianGreenStrain(hyperElasticData::T, solAtNodes::Array{Float64,1}, 
     model::HyperElasticModel = hyperElasticData[1]
     modelParams::Tuple  = hyperElasticData[2]
 
-    ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
-    dΩFunc::Function = getFunction_dΩ(element)
-    noOfIpPoints::Int64 = length(shapeFunction)
-    noOfNodes::Int64 = size(shapeFunction[1].∂ϕ_∂ξ,1)
+    
+    noOfIpPoints::Int64 = RapidFEM.getNoOfElementIpPoints(shapeFunction)
+    noOfNodes::Int64 = RapidFEM.getNoOfElementNodes(shapeFunction)
     ∂u_∂X_array::Array{Float64, 2} = zeros(problemDim, problemDim)
     E_g::Array{Array{Float64,1},1} = Array{Array{Float64,1},1}(undef, noOfIpPoints)
     for ipNo::Int64 ∈ 1:noOfIpPoints
-        ∂X_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
-        ∂ξ_dX::Array{Float64,2} = ∂ξ_∂xFunc(∂X_∂ξ)
-        dΩ::Float64 = dΩFunc(∂X_∂ξ, shapeFunction[ipNo].ipData)
-        ϕ::Array{Float64,1} = shapeFunction[ipNo].ϕ
+        ∂X_∂ξ::Array{Float64,2} =  get_∂x_∂ξ(coordArray, shapeFunction, ipNo)
+        #ϕ::Array{Float64,1} = shapeFunction[ipNo].ϕ
         #X::Array{Float64,1} = getInterpolated_x(coordArray, ϕ)
-        ∂ϕ_∂X_array::Array{Float64} = shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dX
-        ∂ϕ_∂X = LargeDefs.get1DTensor(∂ϕ_∂X_array')
+        ∂ϕ_∂X_array::Array{Float64} = get_∂ϕ_∂x(element, ∂X_∂ξ, shapeFunction, ipNo)
         get_∂u_∂X!(∂u_∂X_array, solAtNodes, ∂ϕ_∂X_array, problemDim)
         ∂u_∂X = LargeDefs.get_∂u_∂X_Tensor(∂u_∂X_array)
         F = LargeDefs.getDeformationGradient(∂u_∂X)
@@ -249,20 +223,14 @@ function gaussianDeformationGrad(hyperElasticData::T, solAtNodes::Array{Float64,
     model::HyperElasticModel = hyperElasticData[1]
     modelParams::Tuple  = hyperElasticData[2]
 
-    ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
-    dΩFunc::Function = getFunction_dΩ(element)
-    noOfIpPoints::Int64 = length(shapeFunction)
-    noOfNodes::Int64 = size(shapeFunction[1].∂ϕ_∂ξ,1)
+    noOfIpPoints::Int64 = RapidFEM.getNoOfElementIpPoints(shapeFunction)
+    noOfNodes::Int64 = RapidFEM.getNoOfElementNodes(shapeFunction)
     ∂u_∂X_array::Array{Float64, 2} = zeros(problemDim, problemDim)
     F_g::Array{Array{Float64,1},1} = Array{Array{Float64,1},1}(undef, noOfIpPoints)
     for ipNo::Int64 ∈ 1:noOfIpPoints
-        ∂X_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
-        ∂ξ_dX::Array{Float64,2} = ∂ξ_∂xFunc(∂X_∂ξ)
-        dΩ::Float64 = dΩFunc(∂X_∂ξ, shapeFunction[ipNo].ipData)
-        ϕ::Array{Float64,1} = shapeFunction[ipNo].ϕ
+        ∂X_∂ξ::Array{Float64,2} =  get_∂x_∂ξ(coordArray, shapeFunction, ipNo)
         #X::Array{Float64,1} = getInterpolated_x(coordArray, ϕ)
-        ∂ϕ_∂X_array::Array{Float64} = shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dX
-        ∂ϕ_∂X = LargeDefs.get1DTensor(∂ϕ_∂X_array')
+        ∂ϕ_∂X_array::Array{Float64} = get_∂ϕ_∂x(element, ∂X_∂ξ, shapeFunction, ipNo)
         get_∂u_∂X!(∂u_∂X_array, solAtNodes, ∂ϕ_∂X_array, problemDim)
         ∂u_∂X = LargeDefs.get_∂u_∂X_Tensor(∂u_∂X_array)
         F_tensor = LargeDefs.getDeformationGradient(∂u_∂X)
@@ -285,20 +253,16 @@ function gaussianCauchyStress(hyperElasticData::T, solAtNodes::Array{Float64,1},
     model::HyperElasticModel = hyperElasticData[1]
     modelParams::Tuple  = hyperElasticData[2]
 
-    ∂ξ_∂xFunc::Function = getFunction_∂ξ_∂x(element)
-    dΩFunc::Function = getFunction_dΩ(element)
-    noOfIpPoints::Int64 = length(shapeFunction)
-    noOfNodes::Int64 = size(shapeFunction[1].∂ϕ_∂ξ,1)
+    
+    noOfIpPoints::Int64 = RapidFEM.getNoOfElementIpPoints(shapeFunction)
+    noOfNodes::Int64 = RapidFEM.getNoOfElementNodes(shapeFunction)
     ∂u_∂X_array::Array{Float64, 2} = zeros(problemDim, problemDim)
     σ_g::Array{Array{Float64,1},1} = Array{Array{Float64,1},1}(undef, noOfIpPoints)
     for ipNo::Int64 ∈ 1:noOfIpPoints
-        ∂X_∂ξ::Array{Float64,2} = get_∂x_∂ξ(coordArray, shapeFunction[ipNo].∂ϕ_∂ξ)
-        ∂ξ_dX::Array{Float64,2} = ∂ξ_∂xFunc(∂X_∂ξ)
-        dΩ::Float64 = dΩFunc(∂X_∂ξ, shapeFunction[ipNo].ipData)
-        ϕ::Array{Float64,1} = shapeFunction[ipNo].ϕ
+        ∂X_∂ξ::Array{Float64,2} =  get_∂x_∂ξ(coordArray, shapeFunction, ipNo)
+        
         #X::Array{Float64,1} = getInterpolated_x(coordArray, ϕ)
-        ∂ϕ_∂X_array::Array{Float64} = shapeFunction[ipNo].∂ϕ_∂ξ*∂ξ_dX
-        ∂ϕ_∂X = LargeDefs.get1DTensor(∂ϕ_∂X_array')
+        ∂ϕ_∂X_array::Array{Float64} = get_∂ϕ_∂x(element, ∂X_∂ξ, shapeFunction, ipNo)
         get_∂u_∂X!(∂u_∂X_array, solAtNodes, ∂ϕ_∂X_array, problemDim)
         ∂u_∂X = LargeDefs.get_∂u_∂X_Tensor(∂u_∂X_array)
         F = LargeDefs.getDeformationGradient(∂u_∂X)
