@@ -27,8 +27,7 @@ function getSurfaceNormals(connections::Array{Float64, 2}, normalCombs::Array{Ar
     return normals, normalMags
 end
 
-function getAspectRatioOfElement(mesh::Mesh, element::TriElement)
-    coordArray = (getCoordArray(mesh, element))[:,1:3]
+function getAspectRatioOfTriElement(coordArray::AbstractArray{Float64})
     nodeNos = [[1, 2], [1, 3], [2, 3]]
     connections, connectionLengths = getConnectionData(coordArray, nodeNos)
     A = 0.5*norm(cross(connections[:, 1], connections[:, 2]))
@@ -36,8 +35,12 @@ function getAspectRatioOfElement(mesh::Mesh, element::TriElement)
     return connectionLengthMax*sum(connectionLengths)/(4.0*sqrt(3.0)*A)
 end
 
-function getAspectRatioOfElement(mesh::Mesh, element::TetElement)
-    coordArray = (getCoordArray(mesh, element))[:,1:4]
+function getAspectRatioOfElement(mesh::Mesh, element::TriElement)
+    coordArray = (getCoordArray(mesh, element))[:,1:3]
+    return getAspectRatioOfTriElement(coordArray)
+end
+
+function getAspectRatioOfTetElement(coordArray::AbstractArray{Float64})
     nodeNos = [[1, 2], [1, 3], [1, 4], [2, 3], [2, 4], [3, 4]]
     connections, connectionLengths = getConnectionData(coordArray, nodeNos)
     connectionLengthMax = maximum(connectionLengths)
@@ -46,6 +49,11 @@ function getAspectRatioOfElement(mesh::Mesh, element::TetElement)
     α = dot(connections[:,1], normals[:,2])
     r = abs(α)/sum(normalMags)
     return connectionLengthMax/(2.0*sqrt(6.0)*r)
+end
+
+function getAspectRatioOfElement(mesh::Mesh, element::TetElement)
+    coordArray = (getCoordArray(mesh, element))[:,1:4]
+    return getAspectRatioOfTetElement(coordArray)
 end
 
 
@@ -57,14 +65,18 @@ function getAspectRatioOfElement(mesh::Mesh, element::PointElement)
     return 1.0
 end
 
-function getAspectRatioOfElement(mesh::Mesh, element::QuadElement)
-    coordArray = (getCoordArray(mesh, element))[:,1:4]
+function getAspectRatioOfQuadElement(coordArray::AbstractArray{Float64})
     nodeNos = [[1, 2], [1, 3], [1, 4], [2, 3], [2, 4],[3, 4]]
     connections, connectionLengths = getConnectionData(coordArray, nodeNos)
     connectionLengthMax = maximum(connectionLengths)
     A = 0.5*norm(cross(connections[:, 1], connections[:, 2]))
     A += 0.5*norm(cross(connections[:, 4], connections[:, 6]))
     return connectionLengthMax*sum(connectionLengths)/(4*A)
+end
+
+function getAspectRatioOfElement(mesh::Mesh, element::QuadElement)
+    coordArray = (getCoordArray(mesh, element))[:,1:4]
+    return getAspectRatioOfQuadElement(coordArray)
 end
 
 function getAspectRatioOfElement(element::HexElement)

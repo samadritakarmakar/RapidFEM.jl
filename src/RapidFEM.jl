@@ -54,7 +54,7 @@ include("Output/WriteToMesh.jl")
     #mesh.jl
     export Mesh, readMesh, getNoOfElements, getCoordArray, updateNodePositions!
     #aspectRatio.jl
-    export getAspectRatioOfElement, getAspectRatios
+    export getAspectRatioOfElement, getAspectRatios, getAspectRatioOfTriElement, getAspectRatioOfTetElement, getAspectRatioOfQuadElement
 #From Quadrature
 export gauss
 #From ShapeFunction
