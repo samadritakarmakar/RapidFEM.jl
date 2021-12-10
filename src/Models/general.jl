@@ -167,7 +167,7 @@ function localScalar!(S::Array{Float64,1}, scalarFunc::Function,
 
     for ipNo ∈ 1:noOfIpPoints
         ∂x_∂ξ = get_∂x_∂ξ(coordArray, shapeFunction, ipNo)
-        dΩ = dΩFunc(element, ∂x_∂ξ, shapeFunction, ipNo)
+        dΩ = get_dΩ(element, ∂x_∂ξ, shapeFunction, ipNo)
         ϕ = get_ϕ(shapeFunction, ipNo)
         x = getInterpolated_x(coordArray, ϕ)
         s = scalarFunc(x; kwargs4function...)
