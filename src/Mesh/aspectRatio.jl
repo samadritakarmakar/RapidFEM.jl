@@ -39,14 +39,14 @@ function getAspectRatioOfElement(mesh::Mesh, element::TriElement)
     coordArray = (getCoordArray(mesh, element))[:,1:3]
     return getAspectRatioOfTriElement(coordArray)
 end
-
+###Test with top = [0.5, 1/(2*√3), √(2/3)]; getAspectRatioOfTetElement([[0.0, 0, 0] [1, 0,0] [.5, sind(60), 0.0] top])
 function getAspectRatioOfTetElement(coordArray::AbstractArray{Float64})
     nodeNos = [[1, 2], [1, 3], [1, 4], [2, 3], [2, 4], [3, 4]]
     connections, connectionLengths = getConnectionData(coordArray, nodeNos)
     connectionLengthMax = maximum(connectionLengths)
-    normalCombs = [[1,3],[2,3],[4,5]] #Combination of nodeNos (connections) that create a normal each
+    normalCombs = [[1,2],[1,3],[2,3],[4,5]] #Combination of nodeNos (connections) that create a normal each
     normals, normalMags = getSurfaceNormals(connections, normalCombs)
-    α = dot(connections[:,1], normals[:,2])
+    α = dot(connections[:,1], normals[:,3])#normals[:,2])
     r = abs(α)/sum(normalMags)
     return connectionLengthMax/(2.0*sqrt(6.0)*r)
 end
