@@ -31,7 +31,7 @@ This function is useful if the local matrix makes changes to the parameters vari
     K::SparseMatrixCSC = assembleMatrix!(parameters, volAttrib, FeSpace, mesh, RapidFEM.local_∇v_λ_∇u!, problemDim, activeDimensions)
 """
 function assembleMatrix!(parameters::T, attribute::Tuple{Int64, Int64},
-    FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}},
+    FeSpace::Dict{Tuple{DataType, Int64, Any, Int64}, Array{ShapeFunction}},
     mesh::Mesh,  localMatrixFunc::Function, problemDim::Int64,
     activeDimensions::Array{Int64,1}=[1, 1, 1], varArgs...; reduction::Int64 = 0, elementFunction::Function=lagrange, quadrature::Function = gauss)::SparseMatrixCSC where T
 
@@ -44,8 +44,8 @@ function assembleMatrix!(parameters::T, attribute::Tuple{Int64, Int64},
         K_localArray[thread] = zeros(0,0)
     end
     #Intiailization of FeSpaceThreaded
-    FeSpaceThreaded::Array{Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}}, 1} =
-    Array{Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}}, 1}(undef, numOfThreads)
+    FeSpaceThreaded::Array{Dict{Tuple{DataType, Int64, Any, Int64}, Array{ShapeFunction}}, 1} =
+    Array{Dict{Tuple{DataType, Int64, Any, Int64}, Array{ShapeFunction}}, 1}(undef, numOfThreads)
     FeSpaceThreaded[1] = FeSpace #First thread can be the same as the original FeSpace
     Threads.@threads for thread ∈ 2:numOfThreads
         FeSpaceThreaded[thread] = deepcopy(FeSpace) #Others need to be deepcopies
@@ -97,7 +97,7 @@ This function is useful if the local matrix makes changes to the parameters vari
     K::SparseMatrixCSC = assembleMatrix!(parameters, volAttrib, FeSpace, mesh, RapidFEM.local_∇v_λ_∇u!, problemDim, activeDimensions)
 """
 function assembleMatrix(parameters::T, attribute::Tuple{Int64, Int64},
-    FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}},
+    FeSpace::Dict{Tuple{DataType, Int64, Any, Int64}, Array{ShapeFunction}},
     mesh::Mesh,  localMatrixFunc::Function, problemDim::Int64,
     activeDimensions::Array{Int64,1}=[1, 1, 1], 
     varArgs...; reduction::Int64 = 0, elementFunction::Function=lagrange, quadrature::Function = gauss)::SparseMatrixCSC where T
@@ -115,7 +115,7 @@ This function is useful if the local matrix makes changes to the parameters vari
     f::Vector = RapidFEM.assembleVector!(parameters, volAttrib, FeSpace, mesh, RapidFEM.localSource, problemDim, activeDimensions)
 """
 function assembleVector!(parameters::T, attribute::Tuple{Int64, Int64},
-    FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}},
+    FeSpace::Dict{Tuple{DataType, Int64, Any, Int64}, Array{ShapeFunction}},
     mesh::Mesh, localVectorFunc::Function, problemDim::Int64,
     activeDimensions::Array{Int64,1}=[1, 1, 1],varArgs...; 
     reduction::Int64 = 0, elementFunction::Function=lagrange, quadrature::Function = gauss)::Vector where T
@@ -128,8 +128,8 @@ function assembleVector!(parameters::T, attribute::Tuple{Int64, Int64},
         f_localArray[thread] = zeros(0)
     end
     #Intiailization of FeSpaceThreaded
-    FeSpaceThreaded::Array{Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}}, 1} =
-    Array{Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}}, 1}(undef, numOfThreads)
+    FeSpaceThreaded::Array{Dict{Tuple{DataType, Int64, Any, Int64}, Array{ShapeFunction}}, 1} =
+    Array{Dict{Tuple{DataType, Int64, Any, Int64}, Array{ShapeFunction}}, 1}(undef, numOfThreads)
     FeSpaceThreaded[1] = FeSpace #First thread can be the same as the original FeSpace
     Threads.@threads for thread ∈ 2:numOfThreads
         FeSpaceThreaded[thread] = deepcopy(FeSpace) #Others need to be deepcopies
@@ -168,7 +168,7 @@ assembler. The below example is similar to used in: src/Examples/poisson.jl
     f::Vector = RapidFEM.assembleVector!(parameters, volAttrib, FeSpace, mesh, RapidFEM.localSource, problemDim, activeDimensions)
 """
 function assembleVector(parameters::T, attribute::Tuple{Int64, Int64},
-    FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}},
+    FeSpace::Dict{Tuple{DataType, Int64, Any, Int64}, Array{ShapeFunction}},
     mesh::Mesh, localVectorFunc::Function, problemDim::Int64,
     activeDimensions::Array{Int64,1}=[1, 1, 1],varArgs...; 
     reduction::Int64 = 0, elementFunction::Function=lagrange, quadrature::Function = gauss)::Vector where T
@@ -190,7 +190,7 @@ This function is useful if the local vector or matrix makes changes to the param
     RapidFEM.local_∇v_Cᵀ_∇u!, problemDim, activeDimensions)
 """
 function assembleVectorMatrix!(parameters::T, attribute::Tuple{Int64, Int64},
-    FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}},
+    FeSpace::Dict{Tuple{DataType, Int64, Any, Int64}, Array{ShapeFunction}},
     mesh::Mesh, localVectorFunc::Function, localMatrixFunc::Function, problemDim::Int64,
     activeDimensions::Array{Int64,1}=[1, 1, 1], varArgs...;
     reduction::Int64 = 0, elementFunction::Function=lagrange, quadrature::Function = gauss) where T
@@ -208,8 +208,8 @@ function assembleVectorMatrix!(parameters::T, attribute::Tuple{Int64, Int64},
         K_localArray[thread] = zeros(0,0)
     end
     #Intiailization of FeSpaceThreaded
-    FeSpaceThreaded::Array{Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}}, 1} =
-    Array{Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}}, 1}(undef, numOfThreads)
+    FeSpaceThreaded::Array{Dict{Tuple{DataType, Int64, Any, Int64}, Array{ShapeFunction}}, 1} =
+    Array{Dict{Tuple{DataType, Int64, Any, Int64}, Array{ShapeFunction}}, 1}(undef, numOfThreads)
     FeSpaceThreaded[1] = FeSpace #First thread can be the same as the original FeSpace
     Threads.@threads for thread ∈ 2:numOfThreads
         FeSpaceThreaded[thread] = deepcopy(FeSpace) #Others need to be deepcopies
@@ -273,7 +273,7 @@ This function is useful if the local matrix makes changes to the parameters vari
     v::Array{Float64,1} = RapidFEM.assembleScalar(parameters, volAttrib, FeSpace, mesh, RapidFEM.localScalar, problemDim, activeDimensions)
 """
 function assembleScalar!(parameters::T, attribute::Tuple{Int64, Int64},
-    FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}},
+    FeSpace::Dict{Tuple{DataType, Int64, Any, Int64}, Array{ShapeFunction}},
     mesh::Mesh, localVectorFunc::Function, problemDim::Int64,
     activeDimensions::Array{Int64,1}=[1, 1, 1],
     varArgs...; reduction::Int64 = 0, elementFunction::Function=lagrange, quadrature::Function = gauss)::Vector where T
@@ -286,8 +286,8 @@ function assembleScalar!(parameters::T, attribute::Tuple{Int64, Int64},
         f[thread] = zeros(noOfElements*problemDim)
         f_localArray[thread] = zeros(0)
     end
-    FeSpaceThreaded::Array{Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}}, 1} =
-    Array{Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}}, 1}(undef, numOfThreads)
+    FeSpaceThreaded::Array{Dict{Tuple{DataType, Int64, Any, Int64}, Array{ShapeFunction}}, 1} =
+    Array{Dict{Tuple{DataType, Int64, Any, Int64}, Array{ShapeFunction}}, 1}(undef, numOfThreads)
     FeSpaceThreaded[1] = FeSpace #First thread can be the same as the original FeSpace
     Threads.@threads for thread ∈ 2:numOfThreads
         FeSpaceThreaded[thread] = deepcopy(FeSpace) #Others need to be deepcopies
@@ -326,7 +326,7 @@ assembler.
     v::Array{Float64,1} = RapidFEM.assembleScalar(parameters, volAttrib, FeSpace, mesh, RapidFEM.localScalar, problemDim, activeDimensions)
 """
 function assembleScalar(parameters::T, attribute::Tuple{Int64, Int64},
-    FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}},
+    FeSpace::Dict{Tuple{DataType, Int64, Any, Int64}, Array{ShapeFunction}},
     mesh::Mesh, localVectorFunc::Function, problemDim::Int64,
     activeDimensions::Array{Int64,1}=[1, 1, 1], varArgs...; 
     reduction::Int64 = 0, elementFunction::Function=lagrange, quadrature::Function = gauss)::Vector where T

@@ -11,7 +11,8 @@ include("gaussTet.jl")
 include("gaussHex.jl")
 """Retrieves the Quadrature of the indivdual element. Reduction of order if any, is done here. For Quadrilateral and Hexahedral, the order is increased by 1 by default before retrieval."""
 function gauss(element::LineElement; reduction::Int64 = 0)
-    return gaussLine(element.order-reduction)
+    order::Int64 = 2*element.order
+    return gaussLine(order-reduction)
 end
 
 function gauss(element::TriElement; reduction::Int64 =0)
