@@ -97,7 +97,7 @@ See src/Examples/LinearElastic2Material.jl example.
         σTemp::Array{Float64,1} = RapidFEM.InvDistInterpolation([RapidFEM.gaussianStress, RapidFEM.gaussianStress], x, [(tensorMap, C1), (tensorMap, C1)],  FeSpace, mesh,  [volAttrib1, volAttrib2], problemDim, activeDimensions)
 """
 function InvDistInterpolation(postProcessFunctionArray::Array{func, 1}, sol::Array{Float64,1},
-    parametersDataArray::Array{T, 1},  FeSpace::Dict{Tuple{DataType, Int64, Any}, Array{ShapeFunction}},
+    parametersDataArray::Array{T, 1},  FeSpace::Dict{Tuple{DataType, Int64, Any, Int64}, Array{ShapeFunction}},
     mesh::Mesh,  attributeArray::Array{Tuple{Int64, Int64},1}, problemDim::Int64,
     activeDimensions::Array{Int64,1}=[1, 1, 1], varArgs...; pow::Float64=14.0, reduction::Int64 = 0, elementFunction = lagrange, quadrature = gauss) where {func, T}
     @assert length(postProcessFunctionArray)==length(attributeArray) "Length of postProcessFunctionArray should be equal to attributeArray."
