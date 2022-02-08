@@ -122,14 +122,23 @@ function InvDistInterpolation(postProcessFunctionArray::Array{func, 1}, sol::Arr
             f_g_Temp = postProcessFunction(parametersData,
             solAtNodes, problemDim, element, elementNo, shapeFunction, coordArray; varArgs...)
             f_g_TempSize = size(f_g_Temp)
-            f_g = zeros(f_g_TempSize[1], prod(f_g_TempSize[2:end]))
-            if length(size(f_g_Temp)) == 3
-                for ipNo ∈ 1:f_g_TempSize[1]
-                    f_g[ipNo, :] = vec(f_g_Temp[ipNo, :, :])
-                end
-            elseif length(size(f_g_Temp)) == 5
-                for ipNo ∈ 1:f_g_TempSize[1]
-                    f_g[ipNo, :] = vec(f_g_Temp[ipNo, :, :, :, :])
+            #f_g = zeros(f_g_TempSize[1], prod(f_g_TempSize[2:end]))
+            f_g = Array{Array{Float64, 1}, 1}(undef, f_g_TempSize[1])
+            if f_g_Temp isa Matrix
+                if length(size(f_g_Temp)) == 2
+                    for ipNo ∈ 1:f_g_TempSize[1]
+                        f_g[ipNo] = vec(f_g_Temp[ipNo, :])
+                    end
+                if length(size(f_g_Temp)) == 3
+                    for ipNo ∈ 1:f_g_TempSize[1]
+                        f_g[ipNo] = vec(f_g_Temp[ipNo, :, :])
+                    end
+                elseif length(size(f_g_Temp)) == 5
+                    for ipNo ∈ 1:f_g_TempSize[1]
+                        f_g[ipNo] = vec(f_g_Temp[ipNo, :, :, :, :])
+                    end
+                else
+                    error("Unknown size of Gaussian function return!")
                 end
             else
                 f_g = f_g_Temp
