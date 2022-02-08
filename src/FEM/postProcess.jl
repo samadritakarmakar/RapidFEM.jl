@@ -129,7 +129,7 @@ function InvDistInterpolation(postProcessFunctionArray::Array{func, 1}, sol::Arr
                     for ipNo ∈ 1:f_g_TempSize[1]
                         f_g[ipNo] = vec(f_g_Temp[ipNo, :])
                     end
-                if length(size(f_g_Temp)) == 3
+                elseif length(size(f_g_Temp)) == 3
                     for ipNo ∈ 1:f_g_TempSize[1]
                         f_g[ipNo] = vec(f_g_Temp[ipNo, :, :])
                     end
