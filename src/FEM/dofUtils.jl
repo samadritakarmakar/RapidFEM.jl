@@ -60,5 +60,62 @@ function getVectorNodes(element::AbstractElement, problemDim::Int64,
     appliedDof::Array{Int64, 1} = ones(Int, problemDim))::Array{Int64}
 
     nodes::Array{Int64} = getNodes(element)
-    return getVectorNodes(nodes, problemDim)
+    return getVectorNodes(nodes, problemDim, appliedDof)
+end
+
+
+"""Extracts the solution available at a particular Element for a certain problem dimension.
+
+    solAtNodes::Array{Float64,1} = getSolAtElement(sol, element, problemDim)
+"""
+function getSolAtElement(sol::AbstractArray{Float64,1}, element::AbstractElement, problemDim::Int)::Array{Float64,1}
+    vectorNodes::Array{Int64,1} = getVectorNodes(element, problemDim)
+    #sort!(vectorNodes)
+    solAtNodes::Array{Float64,1} = Array{Float64,1}(undef, length(vectorNodes))
+    i::Int64 = 1
+    for node ∈ vectorNodes
+        solAtNodes[i] = sol[node]
+        i +=1
+    end
+    return solAtNodes
+end
+
+"""Extracts views of global solutions in coupled problems from a single mesh.
+
+In the below example u has dimension 3, p has 1 and t has 1.
+
+        u, p, t = getCoupledGlobalSols(globalSol, mesh, [3, 1, 1])
+"""
+function getCoupledGlobalSols(globalSol::AbstractArray{Float64, 1}, mesh::Mesh, problemDims::Array{Int64, 1})
+    sols = Array{AbstractArray{Float64, 1}, 1}(undef, length(problemDims))
+    lastSolIndex = 0
+    for i ∈ 1:length(sols)
+        startIndex = 1+lastSolIndex
+        endIndex = problemDims[i]*mesh.noOfNodes+lastSolIndex
+        lastSolIndex = endIndex
+        sols[i] = @view globalSol[startIndex:endIndex]
+    end
+    return sols
+end
+
+function getCoupledGlobalSols(globalSol::AbstractArray{Float64, 1}, coupling::CoupledComponents)
+    sols = Array{AbstractArray{Float64, 1}, 1}(undef, length(coupling.dofs))
+    for i ∈ 1:length(sols)
+        sols[i] = @view globalSol[coupling[i]]
+    end
+    return sols
+end
+
+function getCoupledGlobalSols(globalSol::AbstractArray{Float64, 1}, meshTuple::Tuple, problemDims::Array{Int64, 1}, meshNos::Array{Int64, 1})
+    @assert length(problemDims) == length(meshNos) "Length of problemDims must be the same as meshNos."
+    @assert maximum(meshNos) <= length(meshTuple) "Maximum of meshNos cannot be greater than the total number of meshes."
+    sols = Array{AbstractArray{Float64, 1}, 1}(undef, length(problemDims))
+    lastSolIndex = 0
+    for i ∈ 1:length(sols)
+        startIndex = 1+lastSolIndex
+        endIndex = problemDims[i]*meshTuple[meshNos[i]].noOfNodes+lastSolIndex
+        lastSolIndex = endIndex
+        sols[i] = @view globalSol[startIndex:endIndex]
+    end
+    return sols
 end

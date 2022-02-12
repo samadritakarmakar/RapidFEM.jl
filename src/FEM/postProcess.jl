@@ -72,23 +72,6 @@ function finalizeInvInterpolation!(f::Vector,sumInvDistances::Vector)
     end
 end
 
-"""Extracts the solution available at a particular Element for a certain problem dimension.
-
-    solAtNodes::Array{Float64,1} = getSolAtElement(sol, element, problemDim)
-"""
-function getSolAtElement(sol::Array{Float64,1}, element::AbstractElement, problemDim::Int)::Array{Float64,1}
-    vectorNodes::Array{Int64,1} = getVectorNodes(element, problemDim)
-    #sort!(vectorNodes)
-    solAtNodes::Array{Float64,1} = Array{Float64,1}(undef, length(vectorNodes))
-    i::Int64 = 1
-    for node ∈ vectorNodes
-        solAtNodes[i] = sol[node]
-        i +=1
-    end
-    return solAtNodes
-end
-
-
 """This function is used to for post processing, meaning for obtaining additional data from the solution
 obtained. One such use is to find the stress from the generated displacement data from the solution.
 

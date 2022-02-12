@@ -19,6 +19,7 @@ include("FEM/boundaryCondition.jl")
 include("FEM/assembly.jl")
 include("FEM/feSpace.jl")
 include("FEM/dofUtils.jl")
+include("FEM/coupledComponents.jl")
 include("FEM/postProcess.jl")
 include("FEM/utils.jl")
 include("NonLinear/nonLinearUtils.jl")
@@ -36,8 +37,12 @@ include("Output/WriteToMesh.jl")
 #From FEM
     export AbstractElement, LineElement, TriElement, QuadElement, TetElement, HexElement, PointElement, shapeFunction, ipPoint
 ##feSpace
-    export createFeSpace, feSpace!, lagrange, get_∂x_∂ξ, getFunction_dΩ, getFunction_dS, getFunction_dL, getFunction_∂ξ_∂x, getInterpolated_x, getNodes, getVectorNodes
+    export createFeSpace, feSpace!, lagrange, get_∂x_∂ξ, getFunction_dΩ, getFunction_dS, getFunction_dL, getFunction_∂ξ_∂x, getInterpolated_x
     export get_dΩ, get_∂ξ_∂x, get_dS, get_dL, get_∂ϕ_∂x, get_ϕ, getNoOfElementNodes, getNoOfElementIpPoints
+#dofUtils
+    export getNodes, getVectorNodes, getSolAtElement, getCoupledGlobalSols, getMixedGlobalSols
+#CoupledComponents
+    export CoupledComponents
 ##boundaryCondition
     export applyDirichletBC!, applyDynamicDirichletBC!
     export applyNLDirichletBC_on_J!, applyNLDirichletBC_on_Soln!
@@ -49,7 +54,7 @@ include("Output/WriteToMesh.jl")
 ##utils
     export elmntSizeAlongVel, get_∂u_∂x!, get_∂u_∂x, get_u!, get_u, getCurrentCoordArray!, getCurrentCoordArray
 ##postProcess
-    export InvDistInterpolation, voigtToTensor, getSolAtElement
+    export InvDistInterpolation, voigtToTensor
 #From Mesh
     #mesh.jl
     export Mesh, readMesh, getNoOfElements, getCoordArray, updateNodePositions!
