@@ -1,7 +1,7 @@
 name = "RapidFEM"
 uuid = "845bbcf8-0925-49a4-8eb3-5fd4eb0a75d5"
 authors = ["sam "]
-version = "0.3.2"
+version = "0.4.0"
 
 [deps]
 Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
