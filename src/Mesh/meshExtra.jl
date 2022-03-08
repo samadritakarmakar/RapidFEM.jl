@@ -1,15 +1,45 @@
 using Combinatorics
 
-mutable struct MeshExtra
+struct MeshExtra
     nodeToElementMap::Dict{Int64, Array{Tuple{Tuple{Int64, Int64}, Int64}, 1}}
-
-    
+    allFaces::Dict{Array{Int64, 1}, Array{Tuple{Tuple{Int64, Int64}, Int64}, 1}}
+    #boundaryFaces::Dict{Array{Int64, 1}, Array{Tuple{Tuple{Int64, Int64}, Int64}, 1}}
+    boundaryNodes::Array{Int64, 1}
+    internalNodes::Array{Int64, 1}
     #MeshExtra(nodeToElementMap::Dict{Int64, Array{Tuple{Tuple{Int64, Int64}, Int64}, 1}}) = new(nodeToElementMap)
 end
 
-MeshExtra() = MeshExtra(Dict{Int64, Array{Tuple{Tuple{Int64, Int64}, Int64}, 1}}())
+function MeshExtra()
+    MeshExtra(Dict{Int64, Array{Tuple{Tuple{Int64, Int64}, Int64}, 1}}(), Dict{Array{Int64, 1}, Array{Tuple{Tuple{Int64, Int64}, Int64}, 1}}(),
+    zeros(Int64, 0), zeros(Int64, 0))
+end
 
-MeshExtra(mesh::Mesh, attributeArray::Array{Tuple{Int64, Int64}, 1}) = MeshExtra(getNodeToElementMap(mesh, attributeArray))
+function MeshExtra(mesh::Mesh, attributeArray::Array{Tuple{Int64, Int64}, 1})
+    nodeToElementMap = getNodeToElementMap(mesh, attributeArray)
+    allFaces = getAllFaces(mesh, attributeArray)
+    boundaryFaces = getBoundaryFaces(allFaces)
+    boundaryNodes = getAllBoundaryNodes(boundaryFaces)
+    internalNodes = getAllInternalNodes(boundaryNodes, mesh)
+    MeshExtra(nodeToElementMap, allFaces, boundaryNodes, internalNodes)
+end
+
+"""Retrives all attibutes belonging to a certain dimension"""
+function getAttributesInDimension(mesh::Mesh, dimension::Int64)
+    attributeKeys = keys(mesh.Elements)
+    dimAttribsArray = Tuple{Int64,Int64}[]
+    for attributeKey ∈ attributeKeys
+        if attributeKey[1] == dimension
+            push!(dimAttribsArray, attributeKey)
+        end
+    end
+    return dimAttribsArray
+end
+
+"""Computes and creates extra mesh data from mesh and it's given dimension"""
+function MeshExtra(mesh::Mesh, meshDimension::Int64 = 3)
+    attributeArray = getAttributesInDimension(mesh, meshDimension)
+    return MeshExtra(mesh, attributeArray)
+end
 
 function getNodeToElementMap(mesh::Mesh, attributeArray::Array{Tuple{Int64, Int64}, 1})
     
@@ -55,10 +85,11 @@ function getAllFaces(mesh::Mesh, attributeArray::Array{Tuple{Int64, Int64}, 1})
             elementNo = 1
             for element ∈ mesh.Elements[attribute...]
                 for face ∈ collect(combinations(element.nodeTags[elementDimMap[typeof(element)]], attribDim))
-                    if face ∉ keys(allFaces)
-                        allFaces[face] = Array{Tuple{Tuple{Int64, Int64}, Int64}, 1}(undef, 0)
+                    sortedFace = sort(face)
+                    if sortedFace ∉ keys(allFaces)
+                        allFaces[sortedFace] = Array{Tuple{Tuple{Int64, Int64}, Int64}, 1}(undef, 0)
                     end
-                    push!(allFaces[face], (attribute, elementNo))
+                    push!(allFaces[sortedFace], (attribute, elementNo))
                 end
                 elementNo += 1 
             end
@@ -67,11 +98,39 @@ function getAllFaces(mesh::Mesh, attributeArray::Array{Tuple{Int64, Int64}, 1})
     return allFaces
 end
 
-function getAllBoundaryNodes(allFaces::Dict{Array{Int64, 1}, Array{Tuple{Tuple{Int64, Int64}, Int64}, 1}})
-    boundaryFaces = findall(x->length(x)==1, allFaces)
+"""Returns a list of all the faces that are not shared by any other face, hence the boundaries.
+Does not include boundaries of two different attributes or materials."""
+function getBoundaryFaces(allFaces::Dict{Array{Int64, 1}, Array{Tuple{Tuple{Int64, Int64}, Int64}, 1}})
+    return findall(x->length(x)==1, allFaces)
+end
+
+function getBoundaryFaces(meshExtra::MeshExtra)
+    return getBoundaryFaces(meshExtra.allFaces)
+end
+
+"""Returns list a map(Dict) of Boundary face to the  (atrribute1, elementNumberWithAttribute1, atrribute1, elementNumberWithAttribute2)"""
+function getAllMaterialBoundaryFaces(meshExtra::MeshExtra)
+    commonInternalFaces = findall(x->length(x)==2, meshExtra.allFaces)
+    materialBoundaryFaces =  Dict{Array{Int64, 1},Tuple{Tuple{Int64, Int64}, Int64, Tuple{Int64, Int64}, Int64}}()
+    for commonInternalFace ∈ commonInternalFaces
+        #if the two element attributes are not the same they are material boundaries
+        attrib1 = meshExtra.allFaces[commonInternalFace][1][1]
+        attrib2 = meshExtra.allFaces[commonInternalFace][2][1]
+        #println("attrib1 = $attrib1, attrib2 = $attrib2")
+        if attrib1 != attrib2
+            element1 = meshExtra.allFaces[commonInternalFace][1][2]
+            element2 = meshExtra.allFaces[commonInternalFace][2][2]
+            materialBoundaryFaces[commonInternalFace] = (attrib1, element1, attrib2, element2)
+        end
+    end
+    return materialBoundaryFaces
+end
+
+function getAllBoundaryNodes(boundaryFaces::Array{Array{Int64, 1}, 1})
+    #boundaryFaces = findall(x->length(x)==1, allFaces)
     return unique(sort(vcat(boundaryFaces...)))
 end
 
-function getAllInternalNodes(boundaryNodes::Array{Int64}, mesh::Mesh)
-    return setdiff(keys(mesh.Nodes), boundaryNodes)    
+function getAllInternalNodes(boundaryNodes::Array{Int64, 1}, mesh::Mesh)
+    return sort(collect(setdiff(keys(mesh.Nodes), boundaryNodes)))
 end

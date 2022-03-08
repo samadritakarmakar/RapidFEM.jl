@@ -12,6 +12,7 @@ using FEMSparse, FastGaussQuadrature, SparseArrays, LinearAlgebra, WriteVTK
 include("FEM/elements.jl")
 include("Mesh/mesh.jl")
 include("Mesh/aspectRatio.jl")
+include("Mesh/meshExtra.jl")
 include("Quadrature/quadrature.jl")
 include("ShapeFunctions/langrange.jl")
 include("ShapeFunctions/shapeFunction.jl")
@@ -60,6 +61,10 @@ include("Output/WriteToMesh.jl")
     export Mesh, readMesh, getNoOfElements, getCoordArray, updateNodePositions!
     #aspectRatio.jl
     export getAspectRatioOfElement, getAspectRatios, getAspectRatioOfTriElement, getAspectRatioOfTetElement, getAspectRatioOfQuadElement
+    #meshExtra
+    export MeshExtra, getAttributesInDimension, getNodeToElementMap
+    export getNodeToElementMap!, getAllFaces, getBoundaryFaces
+    export getAllMaterialBoundaryFaces, getAllBoundaryNodes, getAllInternalNodes
 #From Quadrature
 export gauss
 #From ShapeFunction
