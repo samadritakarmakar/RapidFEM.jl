@@ -79,13 +79,145 @@ function getCoordArray(mesh::Mesh,element::AbstractElement)::Array{Float64,2}
     return CoordArray
 end
 
-function updateNodePositions!(mesh::Mesh, changeInPoistion::Array{Float64, 1}, activeDimensions = [1,1,1])
+"""Updates Nodal Positions, given that the change in it's positions are known.
+
+    updateNodePositions!(mesh::Mesh, changeInPosition::Array{Float64, 1}, activeDimensions = [1,1,1])
+"""
+function updateNodePositions!(mesh::Mesh, changeInPosition::Array{Float64, 1}, activeDimensions = [1,1,1])
     nodes = sort(collect(keys(mesh.Nodes)))
     rangeDim = createDimRange()
     problemDim = sum(activeDimensions)
     range = getRange(rangeDim, activeDimensions)
     for node ∈ nodes
-        mesh.Nodes[node][range] = mesh.Nodes[node][range] + changeInPoistion[problemDim*(node-1)+1:problemDim*node]
+        mesh.Nodes[node][range] = mesh.Nodes[node][range] + changeInPosition[problemDim*(node-1)+1:problemDim*node]
     end
     return nothing
+end
+
+function getElementTypeAndOrder(attrib::Tuple{Int64, Int64}, newElementNodeTags::Vector{Int64})
+    lengthElementNodeTags = length(newElementNodeTags)
+    elementType = TriElement
+    order = 1
+    notFound = false
+    if attrib[1] == 0
+        elementType, order = PointElement, 1
+    elseif attrib[1] == 1
+        elementType = LineElement
+        if lengthElementNodeTags == 2
+            order = 1
+        elseif lengthElementNodeTags == 3
+            order = 2
+        elseif lengthElementNodeTags == 4
+            order = 3
+        else
+            notFound = true
+        end
+    elseif attrib[1] == 2
+        if lengthElementNodeTags == 3 
+            elementType, order = TriElement, 1
+        elseif lengthElementNodeTags == 6
+            elementType, order = TriElement, 2
+        elseif lengthElementNodeTags == 10
+            elementType, order = TriElement, 3
+        elseif lengthElementNodeTags == 4
+            elementType, order = QuadElement, 1
+        elseif lengthElementNodeTags == 9
+            elementType, order = QuadElement, 2
+        elseif lengthElementNodeTags == 16
+            elementType, order = QuadElement, 3
+        else
+            notFound = true
+        end
+    elseif attrib[1] == 3 
+        if lengthElementNodeTags == 4 
+            elementType, order = TetElement, 1
+        elseif lengthElementNodeTags == 10
+            elementType, order = TetElement, 2
+        elseif lengthElementNodeTags == 20
+            elementType, order = TetElement, 3
+        elseif lengthElementNodeTags == 8
+            elementType, order = HexElement, 1
+        elseif lengthElementNodeTags == 27
+            elementType, order = HexElement, 2
+        elseif lengthElementNodeTags == 64
+            elementType, order = HexElement, 3
+        else
+            notFound = true
+        end
+    else
+        notFound = true           
+    end
+    if notFound
+        error("Element with attribute $attrib and node length $lengthElementNodeTags not supported.")
+    end
+    return elementType, order
+end
+
+"""Returns a new Element from with a given label and attribute. Recognizes type of element and order from dimension in attib[1] and 
+length of newElementNodeTags
+
+    createNewElement(attrib, label, newElementNodeTags)
+"""
+function createNewElement(attrib::Tuple{Int64, Int64}, label::Int64, newElementNodeTags::Vector{Int64})
+    
+    lengthElementNodeTags = length(newElementNodeTags)
+    elementType, order = getElementTypeAndOrder(attrib, newElementNodeTags)
+    return elementType(label, [attrib[2], attrib[2]], 
+        newElementTags, lengthElementNodeTags, order)   
+end
+
+"""Replaces and Adds Elements in a Set of element attibutes. If badElAttribsElNos is used directly then it is recommended 
+that all element attributes be the same.
+
+    replaceAndAddElements!(mesh, badElAttribsElNos, newElementNodeTags)
+
+    replaceAndAddElements!(mesh, attrib, elementNos, newElementNodeTags)
+"""
+
+function replaceAndAddElements!(mesh::Mesh, 
+    badElAttribsElNos::Set{Tuple{Tuple{Int64, Int64}, Int64}},
+    newElementNodeTags::Union{Vector{Vector{Int64}}, Set{Vector{Int64}}})
+
+    if newElementNodeTags isa Set
+        newElementNodeTags = collect(newElementNodeTags)
+    end
+
+    lengthNewElementTags = length(newElementNodeTags)
+    newElementTagNo = 1
+    deletedElements = 0
+    attrib = (0,0)
+    for badElAttribsElNo ∈ badElAttribsElNos
+        attrib, changeTagElNo = badElAttribsElNo
+        if newElementTagNo <= lengthNewElementTags
+            label = mesh.Elements[attrib][changeTagElNo].label
+            element = createNewElement(attrib, label, newElementNodeTags[newElementTagNo])
+            
+            mesh.Elements[attrib][changeTagElNo] = element
+            newElementTagNo += 1
+        else
+            deleteat!(mesh.Elements[attrib],changeTagElNo)
+            deletedElements += 1
+        end
+    end
+    addElements = 0
+    while newElementTagNo <= lengthNewElementTags
+        newLabel = mesh.Elements[attrib][end].label + 1 
+        element = createNewElement(attrib, newLabel, newElementNodeTags[newElementTagNo])
+            push!(mesh.Elements[attrib], element)
+       
+        newElementTagNo += 1
+        addElements += 1
+    end
+    mesh.noOfElements += addElements - deletedElements
+end
+
+function replaceAndAddElements!(mesh::Mesh, attrib::Tuple{Int64, Int64},
+    elementNos::Union{Vector{Int64}, Set{Int64}}, 
+    newElementNodeTags::Union{Vector{Vector{Int64}}, Set{Vector{Int64}}})
+
+    badElAttribsElNos = Set{Tuple{Tuple{Int64, Int64}, Int64}}()
+    for elementNo ∈ elementNos
+        push!(badElAttribsElNos, (attrib, elementNo))
+    end
+    replaceAndAddElements!(mesh, badElAttribsElNos, newElementNodeTags)
 end

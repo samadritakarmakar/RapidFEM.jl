@@ -1,17 +1,20 @@
 using Combinatorics
 
-struct MeshExtra
-    nodeToElementMap::Dict{Int64, Array{Tuple{Tuple{Int64, Int64}, Int64}, 1}}
-    allFaces::Dict{Array{Int64, 1}, Array{Tuple{Tuple{Int64, Int64}, Int64}, 1}}
-    #boundaryFaces::Dict{Array{Int64, 1}, Array{Tuple{Tuple{Int64, Int64}, Int64}, 1}}
+mutable struct MeshExtra
+    nodeToElementMap::Dict{Int64, Vector{Tuple{Tuple{Int64, Int64}, Int64}}}
+    allFaces::Dict{Array{Int64, 1}, Vector{Tuple{Tuple{Int64, Int64}, Int64}}}
+    #boundaryFaces::Dict{Array{Int64, 1}, Vector{Tuple{Tuple{Int64, Int64}, Int64}}}
     boundaryNodes::Array{Int64, 1}
     internalNodes::Array{Int64, 1}
-    #MeshExtra(nodeToElementMap::Dict{Int64, Array{Tuple{Tuple{Int64, Int64}, Int64}, 1}}) = new(nodeToElementMap)
+    elementNodeTagsToElementMap::Dict{Vector{Int64}, Tuple{Tuple{Int64, Int64}, Int64}}
+    #MeshExtra(nodeToElementMap::Dict{Int64, Vector{Tuple{Tuple{Int64, Int64}, Int64}}}) = new(nodeToElementMap)
 end
 
 function MeshExtra()
-    MeshExtra(Dict{Int64, Array{Tuple{Tuple{Int64, Int64}, Int64}, 1}}(), Dict{Array{Int64, 1}, Array{Tuple{Tuple{Int64, Int64}, Int64}, 1}}(),
-    zeros(Int64, 0), zeros(Int64, 0))
+    MeshExtra(Dict{Int64, Vector{Tuple{Tuple{Int64, Int64}, Int64}}}(), 
+    Dict{Array{Int64, 1}, Vector{Tuple{Tuple{Int64, Int64}, Int64}}}(),
+    zeros(Int64, 0), zeros(Int64, 0), 
+    Dict{Vector{Int64}, Tuple{Tuple{Int64, Int64}, Int64}}())
 end
 
 function MeshExtra(mesh::Mesh, attributeArray::Array{Tuple{Int64, Int64}, 1})
@@ -20,7 +23,8 @@ function MeshExtra(mesh::Mesh, attributeArray::Array{Tuple{Int64, Int64}, 1})
     boundaryFaces = getBoundaryFaces(allFaces)
     boundaryNodes = getAllBoundaryNodes(boundaryFaces)
     internalNodes = getAllInternalNodes(boundaryNodes, mesh)
-    MeshExtra(nodeToElementMap, allFaces, boundaryNodes, internalNodes)
+    elNodeTagsToElMap = getElNodeTagsToElementMap(mesh::Mesh, attributeArray)
+    MeshExtra(nodeToElementMap, allFaces, boundaryNodes, internalNodes, elNodeTagsToElMap)
 end
 
 """Retrives all attibutes belonging to a certain dimension"""
@@ -43,7 +47,7 @@ end
 
 function getNodeToElementMap(mesh::Mesh, attributeArray::Array{Tuple{Int64, Int64}, 1})
     
-    nodeToElementMap = Dict{Int64, Array{Tuple{Tuple{Int64, Int64}, Int64}, 1}}()
+    nodeToElementMap = Dict{Int64, Vector{Tuple{Tuple{Int64, Int64}, Int64}}}()
     for attribute ∈ attributeArray
         elements = mesh.Elements[attribute...]
         noOfElements = size(elements,1)
@@ -53,7 +57,7 @@ function getNodeToElementMap(mesh::Mesh, attributeArray::Array{Tuple{Int64, Int6
             #for nodeNo ∈ 1:length(element)
                 #nodeTag = element.nodeTags[nodeNo]
                 if nodeTag ∉ keys(nodeToElementMap)
-                    nodeToElementMap[nodeTag] = Array{Tuple{Tuple{Int64, Int64}, Int64}, 1}(undef, 0)
+                    nodeToElementMap[nodeTag] = Vector{Tuple{Tuple{Int64, Int64}, Int64}}(undef, 0)
                 end
                 Base.push!(nodeToElementMap[nodeTag], (attribute, elementNo))
             end
@@ -77,7 +81,7 @@ function getElementDimMap()
 end
 
 function getAllFaces(mesh::Mesh, attributeArray::Array{Tuple{Int64, Int64}, 1})
-    allFaces = Dict{Array{Int64, 1}, Array{Tuple{Tuple{Int64, Int64}, Int64}, 1}}()
+    allFaces = Dict{Array{Int64, 1}, Vector{Tuple{Tuple{Int64, Int64}, Int64}}}()
     attribDim = attributeArray[1][1]
     elementDimMap = getElementDimMap()
     for attribute ∈ attributeArray
@@ -87,12 +91,14 @@ function getAllFaces(mesh::Mesh, attributeArray::Array{Tuple{Int64, Int64}, 1})
                 for face ∈ collect(combinations(element.nodeTags[elementDimMap[typeof(element)]], attribDim))
                     sortedFace = sort(face)
                     if sortedFace ∉ keys(allFaces)
-                        allFaces[sortedFace] = Array{Tuple{Tuple{Int64, Int64}, Int64}, 1}(undef, 0)
+                        allFaces[sortedFace] = Vector{Tuple{Tuple{Int64, Int64}, Int64}}(undef, 0)
                     end
                     push!(allFaces[sortedFace], (attribute, elementNo))
                 end
                 elementNo += 1 
             end
+        else
+            error("Only one dimension type in attribute[1] is allowed.")
         end
     end
     return allFaces
@@ -100,7 +106,7 @@ end
 
 """Returns a list of all the faces that are not shared by any other face, hence the boundaries.
 Does not include boundaries of two different attributes or materials."""
-function getBoundaryFaces(allFaces::Dict{Array{Int64, 1}, Array{Tuple{Tuple{Int64, Int64}, Int64}, 1}})
+function getBoundaryFaces(allFaces::Dict{Array{Int64, 1}, Vector{Tuple{Tuple{Int64, Int64}, Int64}}})
     return findall(x->length(x)==1, allFaces)
 end
 
@@ -108,7 +114,7 @@ function getBoundaryFaces(meshExtra::MeshExtra)
     return getBoundaryFaces(meshExtra.allFaces)
 end
 
-"""Returns list a map(Dict) of Boundary face to the  (atrribute1, elementNumberWithAttribute1, atrribute1, elementNumberWithAttribute2)"""
+"""Returns a map(Dict) of Boundary face to the  (atrribute1, elementNumberWithAttribute1, atrribute2, elementNumberWithAttribute2)"""
 function getAllMaterialBoundaryFaces(meshExtra::MeshExtra)
     commonInternalFaces = findall(x->length(x)==2, meshExtra.allFaces)
     materialBoundaryFaces =  Dict{Array{Int64, 1},Tuple{Tuple{Int64, Int64}, Int64, Tuple{Int64, Int64}, Int64}}()
@@ -134,3 +140,18 @@ end
 function getAllInternalNodes(boundaryNodes::Array{Int64, 1}, mesh::Mesh)
     return sort(collect(setdiff(keys(mesh.Nodes), boundaryNodes)))
 end
+
+"""Returns a map(Dict) of Boundary face to the  (atrribute, elementNumberWithAttribute)"""
+function getElNodeTagsToElementMap(mesh::Mesh, attribArray::Vector{Tuple{Int64, Int64}})
+
+    elNodeTagsToElMap = Dict{Vector{Int64}, Tuple{Tuple{Int64, Int64}, Int64}}()
+    for attrib ∈ attribArray
+        elements = mesh.Elements[attrib]
+        for element ∈ elements
+            nodeTags = sort(element.nodeTags)
+            elNodeTagsToElMap[nodeTags] = (attrib, nodeTags)
+        end
+    end
+    return elNodeTagsToElMap
+end
+
