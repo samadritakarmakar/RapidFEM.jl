@@ -1,18 +1,4 @@
-include("mesh.jl")
 include("meshExtra.jl")
-
-"""Returns a new Element from with a given label and attribute. Recognizes type of element and order from dimension in attib[1] and 
-length of newElementNodeTags
-
-    createNewElement(attrib, label, newElementNodeTags)
-"""
-function createNewElement(attrib::Tuple{Int64, Int64}, label::Int64, newElementNodeTags::Vector{Int64})
-    
-    lengthElementNodeTags = length(newElementNodeTags)
-    elementType, order = getElementTypeAndOrder(attrib, newElementNodeTags)
-    return elementType(label, [attrib[2], attrib[2]], 
-        newElementTags, lengthElementNodeTags, order)   
-end
 
 """Replaces and Adds Elements in a Set of element attibutes. If replaceElAttribsElNos is used directly then it is recommended 
 that all element attributes be the same.
@@ -27,9 +13,6 @@ function replaceAndAddElements!(mesh::Mesh,
     newElementNodeTags::Vector{Vector{Int64}})
 
     newElAttribsElNos = Vector{Tuple{Tuple{Int64, Int64}, Int64}}()
-    if newElementNodeTags isa Set
-        newElementNodeTags = collect(newElementNodeTags)
-    end
 
     lengthNewElementTags = length(newElementNodeTags)
     newElementTagNo = 1
@@ -78,15 +61,26 @@ function replaceAndAddElements!(mesh::Mesh, attrib::Tuple{Int64, Int64},
     replaceAndAddElements!(mesh, replaceElAttribsElNos, newElementNodeTags)
 end
 
-function updateElNodeTagsToElementMap!(elNodeTagsToElementMap::Dict{Vector{Int64}, Tuple{Tuple{Int64, Int64}, Int64}},
-    replaceElAttribsElNos::Set{Tuple{Tuple{Int64, Int64}, Int64}}, newElAttribsElNos::Vector{Tuple{Tuple{Int64, Int64}, Int64}},
-    newElementTagSet::Vector{Vector{Int64}}, mesh::Mesh)
-
-
+function getBoundaryPolyhedron(elementNodeTagsArray::Vector{Vector{Int64}}, dimension::Int64)
+    boundaryPolyhedron = Set{Vector{Int64}}()
+    for elementNodeTags ∈ elementNodeTagsArray
+        elementType, order = getElementTypeAndOrder(dimension, elementNodeTags)
+        if elementType == LineElement ||elementType == PointElement || order > 1
+            error("element Type $elementType or order $order not supported to find outer polygons")
+        end
+        combinations = getFaceCombinations(elementType, order)
+        faces = getFacesFromCombinations(elementNodeTags, combinations)
+        for face ∈ faces
+            if face ∉ boundaryPolyhedron
+                push!(boundaryPolyhedron, face)
+            else
+                pop!(boundaryPolyhedron, face)
+            end
+        end
+    end
+    return boundaryPolyhedron
 end
 
-function addNewElNodeTagsToElementMap!(elNodeTagsToElementMap::Dict{Vector{Int64}, Tuple{Tuple{Int64, Int64}, Int64}},
-    newElementTagSet::Vector{Vector{Int64}}, attrib::Tuple{Int64, Int64})
-end
+
 
 

@@ -5,7 +5,6 @@
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
  =====================================================================#
- 
 include("gmshReader.jl")
 """Mesh struct keeps the data regarding the mesh and
 it's properties."""
@@ -94,14 +93,18 @@ function updateNodePositions!(mesh::Mesh, changeInPosition::Array{Float64, 1}, a
     return nothing
 end
 
-function getElementTypeAndOrder(attrib::Tuple{Int64, Int64}, newElementNodeTags::Vector{Int64})
+"""Returns the element type and order from the dimension of the element and the length of its node tags.
+
+        elementType, order = getElementTypeAndOrder(dimension, newElementNodeTags)
+"""
+function getElementTypeAndOrder(dimension::Int64, newElementNodeTags::Vector{Int64})
     lengthElementNodeTags = length(newElementNodeTags)
     elementType = TriElement
     order = 1
     notFound = false
-    if attrib[1] == 0
+    if dimension == 0
         elementType, order = PointElement, 1
-    elseif attrib[1] == 1
+    elseif dimension == 1
         elementType = LineElement
         if lengthElementNodeTags == 2
             order = 1
@@ -112,7 +115,7 @@ function getElementTypeAndOrder(attrib::Tuple{Int64, Int64}, newElementNodeTags:
         else
             notFound = true
         end
-    elseif attrib[1] == 2
+    elseif dimension == 2
         if lengthElementNodeTags == 3 
             elementType, order = TriElement, 1
         elseif lengthElementNodeTags == 6
@@ -128,7 +131,7 @@ function getElementTypeAndOrder(attrib::Tuple{Int64, Int64}, newElementNodeTags:
         else
             notFound = true
         end
-    elseif attrib[1] == 3 
+    elseif dimension == 3 
         if lengthElementNodeTags == 4 
             elementType, order = TetElement, 1
         elseif lengthElementNodeTags == 10
@@ -148,7 +151,7 @@ function getElementTypeAndOrder(attrib::Tuple{Int64, Int64}, newElementNodeTags:
         notFound = true           
     end
     if notFound
-        error("Element with attribute $attrib and node length $lengthElementNodeTags not supported.")
+        error("Element with attribute $dimension and node length $lengthElementNodeTags not supported.")
     end
     return elementType, order
 end
@@ -161,63 +164,8 @@ length of newElementNodeTags
 function createNewElement(attrib::Tuple{Int64, Int64}, label::Int64, newElementNodeTags::Vector{Int64})
     
     lengthElementNodeTags = length(newElementNodeTags)
-    elementType, order = getElementTypeAndOrder(attrib, newElementNodeTags)
+    elementType, order = getElementTypeAndOrder(attrib[1], newElementNodeTags)
     return elementType(label, [attrib[2], attrib[2]], 
         newElementTags, lengthElementNodeTags, order)   
 end
 
-"""Replaces and Adds Elements in a Set of element attibutes. If badElAttribsElNos is used directly then it is recommended 
-that all element attributes be the same.
-
-    replaceAndAddElements!(mesh, badElAttribsElNos, newElementNodeTags)
-
-    replaceAndAddElements!(mesh, attrib, elementNos, newElementNodeTags)
-"""
-
-function replaceAndAddElements!(mesh::Mesh, 
-    badElAttribsElNos::Set{Tuple{Tuple{Int64, Int64}, Int64}},
-    newElementNodeTags::Union{Vector{Vector{Int64}}, Set{Vector{Int64}}})
-
-    if newElementNodeTags isa Set
-        newElementNodeTags = collect(newElementNodeTags)
-    end
-
-    lengthNewElementTags = length(newElementNodeTags)
-    newElementTagNo = 1
-    deletedElements = 0
-    attrib = (0,0)
-    for badElAttribsElNo ∈ badElAttribsElNos
-        attrib, changeTagElNo = badElAttribsElNo
-        if newElementTagNo <= lengthNewElementTags
-            label = mesh.Elements[attrib][changeTagElNo].label
-            element = createNewElement(attrib, label, newElementNodeTags[newElementTagNo])
-            
-            mesh.Elements[attrib][changeTagElNo] = element
-            newElementTagNo += 1
-        else
-            deleteat!(mesh.Elements[attrib],changeTagElNo)
-            deletedElements += 1
-        end
-    end
-    addElements = 0
-    while newElementTagNo <= lengthNewElementTags
-        newLabel = mesh.Elements[attrib][end].label + 1 
-        element = createNewElement(attrib, newLabel, newElementNodeTags[newElementTagNo])
-            push!(mesh.Elements[attrib], element)
-       
-        newElementTagNo += 1
-        addElements += 1
-    end
-    mesh.noOfElements += addElements - deletedElements
-end
-
-function replaceAndAddElements!(mesh::Mesh, attrib::Tuple{Int64, Int64},
-    elementNos::Union{Vector{Int64}, Set{Int64}}, 
-    newElementNodeTags::Union{Vector{Vector{Int64}}, Set{Vector{Int64}}})
-
-    badElAttribsElNos = Set{Tuple{Tuple{Int64, Int64}, Int64}}()
-    for elementNo ∈ elementNos
-        push!(badElAttribsElNos, (attrib, elementNo))
-    end
-    replaceAndAddElements!(mesh, badElAttribsElNos, newElementNodeTags)
-end
