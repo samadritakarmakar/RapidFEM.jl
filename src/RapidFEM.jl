@@ -13,6 +13,7 @@ include("FEM/elements.jl")
 include("Mesh/mesh.jl")
 include("Mesh/aspectRatio.jl")
 include("Mesh/meshExtra.jl")
+include("Mesh/updateMesh.jl")
 include("Quadrature/quadrature.jl")
 include("ShapeFunctions/langrange.jl")
 include("ShapeFunctions/shapeFunction.jl")
@@ -59,13 +60,15 @@ include("Output/WriteToMesh.jl")
 #From Mesh
     #mesh.jl
     export Mesh, readMesh, getNoOfElements, getCoordArray, updateNodePositions!
-    export getElementTypeAndOrder, createNewElement, replaceAndAddElements!
+    export getElementTypeAndOrder, createNewElement
     #aspectRatio.jl
     export getAspectRatioOfElement, getAspectRatios, getAspectRatioOfTriElement, getAspectRatioOfTetElement, getAspectRatioOfQuadElement
     #meshExtra
     export MeshExtra, getAttributesInDimension, getNodeToElementMap
     export getNodeToElementMap!, getAllFaces, getBoundaryFaces
     export getAllMaterialBoundaryFaces, getAllBoundaryNodes, getAllInternalNodes
+    #updateMesh
+    export replaceAndAddElements!
 #From Quadrature
 export gauss
 #From ShapeFunction
