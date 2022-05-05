@@ -3,6 +3,16 @@ using LinearAlgebra, RapidFEM
 #2D : https://docs.salome-platform.org/8/gui/SMESH/aspect_ratio.html
 #3D : https://docs.salome-platform.org/8/gui/SMESH/aspect_ratio_3d.html
 
+function getConnections(coordArray::AbstractArray{Float64, 2}, nodeNos::Array{Array{Int64,1},1})
+    connections = zeros(size(coordArray, 1), length(nodeNos))
+    connectionNo = 1
+    for nodeNo ∈ nodeNos
+        connections[:, connectionNo] = coordArray[:,nodeNo[2]]-coordArray[:,nodeNo[1]]
+        connectionNo += 1
+    end
+    return connections
+end
+
 function getConnectionData(coordArray::AbstractArray{Float64, 2}, nodeNos::Array{Array{Int64,1},1})
     connections = zeros(size(coordArray, 1), length(nodeNos))
     connectionLengths = zeros(length(nodeNos))
@@ -27,20 +37,47 @@ function getSurfaceNormals(connections::Array{Float64, 2}, normalCombs::Array{Ar
     return normals, normalMags
 end
 
-function getAspectRatioOfTriElement(coordArray::AbstractArray{Float64})
+#=function getAspectRatioOfTriElement(coordArray::AbstractArray{Float64})
     nodeNos = [[1, 2], [1, 3], [2, 3]]
     connections, connectionLengths = getConnectionData(coordArray, nodeNos)
     A = 0.5*norm(cross(connections[:, 1], connections[:, 2]))
     connectionLengthMax = maximum(connectionLengths)
     return connectionLengthMax*sum(connectionLengths)/(4.0*sqrt(3.0)*A)
+end=# 
+#Salome implementation superseeded in favour of ratio of length rms to volume
+
+function lengthRmsPowDim(coord::Array{Float64, 2}, dim::Int64, 
+    combinations::Vector{Vector{Int64}})
+
+    c = dim == 2 ? 1.0/3.0 : 1.0/6.0
+    coordMat = coord
+    l_sq = 0.0
+    vec = zeros(size(coordMat,1))
+    for combination ∈ combinations
+        vec .= coordMat[:,combination[1]] -coordMat[:,combination[2]]
+        l_sq += dot(vec, vec)
+    end
+    return sqrt(c*l_sq)^dim
 end
+
+function getAspectRatioOfTriElement(coordArray::AbstractArray{Float64})
+    nodeNos = [[1, 2], [1, 3], [2, 3]]
+    connections = getConnections(coordArray, nodeNos)
+    A = 0.5*norm(cross(connections[:, 1], connections[:, 2]))
+    dim = 2
+    c = √3.0/4.0
+    l_rms = lengthRmsPowDim(coordArray, dim, nodeNos)
+    return c*l_rms/A
+end
+
+
 
 function getAspectRatioOfElement(mesh::Mesh, element::TriElement)
     coordArray = (getCoordArray(mesh, element))[:,1:3]
     return getAspectRatioOfTriElement(coordArray)
 end
 ###Test with top = [0.5, 1/(2*√3), √(2/3)]; getAspectRatioOfTetElement([[0.0, 0, 0] [1, 0,0] [.5, sind(60), 0.0] top])
-function getAspectRatioOfTetElement(coordArray::AbstractArray{Float64})
+#=function getAspectRatioOfTetElement(coordArray::AbstractArray{Float64})
     nodeNos = [[1, 2], [1, 3], [1, 4], [2, 3], [2, 4], [3, 4]]
     connections, connectionLengths = getConnectionData(coordArray, nodeNos)
     connectionLengthMax = maximum(connectionLengths)
@@ -49,6 +86,21 @@ function getAspectRatioOfTetElement(coordArray::AbstractArray{Float64})
     α = dot(connections[:,1], normals[:,3])#normals[:,2])
     r = abs(α)/sum(normalMags)
     return connectionLengthMax/(2.0*sqrt(6.0)*r)
+end=#
+
+#Salome implementation superseeded in favour of ratio of length rms to volume
+###Test with top = [0.5, 1/(2*√3), √(2/3)]; getAspectRatioOfTetElement([[0.0, 0, 0] [1, 0,0] [.5, sind(60), 0.0] top])
+function getAspectRatioOfTetElement(coordArray::AbstractArray{Float64})
+    nodeNos = [[1, 2], [1, 3], [1, 4], [2, 3], [2, 4], [3, 4]]
+    connections = getConnections(coordArray, nodeNos)
+    dim = 3
+    coordMat = zeros(4, 4)
+    coordMat[1, :] .= ones(size(coordMat, 2))
+    coordMat[2:end, :] .= coordArray
+    V = abs(det(coordMat))/6.0
+    l_rms = lengthRmsPowDim(coordArray, dim, nodeNos)
+    c = 1.0/(6.0*√2.0)
+    return c*l_rms/V
 end
 
 function getAspectRatioOfElement(mesh::Mesh, element::TetElement)

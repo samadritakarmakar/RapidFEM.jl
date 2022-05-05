@@ -10,12 +10,13 @@ function replaceAndAddElements!(mesh::Mesh,
     replaceElAttribsElNos::Set{Tuple{Tuple{Int64, Int64}, Int64}},
     newElementNodeTags::Vector{Vector{Int64}})
 
-    newElAttribsElNos = Vector{Tuple{Tuple{Int64, Int64}, Int64}}()
+    #newElAttribsElNos = Vector{Tuple{Tuple{Int64, Int64}, Int64}}()
 
     lengthNewElementTags = length(newElementNodeTags)
     newElementTagNo = 1
     deletedElements = 0
     attrib = (0,0)
+    deleteIndices = Vector{Int64}()
     for replaceElAttribsElNo ∈ replaceElAttribsElNos
         attrib, changeTagElNo = replaceElAttribsElNo
         if newElementTagNo <= lengthNewElementTags
@@ -24,14 +25,16 @@ function replaceAndAddElements!(mesh::Mesh,
             
             mesh.Elements[attrib][changeTagElNo] = element
             
-            push!(newElAttribsElNos, (attrib, changeTagElNo))
+            #push!(newElAttribsElNos, (attrib, changeTagElNo))
 
             newElementTagNo += 1
         else
-            deleteat!(mesh.Elements[attrib],changeTagElNo)
+            push!(deleteIndices, changeTagElNo)
+            sort!(deleteIndices)
             deletedElements += 1
         end
     end
+    deleteat!(mesh.Elements[attrib], deleteIndices)
     addElements = 0
     while newElementTagNo <= lengthNewElementTags
         newLabel = mesh.Elements[attrib][end].label + 1 
@@ -41,11 +44,11 @@ function replaceAndAddElements!(mesh::Mesh,
        
         newElementTagNo += 1
         addElements += 1
-        push!(newElAttribsElNos, length(mesh.Elements[attrib]))   
+        #push!(newElAttribsElNos, length(mesh.Elements[attrib]))   
     end
     mesh.noOfElements += addElements - deletedElements
 
-    return newElAttribsElNos
+    #return newElAttribsElNos
 end
 
 function replaceAndAddElements!(mesh::Mesh, attrib::Tuple{Int64, Int64},
