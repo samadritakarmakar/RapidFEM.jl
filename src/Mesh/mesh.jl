@@ -166,6 +166,6 @@ function createNewElement(attrib::Tuple{Int64, Int64}, label::Int64, newElementN
     lengthElementNodeTags = length(newElementNodeTags)
     elementType, order = getElementTypeAndOrder(attrib[1], newElementNodeTags)
     return elementType(label, [attrib[2], attrib[2]], 
-        newElementTags, lengthElementNodeTags, order)   
+        newElementNodeTags, lengthElementNodeTags, order)   
 end
 
