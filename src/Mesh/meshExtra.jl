@@ -22,7 +22,8 @@ function MeshExtra(mesh::Mesh, attributeArray::Array{Tuple{Int64, Int64}, 1})
     allFaces = getAllFaces(mesh, attributeArray)
     boundaryFaces = getBoundaryFaces(allFaces)
     boundaryNodes = getAllBoundaryNodes(boundaryFaces)
-    internalNodes = getAllInternalNodes(boundaryNodes, mesh)
+    #internalNodes = getAllInternalNodes(boundaryNodes, mesh)
+    internalNodes = getAllInternalNodes(boundaryNodes, nodeToElementMap)
     #elNodeTagsToElMap = getElNodeTagsToElementMap(mesh::Mesh, attributeArray)
     MeshExtra(nodeToElementMap, allFaces, boundaryNodes, internalNodes)#, elNodeTagsToElMap)
 end
@@ -237,6 +238,12 @@ end
 
 function getAllInternalNodes(boundaryNodes::Array{Int64, 1}, mesh::Mesh)
     return sort(collect(setdiff(keys(mesh.Nodes), boundaryNodes)))
+end
+
+function getAllInternalNodes(boundaryNodes::Array{Int64, 1}, 
+    nodeToElementMap::Dict{Int64, Vector{Tuple{Tuple{Int64, Int64}, Int64}}})
+
+    return sort(collect(setdiff(keys(nodeToElementMap), boundaryNodes)))
 end
 
 """Returns a map(Dict) of Boundary face to the  (atrribute, elementNumberWithAttribute)"""
