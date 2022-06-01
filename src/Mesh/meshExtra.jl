@@ -92,6 +92,7 @@ function getFacesFromCombinations(nodes::Vector{Int64}, combinations::Vector{Vec
 end
 
 function getFaceCombinations(elementType::DataType, order::Int64)
+    combinations = [[1], [2]]
     if elementType == LineElement
         combinations = [[1], [2]]
         if order == 2
@@ -147,6 +148,8 @@ function getFaceCombinations(elementType::DataType, order::Int64)
         elseif order != 1
             error("Order $(order) not supported.")
         end
+    else
+        error("$(elementType) not supported.")
     end
     return combinations
 end
@@ -240,10 +243,22 @@ function getAllInternalNodes(boundaryNodes::Array{Int64, 1}, mesh::Mesh)
     return sort(collect(setdiff(keys(mesh.Nodes), boundaryNodes)))
 end
 
+function getAllInternalNodes(boundaryNodes::Array{Any}, 
+    mesh::Mesh)
+
+    return Int64[]
+end
+
 function getAllInternalNodes(boundaryNodes::Array{Int64, 1}, 
     nodeToElementMap::Dict{Int64, Vector{Tuple{Tuple{Int64, Int64}, Int64}}})
 
     return sort(collect(setdiff(keys(nodeToElementMap), boundaryNodes)))
+end
+
+function getAllInternalNodes(boundaryNodes::Array{Any}, 
+    nodeToElementMap::Dict{Int64, Vector{Tuple{Tuple{Int64, Int64}, Int64}}})
+
+    return Int64[]
 end
 
 """Returns a map(Dict) of Boundary face to the  (atrribute, elementNumberWithAttribute)"""
