@@ -91,7 +91,15 @@ function getFacesFromCombinations(nodes::Vector{Int64}, combinations::Vector{Vec
 end
 
 function getFaceCombinations(elementType::DataType, order::Int64)
-    combinations = [[1, 2], [1, 3], [2, 3]]
+    if elementType == LineElement
+        combinations = [[1], [2]]
+        if order == 2
+            combinations = [[1], [3], [2]]
+        elseif order == 3
+            combinations = [[1], [3], [4], [2]]
+        elseif order != 1
+            error("Order $(order) not supported.")
+        end
     if elementType == TriElement
         combinations = [[1, 2], [1, 3], [2, 3]]
         if order == 2
