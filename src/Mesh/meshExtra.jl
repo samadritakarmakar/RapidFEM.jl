@@ -100,7 +100,7 @@ function getFaceCombinations(elementType::DataType, order::Int64)
         elseif order != 1
             error("Order $(order) not supported.")
         end
-    if elementType == TriElement
+    elseif elementType == TriElement
         combinations = [[1, 2], [1, 3], [2, 3]]
         if order == 2
             combinations = [[1, 2, 4], [1, 3, 6], [2, 3, 5]]
