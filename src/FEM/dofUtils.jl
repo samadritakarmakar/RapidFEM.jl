@@ -91,7 +91,7 @@ function getSolAtElement(sol::AbstractArray{Float64,1}, element::AbstractElement
 
     vectorNodes::Array{Int64,1} = getVectorNodes(element, problemDim)
     #sort!(vectorNodes)
-    solAtNodes::Array{Float64,1} = zero(sum(activeDimensions))
+    solAtNodes::Array{Float64,1} = zeros(sum(activeDimensions))
     i::Int64 = 1
     j::Int64 = 1
     for i ∈ 1:length(solAtNodes)
