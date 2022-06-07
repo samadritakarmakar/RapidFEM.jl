@@ -90,13 +90,14 @@ function InvDistInterpolation(postProcessFunctionArray::Array{func, 1}, sol::Arr
     sumInvDistances::Vector = zeros(mesh.noOfNodes)
     RangeDict = RapidFEM.createDimRange()
     dimRange::StepRange{Int64,Int64} = RapidFEM.getRange(RangeDict, activeDimensions)
+    actualProblemDim = Int64(length(sol)/mesh.noOfNodes)
     for attributeNo ∈ 1:length(attributeArray)
         attribute::Tuple{Int64, Int64} = attributeArray[attributeNo]
         postProcessFunction::func = postProcessFunctionArray[attributeNo]
         parametersData::T = parametersDataArray[attributeNo]
         for elementNo ∈ 1:length(mesh.Elements[attribute])
             element::AbstractElement = mesh.Elements[attribute][elementNo]
-            solAtNodes::Array{Float64, 1} = getSolAtElement(sol, element, problemDim, activeDimensions)
+            solAtNodes::Array{Float64, 1} = getSolAtElement(sol, element, actualProblemDim, activeDimensions)
             coordArrayTemp::Array{Float64,2} = getCoordArray(mesh, element)
             coordArray::Array{Float64,2} = coordArrayTemp[dimRange,:]
             shapeFunction::Array{ShapeFunction,1} = feSpace!(FeSpace, element, mesh, reduction = reduction, 
