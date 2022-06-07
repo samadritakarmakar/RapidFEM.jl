@@ -96,7 +96,7 @@ function InvDistInterpolation(postProcessFunctionArray::Array{func, 1}, sol::Arr
         parametersData::T = parametersDataArray[attributeNo]
         for elementNo ∈ 1:length(mesh.Elements[attribute])
             element::AbstractElement = mesh.Elements[attribute][elementNo]
-            solAtNodes::Array{Float64, 1} = getSolAtElement(sol, element, problemDim)
+            solAtNodes::Array{Float64, 1} = getSolAtElement(sol, element, problemDim, activeDimensions)
             coordArrayTemp::Array{Float64,2} = getCoordArray(mesh, element)
             coordArray::Array{Float64,2} = coordArrayTemp[dimRange,:]
             shapeFunction::Array{ShapeFunction,1} = feSpace!(FeSpace, element, mesh, reduction = reduction, 
