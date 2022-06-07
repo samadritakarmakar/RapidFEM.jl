@@ -80,6 +80,32 @@ function getSolAtElement(sol::AbstractArray{Float64,1}, element::AbstractElement
     return solAtNodes
 end
 
+"""Extracts the solution available at a particular Element for a certain problem dimension. 
+activeDimensions can be used if the solution dimension is not the same as used processing dimension.
+For example, the displacement solution is in 2D but the stesses usually need displacement in 3D.
+
+    solAtNodes::Array{Float64,1} = getSolAtElement(sol, element, problemDim, activeDimensions)
+"""
+function getSolAtElement(sol::AbstractArray{Float64,1}, element::AbstractElement, problemDim::Int, 
+    activeDimensions::Vector{Int64})::Array{Float64,1}
+
+    vectorNodes::Array{Int64,1} = getVectorNodes(element, problemDim)
+    #sort!(vectorNodes)
+    solAtNodes::Array{Float64,1} = zero(sum(activeDimensions))
+    i::Int64 = 1
+    j::Int64 = 1
+    for i ∈ 1:length(solAtNodes)
+        if activeDimensions[i] == 0
+            solAtNodes[i] = 0.0
+        else
+            node = vectorNodes[j]
+            solAtNodes[i] = sol[node]
+            j += 1
+        end
+    end
+    return solAtNodes
+end
+
 """Extracts views of global solutions in coupled problems from a single mesh.
 
 In the below example u has dimension 3, p has 1 and t has 1.
