@@ -104,7 +104,7 @@ function getSolAtElement(sol::AbstractArray{Float64,1}, element::AbstractElement
             j += 1
         end
         #if dimNo has reached the end then set it to zero
-        if dimNo == sum(activeDimensions)
+        if dimNo == length(activeDimensions)
             dimNo = 1
         else
             dimNo += 1
