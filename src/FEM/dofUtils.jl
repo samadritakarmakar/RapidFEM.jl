@@ -95,7 +95,6 @@ function getSolAtElement(sol::AbstractArray{Float64,1}, element::AbstractElement
     j::Int64 = 1
     dimNo = 1 #keeps track of current dim in activeDimensions
     for i ∈ 1:length(solAtNodes)
-        println("i = $i, j = $j, dimNo = $dimNo")
         if activeDimensions[dimNo] == 0
             solAtNodes[i] = 0.0
         else
