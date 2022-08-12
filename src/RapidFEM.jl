@@ -60,7 +60,7 @@ include("Output/WriteToMesh.jl")
 #From Mesh
     #mesh.jl
     export Mesh, readMesh, getNoOfElements, getCoordArray, updateNodePositions!
-    export getElementTypeAndOrder, createNewElement
+    export getElementTypeAndOrder, createNewElement, getNodesDict, getTotalElements
     #aspectRatio.jl
     export getAspectRatioOfElement, getAspectRatios, getAspectRatioOfTriElement, getAspectRatioOfTetElement, getAspectRatioOfQuadElement
     #meshExtra

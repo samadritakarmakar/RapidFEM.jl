@@ -169,3 +169,29 @@ function createNewElement(attrib::Tuple{Int64, Int64}, label::Int64, newElementN
         newElementNodeTags, lengthElementNodeTags, order)   
 end
 
+function getNodesDict(primaryNodeArray::AbstractMatrix{Float64}, activeDims::Vector{Int64})
+    Nodes = Dict{Int64, Array{Float64, 1}}()
+    coord = zeros(3)
+    #for nodeNo ∈ 1:size(primaryNodeArray,2)
+    nodeNo = 1
+    for nodeCoord ∈ eachcol(primaryNodeArray)
+       activeDimNo = 1
+       dimNo = 1
+       for activeDim ∈ activeDims
+          coord[dimNo] = activeDim == 1 ? nodeCoord[activeDimNo] : 0.0
+          activeDimNo += activeDim == 1 ? 1 : 0
+          dimNo +=1
+       end
+       Nodes[nodeNo] = deepcopy(coord)
+       nodeNo += 1
+    end
+    return Nodes
+ end
+
+ function getTotalElements(Elements::Dict{Tuple{Int64, Int64}, Array{AbstractElement, 1}})
+    totalElements = 0
+    for attrib ∈ keys(Elements)
+        totalElements += length(Elements[attrib])
+    end
+    return totalElements
+end
