@@ -40,6 +40,21 @@ function getUniqueNodes(attribute::Tuple{Int64, Int64}, mesh::Mesh)::Array{Int64
     return NodeList
 end
 
+"""Generates an array of Unique nodes for the given attribute in the mesh data for given Vector of elementNos."""
+function getUniqueNodes(attribute::Tuple{Int64, Int64}, mesh::Mesh, elementNos::Vector{Int64})
+    NodeList::Array{Int64} = []
+    for element ∈ mesh.Elements[attribute...][elementNos]
+        nodes::Array{Int64} = getNodes(element)
+        for node ∈ nodes
+            if length(searchsorted(NodeList, node))==0
+                push!(NodeList, node)
+                sort!(NodeList)
+            end
+        end
+    end
+    return NodeList
+end
+
 
 """Applies Dirichlet Boundary condition on the given Stiffness matrix 'A' and
 vector 'b' as per the given DirichletFunction which is depedent on the position, x
