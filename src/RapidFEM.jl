@@ -31,6 +31,7 @@ include("Models/general.jl")
 include("Models/linearElasticity.jl")
 include("Models/convectionFluid.jl")
 #include("Models/smallStrainPlasticity.jl")
+include("Output/SolutionVectorIn3d.jl")
 include("Output/WriteToVTK.jl")
 include("Output/WriteToMesh.jl")
 
@@ -91,6 +92,8 @@ export get_SSpj_A_meanU_f, SSpj_getFinal_A_b, updateSolution!, update_f!
 ##SmallStrainPlastic
 #    export local_∇v_Cᵀ_∇u!, local_∇v_σ_Vector!, j2Model, initParams_j2
 #    export updateStateDict4rmBuffer
+#From SolutionVectorIn3d
+    export getSolutionVectorIn3d
 #From WriteToVTK
     export VTKMeshData, InitializeVTK, vtkSave, vtkDataAdd!, createVTKFile
 #From WriteToMesh
