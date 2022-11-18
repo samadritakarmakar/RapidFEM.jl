@@ -195,3 +195,18 @@ function getNodesDict(primaryNodeArray::AbstractMatrix{Float64}, activeDims::Vec
     end
     return totalElements
 end
+
+function getTotalElements(attribute::Tuple{Int64, Int64}, mesh::Mesh)
+    if attribute ∈ keys(mesh.Elements)
+        return length(mesh.Elements[attribute])
+    end
+    return 0
+end
+
+function getTotalElements(mesh::Mesh)
+    totalElements = 0
+    for attribute ∈ mesh.attributes
+        totalElements += getTotalElements(attribute, mesh)
+    end
+    return totalElements
+end

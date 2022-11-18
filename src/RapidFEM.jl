@@ -13,6 +13,7 @@ include("FEM/elements.jl")
 include("Mesh/mesh.jl")
 include("Mesh/aspectRatio.jl")
 include("Mesh/meshExtra.jl")
+include("Mesh/addBoundaryElements.jl")
 include("Mesh/updateMesh.jl")
 include("Quadrature/quadrature.jl")
 include("ShapeFunctions/langrange.jl")
@@ -68,6 +69,8 @@ include("Output/WriteToMesh.jl")
     export MeshExtra, getAttributesInDimension, getNodeToElementMap
     export getNodeToElementMap!, getAllFaces, getBoundaryFaces
     export getAllMaterialBoundaryFaces, getAllBoundaryNodes, getAllInternalNodes
+    #addBoundaryElements
+    export addBoundaryElements!
     #updateMesh
     export replaceAndAddElements!
 #From Quadrature
