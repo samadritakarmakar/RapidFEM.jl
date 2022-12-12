@@ -53,7 +53,7 @@ get_u!(u::Array{Float64, 1}, u_Nodes::Array{Float64, 1}, ϕ::Array{Float64,1}, p
 
 function get_u!(u::Array{Float64, 1}, u_Nodes::Array{Float64, 1}, ϕ::Array{Float64,1}, problemDim::Int64)
     fill!(u, 0.0)
-    for a ∈ 1:size(∂ϕ_∂x, 1)
+    for a ∈ 1:length(ϕ)
         for i ∈ 1:problemDim
             u[i] += ϕ[a]*u_Nodes[problemDim*(a-1)+i]
         end
