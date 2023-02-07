@@ -4,6 +4,7 @@ authors = ["sam "]
 version = "0.4.0"
 
 [deps]
+Arpack = "7d9fca2a-8960-54d3-9f78-7d1dccf2cb97"
 Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 FEMSparse = "dcdf9ed5-39e7-592a-90de-966c054b7718"

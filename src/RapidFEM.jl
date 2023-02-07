@@ -8,7 +8,7 @@
 
 __precompile__()
 module RapidFEM
-using FEMSparse, FastGaussQuadrature, SparseArrays, LinearAlgebra, WriteVTK
+using FEMSparse, FastGaussQuadrature, SparseArrays, LinearAlgebra, Arpack, WriteVTK
 include("FEM/elements.jl")
 include("Mesh/mesh.jl")
 include("Mesh/aspectRatio.jl")
@@ -19,6 +19,7 @@ include("Quadrature/quadrature.jl")
 include("ShapeFunctions/langrange.jl")
 include("ShapeFunctions/shapeFunction.jl")
 include("FEM/boundaryCondition.jl")
+include("FEM/freeVibration.jl")
 include("FEM/assembly.jl")
 include("FEM/feSpace.jl")
 include("FEM/coupledComponents.jl")
@@ -52,6 +53,8 @@ include("Output/WriteToMesh.jl")
     export applyNLDirichletBC_on_J!, applyNLDirichletBC_on_Soln!
     export applyNLDirichletBC_on_f!
     export getUniqueNodes
+##freeVibration
+    export applyFreeVibrationBC!, solveFreeVibration, getFreeVibrationDisplacement, solveFreeVibrationDense
 ##assembly
     export assembleVector, assembleMatrix, assembleScalar
     export assembleVector!, assembleMatrix!, assembleScalar!
