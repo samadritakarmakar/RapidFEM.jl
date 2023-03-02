@@ -35,12 +35,38 @@ function solveFreeVibrationDense(M::AbstractMatrix{Float64}, K::AbstractMatrix{F
   return (1.0./sqrt.(λ))[end:-1:(length(λ)-noOfModes+1)], u_amp[:, end:-1:(length(λ)-noOfModes+1)]
 end
 
-function scaleModeShapes!(u_modeShapes::AbstractMatrix{Float64}, scalingConstant::Number = 1.0)
-  noOfModes = size(u_modeShapes, 2)
+"""Scales the mode shapes after, Normalizing and scaling by the scalingConstant, each of the mode shapes. 
+Normalization with scaling is done by, uᴿ = scalingConstant*û/u_L2Norm, where u_L2Norm = √(∫ û⋅û dΩ)"""
+function scaleModeShapes!(u_modeShapes::AbstractMatrix{Float64}, volAttrib::Tuple, FeSpace::Dict, mesh::Mesh, 
+  problemDim::Int64, activeDims::Vector{Int64}, scalingConstant::Number = 1.0)
   
-  for modeNo ∈ 1:noOfModes
-    scalingFactor = scalingConstant/norm(u_modeShapes[:,modeNo])
-    u_modeShapes[:, modeNo] .= scalingFactor .* u_modeShapes[:, modeNo]
+  dimRange = RapidFEM.createDimRange()
+  usedDims = dimRange[activeDims]
+  modeNo = 1
+  for modeShape ∈ eachcol(u_modeShapes)
+    elementNo = 1
+    L2Norm = 0.0
+    for element ∈ mesh.Elements[volAttrib]
+      coordArray = (getCoordArray(mesh, element))[usedDims, :]
+      shapeFunction = feSpace!(FeSpace, element, mesh)
+      modeAtElNodes = getSolAtElement(modeShape, element, problemDim, activeDims)
+      #ipNo = 1
+      noOfIpPoints = getNoOfElementIpPoints(shapeFunction)
+      modeAtIp = zeros(problemDim)
+      for ipNo ∈ 1:noOfIpPoints
+          ∂x_∂ξ = get_∂x_∂ξ(coordArray, shapeFunction, ipNo)
+          dΩ = get_dΩ(element, ∂x_∂ξ, shapeFunction, ipNo)
+          ϕ = get_ϕ(shapeFunction, ipNo)
+          get_u!(modeAtIp, modeAtElNodes, ϕ, problemDim)
+          L2Norm += dot(modeAtIp, modeAtIp)*dΩ
+          #ipNo += 1
+      end
+      elementNo += 1
+    end
+    L2Norm = sqrt(L2Norm)
+    #println("L2Norm of mode no $modeNo = $L2Norm")
+    u_modeShapes[:, modeNo] .= scalingConstant/L2Norm .*modeShape
+    modeNo += 1
   end
   return u_modeShapes
 end
