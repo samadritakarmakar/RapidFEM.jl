@@ -54,7 +54,7 @@ include("Output/WriteToMesh.jl")
     export applyNLDirichletBC_on_f!
     export getUniqueNodes
 ##freeVibration
-    export applyFreeVibrationBC!, solveFreeVibration, getFreeVibrationDisplacement, solveFreeVibrationDense
+    export applyFreeVibrationBC!, solveFreeVibration, getFreeVibrationDisplacement, solveFreeVibrationDense, scaleModeShapes!
 ##assembly
     export assembleVector, assembleMatrix, assembleScalar
     export assembleVector!, assembleMatrix!, assembleScalar!

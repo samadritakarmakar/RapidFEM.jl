@@ -34,3 +34,13 @@ function solveFreeVibrationDense(M::AbstractMatrix{Float64}, K::AbstractMatrix{F
   λ, u_amp = eigen(Matrix(M), Matrix(K))
   return (1.0./sqrt.(λ))[end:-1:(length(λ)-noOfModes+1)], u_amp[:, end:-1:(length(λ)-noOfModes+1)]
 end
+
+function scaleModeShapes!(u_modeShapes::AbstractMatrix{Float64}, scalingConstant::Number = 1.0)
+  noOfModes = size(u_modeShapes, 2)
+  
+  for modeNo ∈ 1:noOfModes
+    scalingFactor = scalingConstant/norm(u_modeShapes[:,modeNo])
+    u_modeShapes[:, modeNo] .= scalingFactor .* u_modeShapes[:, modeNo]
+  end
+  return u_modeShapes
+end
