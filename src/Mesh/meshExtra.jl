@@ -43,6 +43,9 @@ end
 """Computes and creates extra mesh data from mesh and it's given dimension"""
 function MeshExtra(mesh::Mesh, meshDimension::Int64 = 3)
     attributeArray = getAttributesInDimension(mesh, meshDimension)
+    if length(attributeArray) == 0
+        return MeshExtra()
+    end
     return MeshExtra(mesh, attributeArray)
 end
 
