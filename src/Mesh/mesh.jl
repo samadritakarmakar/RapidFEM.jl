@@ -56,6 +56,17 @@ function getNoOfElements( mesh::Mesh, attribute::Tuple{Int64, Int64})
     return length(mesh.Elements[attribute])
 end
 
+function getCoordArray(NodesDict::Dict{Int64, Array{Float64, 1}}, nodeTags::Array{Int64}, noOfElementNodes::Int64 = 0)::Array{Float64,2}
+    if noOfElementNodes == 0
+        noOfElementNodes = length(nodeTags)
+    end
+    CoordArray::Array{Float64,2} = Array{Float64}(undef, 3, noOfElementNodes)
+    for elmntNodeNum::Int64 ∈ 1:noOfElementNodes
+        CoordArray[:,elmntNodeNum] = NodesDict[nodeTags[elmntNodeNum]]
+    end
+    return CoordArray
+end
+
 """This function extracts the Coordinate array for a certain element.
 As an example, the output for a 1st order element would look like the
 following:
@@ -66,16 +77,28 @@ z₁, z₂, z₃;]
 
     coordArray::Array{Float64,2} = getCoordArray(mesh, element)
 """
-function getCoordArray(mesh::Mesh,element::AbstractElement)::Array{Float64,2}
-    #nodeTags::Array{Int64} = mesh.Elements[attribute][elementNo].nodeTags
-    #noOfElementNodes::Int64 = mesh.Elements[attribute][elementNo].noOfElementNodes
-    nodeTags::Array{Int64} = element.nodeTags
-    noOfElementNodes::Int64 = element.noOfElementNodes
-    CoordArray::Array{Float64,2} = Array{Float64}(undef, 3, noOfElementNodes)
-    for elmntNodeNum::Int64 ∈ 1:noOfElementNodes
-        CoordArray[:,elmntNodeNum] = mesh.Nodes[nodeTags[elmntNodeNum]]
+function getCoordArray(mesh::Mesh, element::AbstractElement)::Array{Float64,2}
+    return getCoordArray(mesh.Nodes, element.nodeTags, element.noOfElementNodes)
+end
+
+"""Updates Nodal Positions in a nodesDict given that the change in it's positions are known."""
+function updateNodePositions!(nodesDict::Dict{Int64, Array{Float64, 1}}, changeInPosition::Array{Float64, 1},
+    problemDim::Int64, dimRange::StepRange)
+
+    for node ∈ eachindex(nodesDict)
+        nodesDict[node][dimRange] += changeInPosition[problemDim*(node-1)+1:problemDim*node]
     end
-    return CoordArray
+    return nothing
+end
+
+"""Makes a copy of mesh.Nodes and adds change in node positions to it."""
+function getCurrentNodeDict(mesh::Mesh, changeInPosition::Array{Float64, 1}, activeDimensions = [1,1,1])
+    rangeDim = createDimRange()
+    problemDim = sum(activeDimensions)
+    range = getRange(rangeDim, activeDimensions)
+    nodesDict = deepcopy(mesh.Nodes)
+    updateNodePositions!(nodesDict, changeInPosition, problemDim, range)
+    return nodesDict
 end
 
 """Updates Nodal Positions, given that the change in it's positions are known.
@@ -83,13 +106,10 @@ end
     updateNodePositions!(mesh::Mesh, changeInPosition::Array{Float64, 1}, activeDimensions = [1,1,1])
 """
 function updateNodePositions!(mesh::Mesh, changeInPosition::Array{Float64, 1}, activeDimensions = [1,1,1])
-    nodes = sort(collect(keys(mesh.Nodes)))
     rangeDim = createDimRange()
     problemDim = sum(activeDimensions)
     range = getRange(rangeDim, activeDimensions)
-    for node ∈ nodes
-        mesh.Nodes[node][range] = mesh.Nodes[node][range] + changeInPosition[problemDim*(node-1)+1:problemDim*node]
-    end
+    updateNodePositions!(mesh.Nodes, changeInPosition, problemDim, range)
     return nothing
 end
 

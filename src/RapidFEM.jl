@@ -64,7 +64,7 @@ include("Output/WriteToMesh.jl")
     export InvDistInterpolation, voigtToTensor
 #From Mesh
     #mesh.jl
-    export Mesh, readMesh, getNoOfElements, getCoordArray, updateNodePositions!
+    export Mesh, readMesh, getNoOfElements, getCoordArray, updateNodePositions!, getCurrentNodeDict
     export getElementTypeAndOrder, createNewElement, getNodesDict, getTotalElements
     #aspectRatio.jl
     export getAspectRatioOfElement, getAspectRatios, getAspectRatioOfTriElement, getAspectRatioOfTetElement, getAspectRatioOfQuadElement

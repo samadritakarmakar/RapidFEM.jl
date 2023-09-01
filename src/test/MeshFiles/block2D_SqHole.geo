@@ -61,3 +61,6 @@ Physical Curve("right", 3) = {6};
 Physical Curve("left", 4) = {8};
 //+
 Physical Surface("vol", 5) = {1};
+//+
+Physical Curve("inPlaneSlip", 6) = {9,11};
+
