@@ -27,8 +27,8 @@ function addBoundaryElements!(mesh::Mesh,
                         mesh.Elements[newAttribute] = Array{AbstractElement, 1}()
                         mesh.noOfAttrib += 1
                         mesh.AttributeName[newAttribute] = newAttributeName
-                        mesh.noOfElements = getTotalElements(mesh)
                     end
+                    mesh.noOfElements += 1
                     #println("faceNodes $faceNodes")
                     push!(mesh.Elements[newAttribute], createNewElement(newAttribute, 1, faceNodes))
                 end
