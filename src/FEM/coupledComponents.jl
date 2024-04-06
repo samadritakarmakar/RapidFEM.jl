@@ -9,29 +9,30 @@ i_th and j_th respectively solution variables.
 
 struct CoupledComponents
     dofs::Array{Int64, 1}
-    function CoupledComponents(mesh::Mesh, problemDims::Array{Int64, 1})
+end
 
-        dofs = zeros(Int64, length(problemDims))
-        lastDof = 0
-        for i ∈ 1:length(dofs)
-            dofs[i] = mesh.noOfNodes*problemDims[i]+lastDof
-            lastDof = dofs[i]
-        end
-        return new(dofs)
+function CoupledComponents(mesh::Mesh, problemDims::Array{Int64, 1})
+
+    dofs = zeros(Int64, length(problemDims))
+    lastDof = 0
+    for i ∈ 1:length(dofs)
+        dofs[i] = mesh.noOfNodes*problemDims[i]+lastDof
+        lastDof = dofs[i]
     end
+    return CoupledComponents(dofs)
+end
 
-    function CoupledComponents(meshTuple::NTuple{T1, Mesh}, problemDims::NTuple{T2, Int64}, meshNos::NTuple{T3, Int64}) where {T1, T2, T3}
-        @assert length(problemDims) == length(meshNos) "Length of problemDims must be the same as meshNos."
-        @assert maximum(meshNos) <= length(meshTuple) "Maximum of meshNos cannot be greater than the total number of meshes."
+function CoupledComponents(meshTuple::NTuple{T1, Mesh}, problemDims::NTuple{T2, Int64}, meshNos::NTuple{T3, Int64}) where {T1, T2, T3}
+    @assert length(problemDims) == length(meshNos) "Length of problemDims must be the same as meshNos."
+    @assert maximum(meshNos) <= length(meshTuple) "Maximum of meshNos cannot be greater than the total number of meshes."
 
-        dofs = zeros(Int64, length(problemDims))
-        lastDof = 0
-        for i ∈ 1:length(dofs)
-            dofs[i] = meshTuple[meshNos[i]].noOfNodes*problemDims[i]+lastDof
-            lastDof = dofs[i]
-        end
-        return new(dofs)
+    dofs = zeros(Int64, length(problemDims))
+    lastDof = 0
+    for i ∈ 1:length(dofs)
+        dofs[i] = meshTuple[meshNos[i]].noOfNodes*problemDims[i]+lastDof
+        lastDof = dofs[i]
     end
+    return CoupledComponents(dofs)
 end
 
 
