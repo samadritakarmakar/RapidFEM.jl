@@ -136,7 +136,7 @@ function getFaceCombinations(elementType::DataType, order::Int64)
             error("Order $(order) not supported.")
         end
     elseif elementType == HexElement
-        combinations = [[1, 2, 3, 4], [5, 6, 7, 8], [1, 2, 5, 6], [3, 4, 7, 8], [1, 4, 5, 8], [2, 3, 6, 7]]
+        combinations = [[1, 2, 3, 4], [5, 6, 7, 8], [1, 2, 6, 5], [3, 4, 7, 8], [1, 4, 5, 8], [2, 3, 6, 7]]
         if order == 2
             combinations = [[1, 2, 3, 4, 9, 10, 12, 14, 21], [2, 3, 6, 7, 12, 13, 15, 19, 24], 
             [1, 4, 5, 8, 10, 11, 16, 18, 23], [1, 2, 5, 6, 9, 11, 13, 17, 22],
