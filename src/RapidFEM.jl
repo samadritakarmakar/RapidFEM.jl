@@ -14,6 +14,7 @@ include("Mesh/mesh.jl")
 include("Mesh/aspectRatio.jl")
 include("Mesh/meshExtra.jl")
 include("Mesh/addBoundaryElements.jl")
+include("Mesh/extrudeSurfaceToVolume.jl")
 include("Mesh/updateMesh.jl")
 include("Quadrature/quadrature.jl")
 include("ShapeFunctions/langrange.jl")
@@ -76,6 +77,8 @@ include("Output/WriteToMesh.jl")
     export addBoundaryElements!
     #updateMesh
     export replaceAndAddElements!
+    #extrudeSurfaceToVolume
+    export tapereExtrusionFunction, extrudeMeshSurfaceToVolume
 #From Quadrature
 export gauss
 #From ShapeFunction
