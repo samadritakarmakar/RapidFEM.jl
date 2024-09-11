@@ -78,7 +78,7 @@ function getGmshElementTypeNo(element::RapidFEM.HexElement)
 end
 
 function addGmshElements!(returnChar::Array{Char, 1}, mesh::RapidFEM.Mesh)
-    append!(returnChar, collect("\$Elements\n$(mesh.noOfElements)\n"))
+    append!(returnChar, collect("\$Elements\n$(getTotalElements(mesh))\n"))
     elAttribs = sort(collect(keys(mesh.Elements)))
     elNo = 1
     for attrib ∈ elAttribs
