@@ -132,31 +132,6 @@ end
 
 getPoly(::HexElement, coords::Union{AbstractVector{Float64}, AbstractMatrix{Float64}}, order::Int64) = getPolyHex(coords, order)
 
-#=function getElementDimDict()
-    elementDimDict = Dict{DataType, Int64}()
-    elementDimDict[RapidFEM.LineElement] = 2
-    elementDimDict[RapidFEM.TriElement] = 3
-    elementDimDict[RapidFEM.QuadElement] = 4
-    elementDimDict[RapidFEM.TetElement] = 4
-    elementDimDict[RapidFEM.HexElement] = 8
-    return elementDimDict
-end
-
-# List of Primary nodes for each element type.
-const elementDimDict = getElementDimDict()
-
-function getPrimaryNodeTags(oldMesh::RapidFEM.Mesh, attribute::Tuple{Int64, Int64})
-    primaryNodeTags = zeros(Int64, 0)
-    #elementDimDict = getElementDimDict()
-    elements = oldMesh.Elements[attribute...]
-    for element ∈ elements
-        for dim ∈ 1:elementDimDict[typeof(element)]
-            splice!(primaryNodeTags, searchsorted(primaryNodeTags, element.nodeTags[dim]), element.nodeTags[dim])
-        end
-    end
-    return primaryNodeTags
-end=#
-
 function getTotalIpPoints(attribElementNos::Vector{Tuple{Tuple{Int64, Int64}, Int64}}, mesh::Mesh, FeSpace::Dict, reduction::Int64)
     totalIpPoints = 0
     for attribElementNo ∈ attribElementNos
@@ -253,6 +228,42 @@ function SprLikeRecovery(ipDataDict::Dict, FeSpace::Dict{Tuple{DataType, Int64, 
     end
     return recoveredData
 end
+
+function SprLikeRecovery(postProcessFunction::func, sol::AbstractVector{Float64},
+    parameters::param,  FeSpace::Dict{Tuple{DataType, Int64, Any, Int64}, Array{ShapeFunction}},
+    mesh::Mesh,  attrib::Tuple{Int64, Int64}, problemDim::Int64,
+    activeDimensions::Array{Int64,1}=[1, 1, 1]) where {func, param}
+
+    dimRange = RapidFEM.createDimRange()
+    usedDims = dimRange[activeDimensions]
+    meshExtra = MeshExtra(mesh, [attrib])
+    ipDataDict = Dict{Tuple{Int64, Int64}, AbstractArray}()
+    elementNo = 1
+    for element ∈ mesh.Elements[attrib]
+        shapeFunction = feSpace!(FeSpace, element, mesh)
+        coordArray = getCoordArray(mesh, element)
+        postPrcssElIpData = postProcessFunction(parameters, sol, problemDim, element, elementNo, shapeFunction, coordArray)
+        for ipNo ∈ 1:length(shapeFunction)
+            if postPrcssElIpData isa Array{Float64, 2}
+                ipDataDict[elementNo, ipNo] = vec(postPrcssElIpData[ipNo, :])
+            elseif postPrcssElIpData isa Array{Float64, 3}
+                ipDataDict[elementNo, ipNo] = vec(postPrcssElIpData[ipNo, :, :])
+            elseif postPrcssElIpData isa Array{Float64, 5}
+                ipDataDict[elementNo, ipNo] = vec(postPrcssElIpData[ipNo, :, :, :, :])
+            else
+                ipDataDict[elementNo, ipNo] = postPrcssElIpData[ipNo]
+            end
+        end
+        elementNo += 1
+    end
+    recoveredData = SprLikeRecovery(ipDataDict, FeSpace, mesh, attrib, problemDim, activeDimensions)
+    return recoveredData
+end
+            
+    
+
+
+
 
         
 

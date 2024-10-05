@@ -26,6 +26,7 @@ include("FEM/feSpace.jl")
 include("FEM/coupledComponents.jl")
 include("FEM/dofUtils.jl")
 include("FEM/postProcess.jl")
+include("FEM/SprLikeRecovery.jl")
 include("FEM/utils.jl")
 include("NonLinear/nonLinearUtils.jl")
 include("NonLinear/simpleNLsolve.jl")
@@ -63,6 +64,8 @@ include("Output/WriteToMesh.jl")
     export elmntSizeAlongVel, get_∂u_∂x!, get_∂u_∂x, get_u!, get_u, getCurrentCoordArray!, getCurrentCoordArray
 ##postProcess
     export InvDistInterpolation, voigtToTensor
+##SprLikeRecovery
+    export SprLikeRecovery
 #From Mesh
     #mesh.jl
     export Mesh, readMesh, getNoOfElements, getCoordArray, updateNodePositions!, getCurrentNodeDict
