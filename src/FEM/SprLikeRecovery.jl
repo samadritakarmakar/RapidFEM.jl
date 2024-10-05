@@ -167,7 +167,7 @@ function getSprPolysAroundNode(centerNodeNo::Int64, FeSpace::Dict, mesh::Mesh, m
         totalIpPoints = getTotalIpPoints(attribElementNos, mesh, FeSpace, reduction)
         @assert length(p) < totalIpPoints "Error: Not enough Integration points to perform SPR"
     end=#
-    sort!(attribElementNos)
+    #sort!(attribElementNos)
     ipCoords = zeros(Float64, length(usedDims), totalIpPoints)
     totalIpNo = 1
     for attribElementNo ∈ attribElementNos
@@ -193,7 +193,7 @@ function getSprPolysAroundNode(centerNodeNo::Int64, FeSpace::Dict, mesh::Mesh, m
 end
 
 getVector(x::AbstractArray) = vec(x)
-getVector(x::Number) = [x]
+getVector(x::Number) = x
 
 
 
@@ -202,11 +202,18 @@ function getSprSampleMatrix(ipDataDict::Dict{Tuple{Int64, Int64}, T}, problemDim
     sampleMatrix = Array{Float64, 2}(undef, totalIpPoints, problemDim)
 
     ipNo = 1
+    ipNoTotal = 1
     for attribElementNo ∈ attribElementNos
         elementNo = attribElementNo[2]
         while haskey(ipDataDict, (elementNo, ipNo))
-            sampleMatrix[ipNo, :] = getVector(ipDataDict[elementNo, ipNo])
+            if ipDataDict[elementNo, ipNo] isa Number
+                sampleMatrix[ipNoTotal] = ipDataDict[elementNo, ipNo]
+                #println("ipDataDict[$elementNo, $ipNo]: $(ipDataDict[elementNo, ipNo])")
+            else
+                sampleMatrix[ipNoTotal, :] = vec(ipDataDict[elementNo, ipNo])
+            end
             ipNo += 1
+            ipNoTotal += 1
         end
         ipNo = 1
     end
@@ -230,6 +237,8 @@ function SprLikeRecovery(ipDataDict::Dict, FeSpace::Dict{Tuple{DataType, Int64, 
         #display(sampleMatrix)
         #println("size of P: ", size(P))
         recoveredData[problemDim*(nodeNo-1)+1:problemDim*nodeNo] = p'*(P \ sampleMatrix) 
+        #println("sampleMatrix: ", sampleMatrix)
+        #println("recoveredData: ", recoveredData[problemDim*(nodeNo-1)+1:problemDim*nodeNo])
     end
     return recoveredData
 end
