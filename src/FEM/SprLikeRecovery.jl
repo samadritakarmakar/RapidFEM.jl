@@ -192,6 +192,11 @@ function getSprPolysAroundNode(centerNodeNo::Int64, FeSpace::Dict, mesh::Mesh, m
     return p, P, attribElementNos, totalIpPoints
 end
 
+getVector(x::AbstractArray) = vec(x)
+getVector(x::Number) = [x]
+
+
+
 function getSprSampleMatrix(ipDataDict::Dict{Tuple{Int64, Int64}, T}, problemDim::Int64, attribElementNos::Vector{Tuple{Tuple{Int64, Int64}, Int64}}, totalIpPoints::Int64) where T
     
     sampleMatrix = Array{Float64, 2}(undef, totalIpPoints, problemDim)
@@ -200,7 +205,7 @@ function getSprSampleMatrix(ipDataDict::Dict{Tuple{Int64, Int64}, T}, problemDim
     for attribElementNo ∈ attribElementNos
         elementNo = attribElementNo[2]
         while haskey(ipDataDict, (elementNo, ipNo))
-            sampleMatrix[ipNo, :] = vec(ipDataDict[elementNo, ipNo])
+            sampleMatrix[ipNo, :] = getVector(ipDataDict[elementNo, ipNo])
             ipNo += 1
         end
         ipNo = 1
@@ -245,11 +250,11 @@ function SprLikeRecovery(postProcessFunction::func, sol::AbstractVector{Float64}
         postPrcssElIpData = postProcessFunction(parameters, sol, problemDim, element, elementNo, shapeFunction, coordArray)
         for ipNo ∈ 1:length(shapeFunction)
             if postPrcssElIpData isa Array{Float64, 2}
-                ipDataDict[elementNo, ipNo] = vec(postPrcssElIpData[ipNo, :])
+                ipDataDict[elementNo, ipNo] = getVector(postPrcssElIpData[ipNo, :])
             elseif postPrcssElIpData isa Array{Float64, 3}
-                ipDataDict[elementNo, ipNo] = vec(postPrcssElIpData[ipNo, :, :])
+                ipDataDict[elementNo, ipNo] = getVector(postPrcssElIpData[ipNo, :, :])
             elseif postPrcssElIpData isa Array{Float64, 5}
-                ipDataDict[elementNo, ipNo] = vec(postPrcssElIpData[ipNo, :, :, :, :])
+                ipDataDict[elementNo, ipNo] = getVector(postPrcssElIpData[ipNo, :, :, :, :])
             else
                 ipDataDict[elementNo, ipNo] = postPrcssElIpData[ipNo]
             end
