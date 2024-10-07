@@ -228,7 +228,7 @@ function SprLikeRecovery(ipDataDict::Dict, FeSpace::Dict{Tuple{DataType, Int64, 
     dimRange = RapidFEM.createDimRange()
     usedDims = dimRange[activeDimensions]
     recoveredData = Array{Float64, 1}(undef, length(mesh.Nodes)*problemDim)
-    Threads.@threads for node ∈ collect(keys(mesh.Nodes))
+    Threads.@threads for nodeNo ∈ collect(keys(mesh.Nodes))
         #println("nodeNo: ", nodeNo)
         p, P, attribElementNos, totalIpPoints = getSprPolysAroundNode(nodeNo, FeSpace, mesh, meshExtra, usedDims, reduction = reduction)
         sampleMatrix = getSprSampleMatrix(ipDataDict, problemDim, attribElementNos, totalIpPoints)
