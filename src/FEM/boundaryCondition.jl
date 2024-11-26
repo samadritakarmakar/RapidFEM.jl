@@ -61,7 +61,7 @@ vector 'b' as per the given DirichletFunction which is depedent on the position,
 
     applyDirichletBC!(A, b, DirichletFunction, attribute, mesh, problemDim)
 """
-function applyDirichletBC!(b::Vector, A::SparseMatrixCSC,
+function applyDirichletBC!(b::AbstractVector, A::AbstractMatrix,
     DirichletFunction::Function, attribute::Tuple{Int64, Int64}, mesh::Mesh,
     problemDim::Int64,
     appliedDof::Array{Int64, 1} = ones(Int, problemDim), varArgs...)
@@ -105,7 +105,7 @@ end
     InitialFunction which is dependent on the position, x. To be used for solving Linear 
     Problems of the form [K]{u} = {f}
 """
-function applyInitialBC!(u::Vector, InitialBcFunction::Function,
+function applyInitialBC!(u::AbstractVector, InitialBcFunction::Function,
     attribute::Tuple{Int64, Int64}, mesh::Mesh, problemDim::Int64, varArgs...)
 
     nodes::Array{Int64} = getUniqueNodes(attribute, mesh)
@@ -118,7 +118,7 @@ end
 
 """Applies boundary condition on the Jacobian for solving Non-Linear Equation. To be used for solving 
 Non-Linear Equations of the form: ``u^{n+1} = u^{n} + J^{-1}\\cdot R``"""
-function applyNLDirichletBC_on_J!(J::SparseMatrixCSC,
+function applyNLDirichletBC_on_J!(J::AbstractMatrix,
     attribute::Tuple{Int64, Int64}, mesh::Mesh,
     problemDim::Int64, appliedDof::Array{Int64, 1} = ones(Int, problemDim), varArgs...)
 
@@ -155,7 +155,7 @@ end
 
 """Applies boundary condition on the force vector 'f' for solving Non-Linear Equation. To be used for solving 
 Non-Linear Equations of the form: ``\\mathbf{u}^{n+1} = \\mathbf{u}^{n} + \\mathbf{J}^{-1}\\cdot \\mathbf{R}``"""
-function applyNLDirichletBC_on_f!(f::Vector,
+function applyNLDirichletBC_on_f!(f::AbstractVector,
     attribute::Tuple{Int64, Int64}, mesh::Mesh, problemDim::Int64,
     appliedDof::Array{Int64, 1} = ones(Int, problemDim), varArgs...)
 
