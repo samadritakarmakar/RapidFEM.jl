@@ -1,5 +1,7 @@
+using LinearAlgebra
 using RapidFEM, SparseArrays
-
+include("testTimeInt.jl")
+#=
 M = spzeros(1,1)
 M[1,1] = 1.0
 C = spzeros(1,1)
@@ -20,4 +22,191 @@ A_global, f_mean_global = SSpj_getFinal_A_b([M, C, K], SolutionArray, f_Array, �
 #println(" A_global = " , A_global[1], " f_mean_global = ", f_mean_global[1], " α = ", α_global[1])
 updateSolution!(SolutionArray, Δt, α_global)
 println(SolutionArray, " ")
+end=#
+
+function testSspl()
+
+    m, c, k = 1.0, 2.0, 3.0
+
+    D, E, G = 6.0, 5.0, 4.0
+
+    M = spzeros(1,1)
+    M[1,1] = m
+    C = spzeros(1,1)
+    C[1,1] = c
+    K = spzeros(1,1)
+    K[1,1] = k
+
+    usol(t) = D*t^2 + E*t + G
+    u̇sol(t) = 2*D*t + E
+    üsol(t) = 2*D
+
+    u = usol(0.0)
+    u̇ = u̇sol(0.0)
+    ü = üsol(0.0)
+    SolutionArray = [[u], [u̇], [ü]]
+
+    Δt = 0.05
+
+    
+    f_1 = -analyticalForceFunction(-0.05, m, c, k, D, E, G)
+    f_2 = -analyticalForceFunction(0.0, m, c, k, D, E, G)
+    #f_3 = analyticalForceFunction(0.05, m, c, k, D, E, G)
+    f_Array = [[0], [f_1], [f_2]]
+    println(f_Array)
+    #first value of f_Array is anyway popped out by update_f! function
+
+    θ_Array = [0.5, 0.5]
+
+    for i ∈ 1:5
+        f_current = [-analyticalForceFunction(i*Δt, m, c, k, D, E, G)]
+        popfirst!(f_Array)
+        push!(f_Array, f_current)
+        println(f_Array)
+        A_global, f_mean_global = SSpj_getFinal_A_b([M, C, K], SolutionArray, f_Array, Δt, θ_Array)
+        α_global = A_global\f_mean_global
+        updateSolution!(SolutionArray, Δt, α_global)
+        println(SolutionArray, " ")
+        println("t = ", i*Δt)
+        println("Actual Solution: ", usol(i*Δt), " ", u̇sol(i*Δt), " ", üsol(i*Δt), "\n")
+    end   
+end
+
+function get_hat_u_vals(u_n, u̇_n, ü_n, Δt::Real, β1::Real, β2::Real)
+    ü_hat_n1 = -2.0/(β2*Δt^2)*u_n - 2.0/(β2*Δt)*u̇_n - (1.0 - β2)/(β2)*ü_n
+    u̇_hat_n1 = -2.0*β1/(β2*Δt)*u_n + (1.0 - 2.0*β1/β2)*u̇_n + Δt*(1.0 - β1/β2)*Δt*ü_n
+    return ü_hat_n1, u̇_hat_n1
+end
+
+function ImplicitNewmark(M_C_K::Vector, u, u̇, ü, f, Δt::Real, β1::Real, β2::Real)
+    M = M_C_K[1]
+    C = M_C_K[2]
+    K = M_C_K[3]
+    @assert β2 > 1e-8 "For Implicit Newmark, β2 must be greater than 1e-8"
+    ü_hat_n1, u̇_hat_n1 = get_hat_u_vals(u, u̇, ü, Δt, β1, β2)
+    A = 2.0/(β2*Δt^2)*M + 2.0*β1/(β2*Δt)*C + K
+    b = f + M*(ü_hat_n1) + C*(u̇_hat_n1)
+    u_n1 = -A\b
+    ü_n1 = ü_hat_n1 + 2.0/(β2*Δt^2)*u_n1
+    u̇_n1 = u̇_hat_n1 + 2.0*β1/(β2*Δt)*u_n1
+    return u_n1, u̇_n1, ü_n1
+end
+
+
+function Newmark(M_C_K::Vector, u_n, u̇_n, ü_n, f, Δt::Real, β1::Real, β2::Real)
+    M = M_C_K[1]
+    C = M_C_K[2]
+    K = M_C_K[3]
+    
+    u_breve_n1 = u_n + Δt*u̇_n + 0.5*(1.0 - β2)*Δt^2*ü_n
+    u̇_breve_n1 = u̇_n + Δt*(1.0 - β1)*ü_n
+    A = M + β1*Δt*C + 0.5*β2*Δt^2*K
+    b = f + C*(u̇_breve_n1) + K*(u_breve_n1)
+    ü_n1 = -A\b
+    u̇_n1 = u̇_breve_n1 + β1*Δt*ü_n1
+    u_n1 = u_breve_n1 + 0.5*Δt^2*β2*ü_n1
+    return u_n1, u̇_n1, ü_n1
+end
+
+
+function testNewmark()
+    m, c, k = 1.0, 2.0, 3.0
+    D, E, G = 3.0, 2.0, 1.0
+
+    M = m
+
+    C = c
+
+    K = k
+    usol(t) = D*t^2 + E*t + G
+    u̇sol(t) = 2*D*t + E
+    üsol(t) = 2*D
+    u = usol(0.0)
+    u̇ = u̇sol(0.0)
+    ü = üsol(0.0)
+    println("u = ", u, " u̇ = ", u̇, " ü = ", ü)
+    Δt = 0.05
+    β1, β2 = (0.5, 0.5)
+    for i ∈ 1:20
+        f = -analyticalForceFunction(i*Δt, m, c, k, D, E, G)
+        println("f = ", f)
+        u_n1, u̇_n1, ü_n1 = ImplicitNewmark([M, C, K], u, u̇, ü, f, Δt, β1, β2)
+        #u_n1, u̇_n1, ü_n1 = Newmark([M, C, K], u, u̇, ü, f, Δt, β1, β2)
+        println("t = ", i*Δt)
+        println("u = ", u_n1, " u̇ = ", u̇_n1, " ü = ", ü_n1)
+        println("Actual Solution: ", usol(i*Δt), " ", u̇sol(i*Δt), " ", üsol(i*Δt), "\n")
+        u, u̇, ü = u_n1, u̇_n1, ü_n1
+    end
+end
+
+
+function NonLinearImplicitNewmark(u_n1, M_vecfunc::Function, C_vecfunc::Function, K_vecfunc::Function, u, u̇, ü, f, Δt::Real, β1::Real, β2::Real)
+    @assert β2 > 1e-8 "For Implicit Newmark, β2 must be greater than 1e-8"
+    ü_hat_n1, u̇_hat_n1 = get_hat_u_vals(u, u̇, ü, Δt, β1, β2)
+
+    ü_n1 = ü_hat_n1 + 2.0/(β2*Δt^2)*u_n1
+    u̇_n1 = u̇_hat_n1 + 2.0*β1/(β2*Δt)*u_n1
+
+    fTotal = f + M_vecfunc(ü_n1) + C_vecfunc(u̇_n1) + K_vecfunc(u_n1)
+
+    return fTotal, u̇_n1,  ü_n1
+end
+
+function testNewmarkNonLinear()
+    m, c, k = 1.0, 2.0, 3.0
+    D, E, G = 3.0, 2.0, 1.0
+
+    M = m
+
+    C = c
+
+    K = k
+    usol(t) = D*t^2 + E*t + G
+    u̇sol(t) = 2*D*t + E
+    üsol(t) = 2*D
+    u = usol(0.0)
+    u̇ = u̇sol(0.0)
+    ü = üsol(0.0)
+
+    M_vecfunc(ü) = M*ü
+    C_vecfunc(u̇) = C*u̇
+    K_vecfunc(u) = K*u
+
+    Δt = 0.05
+
+    β1, β2 = (0.5, 0.5)
+    
+    du = Inf
+    u̇_n1, ü_n1 = 0.0, 0.0
+    Δu = 0.0
+    for i ∈ 1:10
+        f = -analyticalForceFunction(i*Δt, m, c, k, D, E, G)
+        println("f = ", f)
+        fTotal = Inf
+        u_n1 = u + Δu
+        #finite difference
+        iter = 0
+        println("starting u_n1 = ", u_n1)
+        while norm(fTotal) > 1e-8 || norm(du) > 1e-12
+            fTotal, u̇_n1, ü_n1 = NonLinearImplicitNewmark(u_n1, M_vecfunc, C_vecfunc, K_vecfunc, u, u̇, ü, f, Δt, β1, β2)
+            println("\nfTotal = ", fTotal)
+            fTotalm1, u̇_n1_, ü_n1_ = NonLinearImplicitNewmark(u_n1 - 1e-4, M_vecfunc, C_vecfunc, K_vecfunc, u, u̇, ü, f, Δt, β1, β2)
+            
+            fTotal1, u̇_n1_, ü_n1_ = NonLinearImplicitNewmark(u_n1 + 1e-4, M_vecfunc, C_vecfunc, K_vecfunc, u, u̇, ü, f, Δt, β1, β2)
+            df = (fTotal1 - fTotalm1)/(2e-4)
+            du = -df\fTotal
+            println("du = ", du)
+            u_n1 += du
+            iter += 1
+        end
+
+        println("iter = ", iter)
+        println("t = ", i*Δt)
+        Δu = u_n1 - u
+        u, u̇, ü = u_n1, u̇_n1, ü_n1
+        println("u = ", u_n1, " u̇ = ", u̇_n1, " ü = ", ü_n1)
+        println("Actual Solution: ", usol(i*Δt), " ", u̇sol(i*Δt), " ", üsol(i*Δt), "\n")
+        
+    end
+
 end
