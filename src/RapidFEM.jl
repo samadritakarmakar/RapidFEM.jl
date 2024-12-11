@@ -31,6 +31,7 @@ include("FEM/utils.jl")
 include("NonLinear/nonLinearUtils.jl")
 include("NonLinear/simpleNLsolve.jl")
 include("Dynamic/singleStep_pj.jl")
+include("Dynamic/newmark.jl")
 include("Models/general.jl")
 include("Models/linearElasticity.jl")
 include("Models/convectionFluid.jl")
@@ -94,6 +95,8 @@ export berganIncrement
 #From Dynamic
 ##singleStep_pj
 export get_SSpj_A_meanU_f, SSpj_getFinal_A_b, updateSolution!, update_f!
+##newmark
+export getNewmark_Disp_Velocity, NonLinearNewmark
 #From Models
 ##general
     export local_∇v_λ_∇u!, local_v_ρ_u!, localBoundary_v_ρ_u!, localSource!, localNeumann!, localScalar!, localScalarNeumann!
