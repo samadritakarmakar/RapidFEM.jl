@@ -81,7 +81,7 @@ include("Output/WriteToMesh.jl")
     export getNodeToElementMap!, getAllFaces, getBoundaryFaces
     export getAllMaterialBoundaryFaces, getAllBoundaryNodes, getAllInternalNodes
     #addBoundaryElements
-    export addBoundaryElements!
+    export addBoundaryElements!, removeElements!
     #updateMesh
     export replaceAndAddElements!
     #extrudeSurfaceToVolume

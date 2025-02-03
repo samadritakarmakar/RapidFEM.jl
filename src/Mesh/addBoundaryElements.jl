@@ -58,3 +58,14 @@ function addBoundaryElements!(mesh::Mesh, boundaryDimension::Int64, newAttribute
         boundarySelectConditions[attribNo], dimRange[activeDims])
     end
 end
+
+
+function removeElements!(mesh::Mesh, attribute::Tuple{Int64, Int64})
+    if attribute ∈ keys(mesh.Elements)
+        mesh.noOfElements -= length(mesh.Elements[attribute])
+        delete!(mesh.Elements, attribute)
+        mesh.noOfAttrib -= 1
+        delete!(mesh.AttributeName, attribute)
+        delete!(mesh.attributes, attribute)
+    end
+end
