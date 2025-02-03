@@ -66,6 +66,6 @@ function removeElements!(mesh::Mesh, attribute::Tuple{Int64, Int64})
         delete!(mesh.Elements, attribute)
         mesh.noOfAttrib -= 1
         delete!(mesh.AttributeName, attribute)
-        delete!(mesh.attributes, attribute)
+        remove!(mesh.attributes, attribute)
     end
 end
