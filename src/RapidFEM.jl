@@ -28,6 +28,7 @@ include("FEM/dofUtils.jl")
 include("FEM/postProcess.jl")
 include("FEM/SprLikeRecovery.jl")
 include("FEM/utils.jl")
+include("FEM/normals.jl")
 include("NonLinear/nonLinearUtils.jl")
 include("NonLinear/simpleNLsolve.jl")
 include("Dynamic/singleStep_pj.jl")
@@ -67,6 +68,8 @@ include("Output/WriteToMesh.jl")
     export InvDistInterpolation, voigtToTensor
 ##SprLikeRecovery
     export SprLikeRecovery
+##normals
+    export getElementSurfaceNormal, getSurfaceNormals
 #From Mesh
     #mesh.jl
     export Mesh, readMesh, getNoOfElements, getCoordArray, updateNodePositions!, getCurrentNodeDict
