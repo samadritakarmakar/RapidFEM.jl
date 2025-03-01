@@ -1,5 +1,6 @@
-using LinearAlgebra
+using LinearAlgebra, Plots
 using RapidFEM, SparseArrays
+
 include("testTimeInt.jl")
 #=
 M = spzeros(1,1)
@@ -78,7 +79,7 @@ function get_hat_u_vals(u_n, u̇_n, ü_n, Δt::Real, β1::Real, β2::Real)
     return ü_hat_n1, u̇_hat_n1
 end
 
-function ImplicitNewmark(M_C_K::Vector, f, u_n, u̇_n, ü_n, Δt::Real, β1::Real, β2::Real)
+#=function ImplicitNewmark(M_C_K::Vector, f, u_n, u̇_n, ü_n, Δt::Real, β1::Real, β2::Real)
     M = M_C_K[1]
     C = M_C_K[2]
     K = M_C_K[3]
@@ -106,7 +107,7 @@ function Newmark(M_C_K::Vector, f, u_n, u̇_n, ü_n, Δt::Real, β1::Real, β2:
     u̇_n1 = u̇_breve_n1 + β1*Δt*ü_n1
     u_n1 = u_breve_n1 + 0.5*Δt^2*β2*ü_n1
     return u_n1, u̇_n1, ü_n1
-end
+end=#
 
 
 function testNewmark()
@@ -216,7 +217,7 @@ function testImplicitNewmarkNonLinear()
 
 end
 
-function getNewmark_Disp_Velocity(ü_n1::Union{Real, Vector}, u_n::Union{Real, Vector}, u̇_n::Union{Real, Vector}, ü_n::Union{Real, Vector}, 
+#=function getNewmark_Disp_Velocity(ü_n1::Union{Real, Vector}, u_n::Union{Real, Vector}, u̇_n::Union{Real, Vector}, ü_n::Union{Real, Vector}, 
     Δt::Real, β1::Real, β2::Real)
 
     u_n1 = u_n + Δt*u̇_n + 0.5*Δt^2*(1.0 - β2)*ü_n + 0.5*Δt^2*β2*ü_n1
@@ -238,7 +239,7 @@ function NonLinearNewmark(ü_n1::Union{Real, Vector}, M_vecfunc::Function, C_ve
     fTotal = f + M_vecfunc(ü_n1) + C_vecfunc(u̇_n1) + K_vecfunc(u_n1)
 
     return fTotal, u_n1, u̇_n1
-end
+end=#
 
 
 function testNewmarkNonLinear()
@@ -268,9 +269,14 @@ function testNewmarkNonLinear()
     dü = Inf
     Δü = 0.0
     u_n1, u̇_n1 = 0.0, 0.0
+    u_nVal = Float64[]
+    u̇_nVal = Float64[]
+    ü_nVal = Float64[]
+    t_nVal = Float64[]
     for i ∈ 1:5
+        t = i*Δt
         f = -analyticalForceFunction(i*Δt, m, c, k, D, E, G)
-        f_func(u_n) = f
+        f_func(u_n, u̇_n, time) = f
         #println("u_n = $u_n u̇_n = $u̇_n ü_n = $ü_n")
         #println("f = ", f)
         fTotal = Inf
@@ -279,10 +285,10 @@ function testNewmarkNonLinear()
         iter = 0
         #println("starting ü_n1 = ", ü_n1)
         while norm(fTotal) > 1e-8 || norm(dü) > 1e-12
-            fTotal, u_n1, u̇_n1 = NonLinearNewmark(ü_n1, M_vecfunc, C_vecfunc, K_vecfunc, f_func, u_n, u̇_n, ü_n, Δt, β1, β2)
+            fTotal, u_n1, u̇_n1 = ImplicitNewmark(ü_n1, M_vecfunc, C_vecfunc, K_vecfunc, f_func, u_n, u̇_n, ü_n, t, t-Δt, β1, β2)
             #println("\nfTotal = ", fTotal)
-            fTotalm1, u_n1_, u̇_n1_ = NonLinearNewmark(ü_n1 - 1e-4, M_vecfunc, C_vecfunc, K_vecfunc, f_func, u_n, u̇_n, ü_n,  Δt, β1, β2)
-            fTotal1, u_n1_, u̇_n1_ = NonLinearNewmark(ü_n1 + 1e-4, M_vecfunc, C_vecfunc, K_vecfunc, f, u_n, u̇_n, ü_n, Δt, β1, β2)
+            fTotalm1, u_n1_, u̇_n1_ = ImplicitNewmark(ü_n1 - 1e-4, M_vecfunc, C_vecfunc, K_vecfunc, f_func, u_n, u̇_n, ü_n,  t, t-Δt, β1, β2)
+            fTotal1, u_n1_, u̇_n1_ = ImplicitNewmark(ü_n1 + 1e-4, M_vecfunc, C_vecfunc, K_vecfunc, f_func, u_n, u̇_n, ü_n, t, t-Δt, β1, β2)
             df = (fTotal1 - fTotalm1)/(2e-4)
             dü = -df\fTotal
             #println("dü = ", dü)
@@ -291,6 +297,10 @@ function testNewmarkNonLinear()
             
             iter += 1
         end
+        push!(u_nVal, u_n1)
+        push!(u̇_nVal, u̇_n1)
+        push!(ü_nVal, ü_n1)
+        push!(t_nVal, t)
         println("iter = ", iter)
         println("t = ", i*Δt)
         Δü = ü_n1 - ü_n
@@ -298,4 +308,7 @@ function testNewmarkNonLinear()
         println("u_n = ", u_n1, " u̇_n = ", u̇_n1, " ü_n = ", ü_n1)
         println("Actual Solution: ", usol(i*Δt), " ", u̇sol(i*Δt), " ", üsol(i*Δt), "\n")
     end
+    println("ü_nVal = ", ü_nVal)
+    accPlot = plot(label = "Acc", xlabel = "Time", ylabel = "Acceleration")
+    plot!(accPlot, t_nVal, ü_nVal, label = "β1 = $β1, β2 = $β2")
 end

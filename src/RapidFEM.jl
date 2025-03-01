@@ -99,7 +99,10 @@ export berganIncrement
 ##singleStep_pj
 export get_SSpj_A_meanU_f, SSpj_getFinal_A_b, updateSolution!, update_f!
 ##newmark
-export getNewmark_Disp_Velocity, NonLinearNewmark
+export getNewmark_Disp_Velocity, ImplicitNewmark
+##Generalized Alpha
+export getGenAlpha_DispVelAccTime, getImplicitGenAlphaParameters, getExplicitGenAlphaParameters
+export getGenAlphaParameters, GeneralizedAlpha
 #From Models
 ##general
     export local_∇v_λ_∇u!, local_v_ρ_u!, localBoundary_v_ρ_u!, localSource!, localNeumann!, localScalar!, localScalarNeumann!
