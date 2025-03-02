@@ -27,14 +27,14 @@ function ImplicitNewmark(ü_n1::Union{Real, Vector}, M_vecfunc::Function, C_vec
     return fTotal, u_n1, u̇_n1
 end
 
-function getGenAlpha_DispVelAccTime(ü_n1::Union{Real, Vector}, u_n::Union{Real, Vector}, u̇_n::Union{Real, Vector}, ü_n::Union{Real, Vector}, 
+function getGenAlpha_DispVelAcc(ü_n1::Union{Real, Vector}, u_n::Union{Real, Vector}, u̇_n::Union{Real, Vector}, ü_n::Union{Real, Vector}, 
     t_n1::Real, t_n::Real, α_f::Real, α_m::Real, γ::Real, β::Real)
 
     u_n1, u̇_n1 = getNewmark_Disp_Velocity(ü_n1, u_n, u̇_n, ü_n, t_n1-t_n, γ, 2.0*β)
     ü_n1_m_αm = α_m*ü_n + (1.0-α_m)*ü_n1
     u̇_n1_m_αf = α_f*u̇_n + (1.0-α_f)*u̇_n1
     u_n1_m_αf = α_f*u_n + (1.0-α_f)*u_n1
-    return u_n1, u̇_n1, u_n1_m_αf, u̇_n1_m_αf, ü_n1_m_αm, α_f
+    return u_n1, u̇_n1, u_n1_m_αf, u̇_n1_m_αf, ü_n1_m_αm, α_f, α_m, γ, β
 end
 
 function getImplicitGenAlphaParameters(ρInf::Real)
@@ -62,17 +62,17 @@ function getGenAlphaParameters(ρ::Real, method::Symbol)
     end
 end
 
-function getGenAlpha_DispVelAccTime(ü_n1::Union{Real, Vector}, u_n::Union{Real, Vector}, u̇_n::Union{Real, Vector}, ü_n::Union{Real, Vector}, 
+function getGenAlpha_DispVelAcc(ü_n1::Union{Real, Vector}, u_n::Union{Real, Vector}, u̇_n::Union{Real, Vector}, ü_n::Union{Real, Vector}, 
     t_n1::Real, t_n::Real, ρ::Real, method::Symbol)
 
     α_f, α_m,  γ, β = getGenAlphaParameters(ρ, method)
-    return getGenAlpha_DispVelAccTime(ü_n1, u_n, u̇_n, ü_n, t_n1, t_n, α_f, α_m, γ, β)
+    return getGenAlpha_DispVelAcc(ü_n1, u_n, u̇_n, ü_n, t_n1, t_n, α_f, α_m, γ, β)
 end
 
 function GeneralizedAlpha(ü_n1::Union{Real, Vector}, M_vecfunc::Function, C_vecfunc::Function, K_vecfunc::Function, f::T, u_n::Union{Real, Vector}, 
     u̇_n::Union{Real, Vector}, ü_n::Union{Real, Vector}, t_n1::Real, t_n::Real, ρ::Real, method::Symbol) where T
 
-    u_n1, u̇_n1, u_n1_m_αf,  u̇_n1_m_αf, ü_n1_m_αm, αf = getGenAlpha_DispVelAccTime(ü_n1, u_n, u̇_n, ü_n, t_n1, t_n, ρ, method)
+    u_n1, u̇_n1, u_n1_m_αf,  u̇_n1_m_αf, ü_n1_m_αm, αf, αm, γ, β = getGenAlpha_DispVelAcc(ü_n1, u_n, u̇_n, ü_n, t_n1, t_n, ρ, method)
     
     if isa(f, Function)
         f = αf*f(u_n, u̇_n, t_n)+ (1.0 - αf)*f(u_n1, u̇_n1, t_n1)
@@ -85,7 +85,7 @@ function GeneralizedAlpha(ü_n1::Union{Real, Vector}, M_vecfunc::Function, C_ve
     f_n1_ext::Union{Real, Vector}, u_n::Union{Real, Vector}, u̇_n::Union{Real, Vector}, ü_n::Union{Real, Vector}, t_n1::Real, t_n::Real, ρ::Real, 
     method::Symbol)
 
-    u_n1, u̇_n1, u_n1_m_αf,  u̇_n1_m_αf, ü_n1_m_αm, αf = getGenAlpha_DispVelAccTime(ü_n1, u_n, u̇_n, ü_n, t_n1, t_n, ρ, method)
+    u_n1, u̇_n1, u_n1_m_αf,  u̇_n1_m_αf, ü_n1_m_αm, αf, αm, γ, β = getGenAlpha_DispVelAcc(ü_n1, u_n, u̇_n, ü_n, t_n1, t_n, ρ, method)
     
     f = αf*f_n_ext + (1.0 - αf)*f_n1_ext
 

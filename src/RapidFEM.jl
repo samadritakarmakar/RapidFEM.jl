@@ -101,7 +101,7 @@ export get_SSpj_A_meanU_f, SSpj_getFinal_A_b, updateSolution!, update_f!
 ##newmark
 export getNewmark_Disp_Velocity, ImplicitNewmark
 ##Generalized Alpha
-export getGenAlpha_DispVelAccTime, getImplicitGenAlphaParameters, getExplicitGenAlphaParameters
+export getGenAlpha_DispVelAcc, getImplicitGenAlphaParameters, getExplicitGenAlphaParameters
 export getGenAlphaParameters, GeneralizedAlpha
 #From Models
 ##general

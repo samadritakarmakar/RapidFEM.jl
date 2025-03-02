@@ -11,7 +11,7 @@ function testGenAlphaNonLinear()
     tTotal = 10.0
     
 
-    model::String = "oscillator"
+    model::String = "polyO2"
     wavelength = nothing
     if model == "polyO2"
         D, E, G = 3.0, 2.0, 1.0
@@ -47,8 +47,8 @@ function testGenAlphaNonLinear()
 
     Δt = .02
 
-    ρ = 0.9
-    method = :implicit
+    ρ = 0.6
+    method = :explicit
     dü = Inf
     Δü = 0.0
     u_n1, u̇_n1 = 0.0, 0.0
@@ -70,11 +70,11 @@ function testGenAlphaNonLinear()
         #println("u_n = $u_n u̇_n = $u̇_n ü_n = $ü_n")
         #println("f = ", f)
         fTotal = Inf
-        ü_n1 = 6.0#ü_n + Δü
+        ü_n1 = 0.0#ü_n + Δü
         #finite difference
         iter = 0
         #println("starting ü_n1 = ", ü_n1)
-        while norm(fTotal) > 1e-8 || norm(dü) > 1e-8
+        while norm(fTotal) > 1e-10 || norm(dü) > 1e-10
             #println("Look at this")
             fTotal, u_n1, u̇_n1 = GeneralizedAlpha(ü_n1, M_vecfunc, C_vecfunc, K_vecfunc, f_func, u_n, u̇_n, ü_n, 
                 i*Δt, (i-1)*Δt, ρ, method)
