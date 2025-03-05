@@ -48,7 +48,7 @@ function testNewmarkNonLinear()
     Δt = 1.2
 
     β1 = 0.5
-    β2 = 0.5
+    β2 = 1.0
     dü = Inf
     Δü = 0.0
     u_n1, u̇_n1 = 0.0, 0.0
@@ -90,6 +90,10 @@ function testNewmarkNonLinear()
         println("iter = ", iter)
         println("t = ", i*Δt)
         Δü = ü_n1 - ü_n
+        ü_nTrial, ü_n1_Trial = getNewmarkAccsFromDispVel(u_n1, u̇_n1, u_n, u̇_n, Δt, β1, β2)
+        println("diff in ü_n1 and ü_n1_Trial = ", ü_n1 - ü_n1_Trial)
+        println("diff in ü_n and ü_nTrial = ", ü_n - ü_nTrial)
+
         u_n, u̇_n, ü_n = u_n1, u̇_n1, ü_n1
         push!(uSolVec, u_n)
         push!(u̇SolVec, u̇_n)

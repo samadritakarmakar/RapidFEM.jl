@@ -8,6 +8,18 @@ function getNewmark_Disp_Velocity(ü_n1::Union{Real, Vector}, u_n::Union{Real, 
     return u_n1, u̇_n1
 end
 
+"""Given the current displacement: u_n1, velocity: u̇_n1, and the previous displacement: u_n, velocity: u̇_n, this function returns the
+accelerations at the previous: ü_n, and current time steps: ü_n1. The time step is represented by Δt. The Newmark parameters are represented
+by β1 and β2. WARNING: β2 parameter is here is 2*β parameter in the literature. β1 = γ as in the literature."""
+function getNewmarkAccsFromDispVel(u_n1::Union{Real, Vector}, u̇_n1::Union{Real, Vector}, u_n::Union{Real, Vector}, u̇_n::Union{Real, Vector}, Δt::Real, β1::Real, β2::Real)
+    if β1 == β2
+        error("β1 and β2 cannot be equal to find accelerations with this function.")
+    end
+    ü_n = ((2.0*β1*(u_n1 - u_n)/Δt - u̇_n) - β2*u̇_n1 + β2*u̇_n)/((β1 - β2)*Δt)
+    ü_n1 = ((u̇_n1 - u̇_n)/Δt - ü_n)/β1 + ü_n
+    return ü_n, ü_n1
+end
+
 
 """This function returns the total force acting on the system, given the current acceleration guess in a Newton-Raphson iteration.
 The mass, damping, and stiffness matrices are represented by the functions M_vecfunc(ü_n1), C_vecfunc(u̇_n1), and K_vecfunc(u_n1), respectively. The

@@ -99,7 +99,7 @@ export berganIncrement
 ##singleStep_pj
 export get_SSpj_A_meanU_f, SSpj_getFinal_A_b, updateSolution!, update_f!
 ##newmark
-export getNewmark_Disp_Velocity, ImplicitNewmark
+export getNewmark_Disp_Velocity, ImplicitNewmark, getNewmarkAccsFromDispVel
 ##Generalized Alpha
 export getGenAlpha_DispVelAcc, getImplicitGenAlphaParameters, getExplicitGenAlphaParameters
 export getGenAlphaParameters, GeneralizedAlpha
