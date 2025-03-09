@@ -103,6 +103,7 @@ export getNewmark_Disp_Velocity, ImplicitNewmark, getNewmarkAccsFromDispVel
 ##Generalized Alpha
 export getGenAlpha_DispVelAcc, getImplicitGenAlphaParameters, getExplicitGenAlphaParameters
 export getGenAlphaParameters, GeneralizedAlpha
+export getHhtAlphaParameters, getHhtAlpha_DispVecAcc
 #From Models
 ##general
     export local_∇v_λ_∇u!, local_v_ρ_u!, localBoundary_v_ρ_u!, localSource!, localNeumann!, localScalar!, localScalarNeumann!

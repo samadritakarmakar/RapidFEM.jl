@@ -99,6 +99,27 @@ function getGenAlpha_DispVelAcc(ü_n1::Union{Real, Vector}, u_n::Union{Real, Ve
     return getGenAlpha_DispVelAcc(ü_n1, u_n, u̇_n, ü_n, t_n1, t_n, α_f, α_m, γ, β)
 end
 
+"""Given the parameter α_f, this function returns the Generalized-Alpha parameters αf, αm, γ, and β."""
+function getHhtAlphaParameters(α_f::Real)
+    @assert 0.0 <= α_f <= 1.0/3.0 "α_f must be between 0 and 1/3."
+    α_m = 1.0
+    β = 0.25*(1.0 + α_f)^2
+    γ = 0.5 + α_f
+    return α_f, α_m, γ, β
+end
+
+"""Given the parameter α_f, this function returns the Generalized-Alpha data u_n+1, u̇_n+1, u_n+1-αf, u̇_n+1-αf, ü_n+1-αm, αf, αm, γ, and β."""
+function getHhtAlpha_DispVecAcc(ü_n1::Union{Real, Vector}, u_n::Union{Real, Vector}, u̇_n::Union{Real, Vector}, ü_n::Union{Real, Vector}, 
+    t_n1::Real, t_n::Real, α_f::Real)
+
+    α_f, α_m, γ, β = getHhtAlphaParameters(α_f)
+    return getGenAlpha_DispVelAcc(ü_n1, u_n, u̇_n, ü_n, t_n1, t_n, α_f, α_m, γ, β)
+end
+    
+    
+    
+
+
 
 """"This function returns the total force acting on the system, given the current acceleration guess in a Newton-Raphson iteration.
     Additionally, it returns the next set of possible displacement, u_n+1, and velocity, u̇_n+1. 
