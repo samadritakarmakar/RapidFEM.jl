@@ -136,7 +136,7 @@ function GeneralizedAlpha(ü_n1::Union{Real, Vector}, M_vecfunc::Function, C_ve
     if isa(f, Function)
         f = αf*f(u_n, u̇_n, t_n)+ (1.0 - αf)*f(u_n1, u̇_n1, t_n1)
     end
-    fTotal = f + M_vecfunc(ü_n1_m_αm) + C_vecfunc(u̇_n1_m_αf) + (1.0-α_f)*K_vecfunc(u_n1) + α_f*K_vecfunc(u_n)
+    fTotal = f + M_vecfunc(ü_n1_m_αm) + C_vecfunc(u̇_n1_m_αf) + (1.0-αf)*K_vecfunc(u_n1) + αf*K_vecfunc(u_n)
     return fTotal, u_n1, u̇_n1
 end
 
@@ -154,7 +154,7 @@ function GeneralizedAlpha(ü_n1::Union{Real, Vector}, M_vecfunc::Function, C_ve
     
     f = αf*f_n_ext + (1.0 - αf)*f_n1_ext
 
-    fTotal = f + M_vecfunc(ü_n1_m_αm) + C_vecfunc(u̇_n1_m_αf) + (1.0-α_f)*K_vecfunc(u_n1) + α_f*K_vecfunc(u_n)
+    fTotal = f + M_vecfunc(ü_n1_m_αm) + C_vecfunc(u̇_n1_m_αf) + (1.0-αf)*K_vecfunc(u_n1) + αf*K_vecfunc(u_n)
     return fTotal, u_n1, u̇_n1
 end
 
