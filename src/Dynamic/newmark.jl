@@ -101,8 +101,8 @@ end
 
 """Given the parameter α_f, this function returns the Generalized-Alpha parameters αf, αm, γ, and β."""
 function getHhtAlphaParameters(α_f::Real)
-    @assert 0.0 <= α_f <= 1.0/3.0 "α_f must be between 0 and 1/3."
-    α_m = 1.0
+    @assert 0.0 <= α_f <= 1.0/3.0+1e-9 "α_f must be between 0 and 1/3."
+    α_m = 0.0
     β = 0.25*(1.0 + α_f)^2
     γ = 0.5 + α_f
     return α_f, α_m, γ, β
