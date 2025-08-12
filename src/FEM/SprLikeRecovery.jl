@@ -151,22 +151,34 @@ function getSprPolysAroundNode(centerNodeNo::Int64, FeSpace::Dict, mesh::Mesh, m
     #the type of polynomial and order to be used is as per the first element
     firstElement = mesh.Elements[attribElementNos[1][1]][attribElementNos[1][2]]
     nodeCoord = mesh.Nodes[centerNodeNo][usedDims]
+    orderUsed = firstElement.order
+    p = getPoly(firstElement, nodeCoord, orderUsed)
     #println("totalIpPoints: ", totalIpPoints, " length(p): ", length(p))
-    #=if length(p) >= totalIpPoints
-        #add more neaby elements to attribElementNos
+    
+    if ceil(Int64, 1.5*length(p)) >= totalIpPoints
+        attribElementNoCounter = 1
+        nodeTagCounter = 1
         newAttribElementNos = deepcopy(attribElementNos)
-        for attribElementNo ∈ attribElementNos
+        #println("SPR: Initial number of elements around node $(centerNodeNo): ", length(attribElementNos))        
+        #add more neaby elements to attribElementNos
+        while ceil(Int64, 1.5*length(p)) >= totalIpPoints && attribElementNoCounter <= length(attribElementNos)
+            attribElementNo = attribElementNos[attribElementNoCounter]
             element = mesh.Elements[attribElementNo[1]][attribElementNo[2]]
             nodeTags = element.nodeTags
-            for nodeTag ∈ nodeTags
-                append!(newAttribElementNos, meshExtra.nodeToElementMap[nodeTag])
+            nodeTag = nodeTags[nodeTagCounter]
+            append!(newAttribElementNos, meshExtra.nodeToElementMap[nodeTag])
+            unique!(sort!(newAttribElementNos))
+            totalIpPoints = getTotalIpPoints(newAttribElementNos, mesh, FeSpace, reduction)
+            if nodeTagCounter < length(nodeTags) #if there are more nodes in the element
+                nodeTagCounter += 1
+            else #else move to the next element
+                nodeTagCounter = 1
+                attribElementNoCounter += 1
             end
         end
-        unique!(sort!(newAttribElementNos))
         attribElementNos = newAttribElementNos
-        totalIpPoints = getTotalIpPoints(attribElementNos, mesh, FeSpace, reduction)
-        @assert length(p) < totalIpPoints "Error: Not enough Integration points to perform SPR"
-    end=#
+        #println("SPR: New number of elements around node $(centerNodeNo): ", length(attribElementNos))
+    end
     #sort!(attribElementNos)
     ipCoords = zeros(Float64, length(usedDims), totalIpPoints)
     totalIpNo = 1
@@ -180,14 +192,16 @@ function getSprPolysAroundNode(centerNodeNo::Int64, FeSpace::Dict, mesh::Mesh, m
             totalIpNo += 1
         end
     end
-    orderUsed = firstElement.order
-    p = getPoly(firstElement, nodeCoord, orderUsed)
-    while length(p) > totalIpPoints && orderUsed > 0
-        orderUsed -= 1
-        p = getPoly(firstElement, nodeCoord, orderUsed)
+    #If the number of sample points is still less than the number of polynomial coefficients, reduce the order of polynomial.
+    if length(p) > totalIpPoints
+        #@warn "SPR Warning: The number of sample points < the number of polynomial coefficients for node $(centerNodeNo). Reducing smoothing order!"
+        while length(p) > totalIpPoints && orderUsed > 0
+            orderUsed -= 1
+            p = getPoly(firstElement, nodeCoord, orderUsed)
+        end
+        #println("orderUsed: ", orderUsed)
+        @assert orderUsed >= 0 "Error: Selected order is less than 0"
     end
-    #println("orderUsed: ", orderUsed)
-    @assert orderUsed >= 0 "Error: Selected order is less than 0"
     P = getPoly(firstElement, ipCoords, orderUsed)
     return p, P, attribElementNos, totalIpPoints
 end
