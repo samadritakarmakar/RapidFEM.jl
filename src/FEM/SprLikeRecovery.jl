@@ -244,14 +244,18 @@ function SprLikeRecovery(ipDataDict::Dict, FeSpace::Dict{Tuple{DataType, Int64, 
     recoveredData = Array{Float64, 1}(undef, length(mesh.Nodes)*problemDim)
     Threads.@threads for nodeNo ∈ collect(keys(mesh.Nodes))
         #println("nodeNo: ", nodeNo)
-        p, P, attribElementNos, totalIpPoints = getSprPolysAroundNode(nodeNo, FeSpace, mesh, meshExtra, usedDims, reduction = reduction)
-        sampleMatrix = getSprSampleMatrix(ipDataDict, problemDim, attribElementNos, totalIpPoints)
-        #println("size of sampleMatrix: ", size(sampleMatrix))
-        #display(sampleMatrix)
-        #println("size of P: ", size(P))
-        recoveredData[problemDim*(nodeNo-1)+1:problemDim*nodeNo] = p'*(P \ sampleMatrix) 
-        #println("sampleMatrix: ", sampleMatrix)
-        #println("recoveredData: ", recoveredData[problemDim*(nodeNo-1)+1:problemDim*nodeNo])
+        if nodeNo ∈ keys(meshExtra.nodeToElementMap)
+            p, P, attribElementNos, totalIpPoints = getSprPolysAroundNode(nodeNo, FeSpace, mesh, meshExtra, usedDims, reduction = reduction)
+            sampleMatrix = getSprSampleMatrix(ipDataDict, problemDim, attribElementNos, totalIpPoints)
+            #println("size of sampleMatrix: ", size(sampleMatrix))
+            #display(sampleMatrix)
+            #println("size of P: ", size(P))
+            recoveredData[problemDim*(nodeNo-1)+1:problemDim*nodeNo] = p'*(P \ sampleMatrix) 
+            #println("sampleMatrix: ", sampleMatrix)
+            #println("recoveredData: ", recoveredData[problemDim*(nodeNo-1)+1:problemDim*nodeNo])
+        else
+            recoveredData[problemDim*(nodeNo-1)+1:problemDim*nodeNo] .= 0.0
+        end
     end
     return recoveredData
 end
