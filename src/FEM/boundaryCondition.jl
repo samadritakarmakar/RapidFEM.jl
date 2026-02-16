@@ -62,14 +62,13 @@ vector 'b' as per the given DirichletFunction which is depedent on the position,
     applyDirichletBC!(A, b, DirichletFunction, attribute, mesh, problemDim)
 """
 function applyDirichletBC!(b::AbstractVector, A::AbstractMatrix,
-    DirichletFunction::Function, attribute::Tuple{Int64, Int64}, mesh::Mesh,
+    DirichletFunction::Function, nodes::Union{Set{Int64}, Vector{Int64}}, mesh::Mesh,
     problemDim::Int64,
     appliedDof::Array{Int64, 1} = ones(Int, problemDim), varArgs...)
 
     x_dirchlet = zeros(length(b))
     applied_vNodeArray = Array{Int64, 1}(undef, 0)
     lengthAppldDof::Int64 = getAppliedDofLength(problemDim, appliedDof)
-    nodes::Array{Int64} = getUniqueNodes(attribute, mesh)
     vNodes::Array{Int64} = getVectorNodes(nodes, problemDim, appliedDof)
     for nodeNo ∈ 1:length(nodes)
         coordArray::Array{Float64} = mesh.Nodes[nodes[nodeNo]]
@@ -101,14 +100,23 @@ function applyDirichletBC!(b::AbstractVector, A::AbstractMatrix,
     #return A .+ Pzeros
 end
 
+function applyDirichletBC!(b::AbstractVector, A::AbstractMatrix,
+    DirichletFunction::Function, attribute::Tuple{Int64, Int64}, mesh::Mesh,
+    problemDim::Int64,
+    appliedDof::Array{Int64, 1} = ones(Int, problemDim), varArgs...)
+
+    nodes::Array{Int64} = getUniqueNodes(attribute, mesh)
+    
+    return applyDirichletBC!(b, A, DirichletFunction, nodes, mesh, problemDim, appliedDof, varArgs...)
+end
+
 """Applies Initial Boundary condition on the given vector 'u' as per the given
     InitialFunction which is dependent on the position, x. To be used for solving Linear 
     Problems of the form [K]{u} = {f}
 """
 function applyInitialBC!(u::AbstractVector, InitialBcFunction::Function,
-    attribute::Tuple{Int64, Int64}, mesh::Mesh, problemDim::Int64, varArgs...)
+    nodes::Union{Set{Int64}, Vector{Int64}}, mesh::Mesh, problemDim::Int64, varArgs...)
 
-    nodes::Array{Int64} = getUniqueNodes(attribute, mesh)
     vNodes::Array{Int64} = getVectorNodes(nodes, problemDim)
     for nodeNo ∈ 1:length(nodes)
         coordArray::Array{Float64} = mesh.Nodes[nodes[nodeNo]]
@@ -116,13 +124,19 @@ function applyInitialBC!(u::AbstractVector, InitialBcFunction::Function,
     end
 end
 
+function applyInitialBC!(u::AbstractVector, InitialBcFunction::Function,
+    attribute::Tuple{Int64, Int64}, mesh::Mesh, problemDim::Int64, varArgs...)
+
+    nodes::Array{Int64} = getUniqueNodes(attribute, mesh)
+    return applyInitialBC!(u, InitialBcFunction, nodes, mesh, problemDim, varArgs...)
+end
+
 """Applies boundary condition on the Jacobian for solving Non-Linear Equation. To be used for solving 
 Non-Linear Equations of the form: ``u^{n+1} = u^{n} + J^{-1}\\cdot R``"""
 function applyNLDirichletBC_on_J!(J::AbstractMatrix,
-    attribute::Tuple{Int64, Int64}, mesh::Mesh,
+    nodes::Union{Set{Int64}, Vector{Int64}}, mesh::Mesh,
     problemDim::Int64, appliedDof::Array{Int64, 1} = ones(Int, problemDim), varArgs...)
 
-    nodes::Array{Int64} = getUniqueNodes(attribute, mesh)
     vNodes::Array{Int64} = getVectorNodes(nodes, problemDim, appliedDof)
     P::SparseMatrixCSC, Pzeros::SparseMatrixCSC =  getPermutionMatrix(vNodes, mesh, problemDim)
      J .= P*J
@@ -130,16 +144,22 @@ function applyNLDirichletBC_on_J!(J::AbstractMatrix,
     J .+= Pzeros
     return J
 end
+function applyNLDirichletBC_on_J!(J::AbstractMatrix,
+    attribute::Tuple{Int64, Int64}, mesh::Mesh,
+    problemDim::Int64, appliedDof::Array{Int64, 1} = ones(Int, problemDim), varArgs...)
+
+    nodes::Array{Int64} = getUniqueNodes(attribute, mesh)
+    return applyNLDirichletBC_on_J!(J, nodes, mesh, problemDim, appliedDof, varArgs...)
+end
 
 """Applies boundary condition on the solution 'u' for solving Non-Linear Equation. To be used for solving 
 Non-Linear Equations of the form: ``u^{n+1} = u^{n} + J^{-1}\\cdot R``"""
 function applyNLDirichletBC_on_Soln!(Soln::Array{Float64,1},
-    DirichletFunction::Function,  attribute::Tuple{Int64, Int64},
+    DirichletFunction::Function,  nodes::Union{Set{Int64}, Vector{Int64}},
     mesh::Mesh, problemDim::Int64,
     appliedDof::Array{Int64, 1} = ones(Int, problemDim), varArgs...)
 
     lengthAppldDof::Int64 = getAppliedDofLength(problemDim, appliedDof)
-    nodes::Array{Int64} = getUniqueNodes(attribute, mesh)
     vNodes::Array{Int64} = getVectorNodes(nodes, problemDim, appliedDof)
     for nodeNo ∈ 1:length(nodes)
         coordArray::Array{Float64} = mesh.Nodes[nodes[nodeNo]]
@@ -153,14 +173,22 @@ function applyNLDirichletBC_on_Soln!(Soln::Array{Float64,1},
     end
 end
 
+function applyNLDirichletBC_on_Soln!(Soln::Array{Float64,1},
+    DirichletFunction::Function,  attribute::Tuple{Int64, Int64},
+    mesh::Mesh, problemDim::Int64,
+    appliedDof::Array{Int64, 1} = ones(Int, problemDim), varArgs...)
+
+    nodes::Array{Int64} = getUniqueNodes(attribute, mesh)
+    return applyNLDirichletBC_on_Soln!(Soln, DirichletFunction, nodes, mesh, problemDim, appliedDof, varArgs...)
+end
+
 """Applies boundary condition on the force vector 'f' for solving Non-Linear Equation. To be used for solving 
 Non-Linear Equations of the form: ``\\mathbf{u}^{n+1} = \\mathbf{u}^{n} + \\mathbf{J}^{-1}\\cdot \\mathbf{R}``"""
 function applyNLDirichletBC_on_f!(f::AbstractVector,
-    attribute::Tuple{Int64, Int64}, mesh::Mesh, problemDim::Int64,
+    nodes::Union{Set{Int64}, Vector{Int64}}, mesh::Mesh, problemDim::Int64,
     appliedDof::Array{Int64, 1} = ones(Int, problemDim), varArgs...)
 
     lengthAppldDof::Int64 = getAppliedDofLength(problemDim, appliedDof)
-    nodes::Array{Int64} = getUniqueNodes(attribute, mesh)
     vNodes::Array{Int64} = getVectorNodes(nodes, problemDim, appliedDof)
     #println("vNodes = ",vNodes)
     for nodeNo ∈ 1:length(nodes)
@@ -174,13 +202,20 @@ function applyNLDirichletBC_on_f!(f::AbstractVector,
     end
 end
 
-function applyDynamicDirichletBC!(Soln::Array{Array{Float64,1},1},
-    b::Vector, A::SparseMatrixCSC, DirichletFunction::Function,
+function applyNLDirichletBC_on_f!(f::AbstractVector,
     attribute::Tuple{Int64, Int64}, mesh::Mesh, problemDim::Int64,
     appliedDof::Array{Int64, 1} = ones(Int, problemDim), varArgs...)
 
-    lengthAppldDof::Int64 = getAppliedDofLength(problemDim, appliedDof)
     nodes::Array{Int64} = getUniqueNodes(attribute, mesh)
+    return applyNLDirichletBC_on_f!(f, nodes, mesh, problemDim, appliedDof, varArgs...)
+end
+
+function applyDynamicDirichletBC!(Soln::Array{Array{Float64,1},1},
+    b::Vector, A::SparseMatrixCSC, DirichletFunction::Function,
+    nodes::Union{Set{Int64}, Vector{Int64}}, mesh::Mesh, problemDim::Int64,
+    appliedDof::Array{Int64, 1} = ones(Int, problemDim), varArgs...)
+
+    lengthAppldDof::Int64 = getAppliedDofLength(problemDim, appliedDof)
     vNodes::Array{Int64} = getVectorNodes(nodes, problemDim, appliedDof)
     for nodeNo ∈ 1:length(nodes)
         coordArray::Array{Float64} = mesh.Nodes[nodes[nodeNo]]
@@ -199,4 +234,13 @@ function applyDynamicDirichletBC!(Soln::Array{Array{Float64,1},1},
      A .= A*P
     A .+= Pzeros
     return A
+end
+
+function applyDynamicDirichletBC!(Soln::Array{Array{Float64,1},1},
+    b::Vector, A::SparseMatrixCSC, DirichletFunction::Function,
+    attribute::Tuple{Int64, Int64}, mesh::Mesh, problemDim::Int64,
+    appliedDof::Array{Int64, 1} = ones(Int, problemDim), varArgs...)
+
+    nodes::Array{Int64} = getUniqueNodes(attribute, mesh)
+    return applyDynamicDirichletBC!(Soln, b, A, DirichletFunction, nodes, mesh, problemDim, appliedDof, varArgs...)
 end
