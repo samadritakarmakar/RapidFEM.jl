@@ -33,17 +33,20 @@ global stiffness matrix and vector.
     vNodes::Array{Int64} = getVectorNodes(nodes, problemDim)
     vNodes::Array{Int64} = getVectorNodes(element, problemDim)
 """
-function getVectorNodes(nodes::Array{Int64}, problemDim::Int64,
+function getVectorNodes(nodes::Union{Set{Int64}, Vector{Int64}}, problemDim::Int64,
     appliedDof::Array{Int64, 1} = ones(Int, problemDim))::Array{Int64}
 
     lengthAppldDof::Int64 = getAppliedDofLength(problemDim, appliedDof)
+    if nodes isa Set{Int64}
+        nodes = sort(collect(nodes))
+    end
 
     vectorNodes::Array{Int64} = Array{Int64}(undef, length(nodes)*lengthAppldDof)
-    for i ∈ 1:length(nodes)
+    for (i, node) ∈ enumerate(nodes)
         for j ∈ 1:problemDim
             if (appliedDof[j] == 1)
                 #sum(appliedDof[1:j])] is a trick to give the current dof number 
-                vectorNodes[lengthAppldDof*(i-1)+sum(appliedDof[1:j])] = problemDim*(nodes[i]-1)+j
+                vectorNodes[lengthAppldDof*(i-1)+sum(appliedDof[1:j])] = problemDim*(node-1)+j
             end
         end
     end
@@ -94,7 +97,7 @@ function getSolAtElement(sol::AbstractArray{Float64,1}, element::AbstractElement
     solAtNodes::Array{Float64,1} = zeros(length(activeDimensions)*length(element.nodeTags))
     j::Int64 = 1
     dimNo = 1 #keeps track of current dim in activeDimensions
-    for i ∈ 1:length(solAtNodes)
+    for i ∈ eachindex(solAtNodes)
         if activeDimensions[dimNo] == 0
             solAtNodes[i] = 0.0
         else

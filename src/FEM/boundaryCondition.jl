@@ -15,44 +15,39 @@ function getPermutionMatrix(vNodes::Array{Int64}, mesh::Mesh, problemDim::Int64)
     return P, Pzeros
 end
 
-"""Generates an array of Unique nodes for the given attribute in the mesh data."""
-function getUniqueNodes(attribute::Tuple{Int64, Int64}, mesh::Mesh)::Array{Int64}
-    #=NodeList::Array{Int64} = []
+function getUniqueNodesSet(attribute::Tuple{Int64, Int64}, mesh::Mesh)::Set{Int64}
+    NodeList = Set{Int64}()
     for element ∈ mesh.Elements[attribute...]
         nodes::Array{Int64} = getNodes(element)
         for node ∈ nodes
-            if node ∉ (NodeList)
-                push!(NodeList, node)
-            end
-        end
-    end=#
-    NodeList::Array{Int64} = []
-    for element ∈ mesh.Elements[attribute...]
-        nodes::Array{Int64} = getNodes(element)
-        for node ∈ nodes
-            if length(searchsorted(NodeList, node))==0
-                push!(NodeList, node)
-                sort!(NodeList)
-            end
+            push!(NodeList, node)
         end
     end
-    #unique!(NodeList) #Makes sure of only one copy of each node in NodeList
     return NodeList
 end
 
+"""Generates an array of Unique nodes for the given attribute in the mesh data."""
+function getUniqueNodes(attribute::Tuple{Int64, Int64}, mesh::Mesh)::Array{Int64}
+    return sort(collect(getUniqueNodesSet(attribute, mesh)))
+end
+
 """Generates an array of Unique nodes for the given attribute in the mesh data for given Vector of elementNos."""
-function getUniqueNodes(attribute::Tuple{Int64, Int64}, mesh::Mesh, elementNos::Vector{Int64})
-    NodeList::Array{Int64} = []
+function getUniqueNodesSet(attribute::Tuple{Int64, Int64}, mesh::Mesh, elementNos::Vector{Int64})
+    NodeList = Set{Int64}()
     for element ∈ mesh.Elements[attribute...][elementNos]
         nodes::Array{Int64} = getNodes(element)
         for node ∈ nodes
-            if length(searchsorted(NodeList, node))==0
+            #if length(searchsorted(NodeList, node))==0
                 push!(NodeList, node)
-                sort!(NodeList)
-            end
+                #sort!(NodeList)
+            #end
         end
     end
     return NodeList
+end
+
+function getUniqueNodes(attribute::Tuple{Int64, Int64}, mesh::Mesh, elementNos::Vector{Int64})
+    return sort(collect(getUniqueNodesSet(attribute, mesh, elementNos)))
 end
 
 
@@ -69,9 +64,12 @@ function applyDirichletBC!(b::AbstractVector, A::AbstractMatrix,
     x_dirchlet = zeros(length(b))
     applied_vNodeArray = Array{Int64, 1}(undef, 0)
     lengthAppldDof::Int64 = getAppliedDofLength(problemDim, appliedDof)
+    if nodes isa Set{Int64}
+        nodes = sort(collect(nodes))
+    end
     vNodes::Array{Int64} = getVectorNodes(nodes, problemDim, appliedDof)
-    for nodeNo ∈ 1:length(nodes)
-        coordArray::Array{Float64} = mesh.Nodes[nodes[nodeNo]]
+    for (nodeNo, node) ∈ enumerate(nodes)
+        coordArray::Array{Float64} = mesh.Nodes[node]
         diricFunc::Array{Float64,1} = DirichletFunction(coordArray, varArgs...)
         for j ∈ 1:problemDim
             if appliedDof[j] == 1
@@ -116,10 +114,13 @@ end
 """
 function applyInitialBC!(u::AbstractVector, InitialBcFunction::Function,
     nodes::Union{Set{Int64}, Vector{Int64}}, mesh::Mesh, problemDim::Int64, varArgs...)
-
+    
+    if nodes isa Set{Int64}
+        nodes = sort(collect(nodes))
+    end
     vNodes::Array{Int64} = getVectorNodes(nodes, problemDim)
-    for nodeNo ∈ 1:length(nodes)
-        coordArray::Array{Float64} = mesh.Nodes[nodes[nodeNo]]
+    for (nodeNo, node) ∈ enumerate(nodes)
+        coordArray::Array{Float64} = mesh.Nodes[node]
         u[vNodes[(nodeNo-1)*problemDim+1:nodeNo*problemDim]] .= InitialBcFunction(coordArray, varArgs...)
     end
 end
@@ -160,9 +161,12 @@ function applyNLDirichletBC_on_Soln!(Soln::Array{Float64,1},
     appliedDof::Array{Int64, 1} = ones(Int, problemDim), varArgs...)
 
     lengthAppldDof::Int64 = getAppliedDofLength(problemDim, appliedDof)
+    if nodes isa Set{Int64}
+        nodes = sort(collect(nodes))
+    end
     vNodes::Array{Int64} = getVectorNodes(nodes, problemDim, appliedDof)
-    for nodeNo ∈ 1:length(nodes)
-        coordArray::Array{Float64} = mesh.Nodes[nodes[nodeNo]]
+    for (nodeNo, node) ∈ enumerate(nodes)
+        coordArray::Array{Float64} = mesh.Nodes[node]
         diricFunc::Array{Float64,1} = DirichletFunction(coordArray, varArgs...)
         for j ∈ 1:problemDim
             if appliedDof[j] == 1
@@ -189,9 +193,12 @@ function applyNLDirichletBC_on_f!(f::AbstractVector,
     appliedDof::Array{Int64, 1} = ones(Int, problemDim), varArgs...)
 
     lengthAppldDof::Int64 = getAppliedDofLength(problemDim, appliedDof)
+    if nodes isa Set{Int64}
+        nodes = sort(collect(nodes))
+    end
     vNodes::Array{Int64} = getVectorNodes(nodes, problemDim, appliedDof)
     #println("vNodes = ",vNodes)
-    for nodeNo ∈ 1:length(nodes)
+    for (nodeNo, node) ∈ enumerate(nodes)
         for j ∈ 1:problemDim
             if appliedDof[j] == 1
                 f[vNodes[(nodeNo-1)*lengthAppldDof+sum(appliedDof[1:j])]] = 0.0
@@ -216,9 +223,12 @@ function applyDynamicDirichletBC!(Soln::Array{Array{Float64,1},1},
     appliedDof::Array{Int64, 1} = ones(Int, problemDim), varArgs...)
 
     lengthAppldDof::Int64 = getAppliedDofLength(problemDim, appliedDof)
+    if nodes isa Set{Int64}
+        nodes = sort(collect(nodes))
+    end
     vNodes::Array{Int64} = getVectorNodes(nodes, problemDim, appliedDof)
-    for nodeNo ∈ 1:length(nodes)
-        coordArray::Array{Float64} = mesh.Nodes[nodes[nodeNo]]
+    for (nodeNo, node) ∈ enumerate(nodes)
+        coordArray::Array{Float64} = mesh.Nodes[node]
         diricFunc::Array{Float64,1} = DirichletFunction(coordArray, varArgs...)
         for j ∈ 1:problemDim
             if appliedDof[j] == 1
