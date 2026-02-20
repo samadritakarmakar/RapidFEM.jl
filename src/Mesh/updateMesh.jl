@@ -86,36 +86,38 @@ end
 It also updates the node tags in the elements to reflect the new node indexing."""
 function checkAndRemoveOrphanNodes!(mesh::Mesh, meshExtra::MeshExtra)
     orphanNodes = setdiff(1:length(mesh.Nodes), keys(meshExtra.nodeToElementMap))
-    for orphanNode ∈ orphanNodes
-        delete!(mesh.Nodes, orphanNode)
-    end
-    #reindex nodes
-    newNodeIndex = 1
-    oldNodeToNewNodeMap = Dict{Int64, Int64}()
-    existingNodeNos = sort(collect(keys(mesh.Nodes)))
-    for oldNodeNo ∈ existingNodeNos
-        oldNodeToNewNodeMap[oldNodeNo] = newNodeIndex
-        newNodeIndex += 1
-    end
-    minimalOrphanNodeIndex = minimum(orphanNodes)
-    for oldNodeNo ∈ existingNodeNos
-        if oldNodeNo > minimalOrphanNodeIndex
-            newNodeNo = oldNodeToNewNodeMap[oldNodeNo]
-             mesh.Nodes[newNodeNo] = deepcopy(mesh.Nodes[oldNodeNo])
+    if length(orphanNodes) > 0
+        for orphanNode ∈ orphanNodes
+            delete!(mesh.Nodes, orphanNode)
         end
-    end
-    for endNodeNo ∈ length(mesh.Nodes)-length(orphanNodes)+1:length(mesh.Nodes)
-        delete!(mesh.Nodes, endNodeNo)
-    end
-    mesh.noOfNodes = length(mesh.Nodes)
+        #reindex nodes
+        newNodeIndex = 1
+        oldNodeToNewNodeMap = Dict{Int64, Int64}()
+        existingNodeNos = sort(collect(keys(mesh.Nodes)))
+        for oldNodeNo ∈ existingNodeNos
+            oldNodeToNewNodeMap[oldNodeNo] = newNodeIndex
+            newNodeIndex += 1
+        end
+        minimalOrphanNodeIndex = minimum(orphanNodes)
+        for oldNodeNo ∈ existingNodeNos
+            if oldNodeNo > minimalOrphanNodeIndex
+                newNodeNo = oldNodeToNewNodeMap[oldNodeNo]
+                mesh.Nodes[newNodeNo] = deepcopy(mesh.Nodes[oldNodeNo])
+            end
+        end
+        for endNodeNo ∈ length(mesh.Nodes)-length(orphanNodes)+1:length(mesh.Nodes)
+            delete!(mesh.Nodes, endNodeNo)
+        end
+        mesh.noOfNodes = length(mesh.Nodes)
 
 
-    for elementAttribute ∈ keys(mesh.Elements)
-        for element ∈ mesh.Elements[elementAttribute]
-            nodeTags = deepcopy(element.nodeTags)
-            for (oldNodeTagNo, oldNodeTag) ∈ enumerate(nodeTags)
-                newNodeTag = oldNodeToNewNodeMap[oldNodeTag]
-                element.nodeTags[oldNodeTagNo] = newNodeTag
+        for elementAttribute ∈ keys(mesh.Elements)
+            for element ∈ mesh.Elements[elementAttribute]
+                nodeTags = deepcopy(element.nodeTags)
+                for (oldNodeTagNo, oldNodeTag) ∈ enumerate(nodeTags)
+                    newNodeTag = oldNodeToNewNodeMap[oldNodeTag]
+                    element.nodeTags[oldNodeTagNo] = newNodeTag
+                end
             end
         end
     end          
