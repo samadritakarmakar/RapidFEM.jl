@@ -83,7 +83,7 @@ include("Output/WriteToMesh.jl")
     #addBoundaryElements
     export addBoundaryElements!, removeElements!
     #updateMesh
-    export replaceAndAddElements!
+    export replaceAndAddElements!, checkAndRemoveOrphanNodes!
     #extrudeSurfaceToVolume
     export tapereExtrusionFunction, extrudeMeshSurfaceToVolume
 #From Quadrature
