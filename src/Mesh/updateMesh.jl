@@ -90,6 +90,8 @@ function checkAndRemoveOrphanNodes!(mesh::Mesh, meshExtra::MeshExtra)
         for orphanNode ∈ orphanNodes
             delete!(mesh.Nodes, orphanNode)
         end
+        newMeshNodesLength = length(mesh.Nodes)
+        #println("new mesh nodes length: $newMeshNodesLength")
         #reindex nodes
         newNodeIndex = 1
         oldNodeToNewNodeMap = Dict{Int64, Int64}()
@@ -105,7 +107,8 @@ function checkAndRemoveOrphanNodes!(mesh::Mesh, meshExtra::MeshExtra)
                 mesh.Nodes[newNodeNo] = deepcopy(mesh.Nodes[oldNodeNo])
             end
         end
-        for endNodeNo ∈ length(mesh.Nodes)-length(orphanNodes)+1:length(mesh.Nodes)
+        for endNodeNo ∈ newMeshNodesLength+1:length(mesh.Nodes)
+            #println("deleting node $endNodeNo")
             delete!(mesh.Nodes, endNodeNo)
         end
         mesh.noOfNodes = length(mesh.Nodes)
