@@ -86,7 +86,7 @@ end
 It also updates the node tags in the elements to reflect the new node indexing."""
 function checkAndRemoveOrphanNodes!(mesh::Mesh, meshExtra::MeshExtra, usedDims::StepRange)
     orphanNodes = setdiff(1:length(mesh.Nodes), keys(meshExtra.nodeToElementMap))
-
+    #println("orphan nodes: $orphanNodes")
     if length(orphanNodes) > 0
         deletedCoords = Matrix{Float64}(undef, length(usedDims), 1)
         orphanNodeNo = 1
@@ -116,7 +116,7 @@ function checkAndRemoveOrphanNodes!(mesh::Mesh, meshExtra::MeshExtra, usedDims::
                 mesh.Nodes[newNodeNo] = deepcopy(mesh.Nodes[oldNodeNo])
             end
         end
-        for endNodeNo ∈ newMeshNodesLength+1:length(mesh.Nodes)
+        for endNodeNo ∈ newMeshNodesLength+1:maximum(collect(keys(mesh.Nodes))) 
             #println("deleting node $endNodeNo")
             delete!(mesh.Nodes, endNodeNo)
         end
