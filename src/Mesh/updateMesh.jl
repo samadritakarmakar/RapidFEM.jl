@@ -88,7 +88,7 @@ function checkAndRemoveOrphanNodes!(mesh::Mesh, meshExtra::MeshExtra, usedDims::
     orphanNodes = setdiff(1:length(mesh.Nodes), keys(meshExtra.nodeToElementMap))
 
     if length(orphanNodes) > 0
-        deletedCoords = Matrix{Float64}(undef, 3, 1)
+        deletedCoords = Matrix{Float64}(undef, length(usedDims), 1)
         orphanNodeNo = 1
         for orphanNode ∈ orphanNodes
             if orphanNodeNo == 1
