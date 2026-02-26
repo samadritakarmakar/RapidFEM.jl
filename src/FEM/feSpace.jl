@@ -61,15 +61,43 @@ function get_∂x_∂ξ(coordArray::Array{Float64,2}, shapeFunction::Array{Shape
 end
 
 function get_∂ξ_∂x_Normalized(∂x_∂ξ::Array{Float64})::Array{Float64}
-    return inv(∂x_∂ξ)
+    if size(∂x_∂ξ,1) == size(∂x_∂ξ,2)
+        return inv(∂x_∂ξ)
+    else
+        #Chat-GPT suggested for non-square matrices, like in the case of surface integrals.
+        return pinv(∂x_∂ξ)
+    end
 end
 
-function get_∂ξ_∂x_TriTet(∂x_∂ξ::Array{Float64})::Array{Float64}
+function get_∂ξ_∂x_TriTetVol(∂x_∂ξ::Array{Float64})::Array{Float64}
     ∂x_∂ξ_temp = Array{Float64,2}(undef, size(∂x_∂ξ,1)+1,size(∂x_∂ξ,2))
     ∂x_∂ξ_temp[1,:] = ones(1,size(∂x_∂ξ,2))
     ∂x_∂ξ_temp[2:end,:] = ∂x_∂ξ
     ∂1_∂x__∂x_∂x::Array{Float64,2} = [zeros(size(∂x_∂ξ,1))';diagm(ones(size(∂x_∂ξ,1)))]
     return ∂x_∂ξ_temp\∂1_∂x__∂x_∂x
+end
+
+function get_∂ξ_∂x_TriTet(∂x_∂ξ::Array{Float64})::Array{Float64}
+    if size(∂x_∂ξ,1) + 1 == size(∂x_∂ξ,2)
+        return get_∂ξ_∂x_TriTetVol(∂x_∂ξ)
+    end
+    
+    #Chat-GPT suggested for non-square matrices, like in the case of surface integrals.
+
+    # --- Triangular surface in 3D: J is 3×2 (or more generally d×2 with d>2)
+    # We want ∂(ξ,η)/∂x = pinv(J), shape 2×d.
+    # Use SVD-based pseudoinverse for robustness.
+    if size(∂x_∂ξ,2) == 2 && size(∂x_∂ξ,1) > 2
+        return pinv(∂x_∂ξ)  # returns 2×d, e.g. 2×3
+    end
+
+    # --- If you ever get a square Jacobian here (e.g. triangle in 2D with J 2×2), invert.
+    if size(∂x_∂ξ,1) == size(∂x_∂ξ,2)
+        return inv(∂x_∂ξ)
+    end
+
+    # Fallback: pseudoinverse
+    return pinv(∂x_∂ξ)
 end
 
 """This function returns the appropriate function to be used with the passed
