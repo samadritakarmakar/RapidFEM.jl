@@ -143,7 +143,7 @@ function getTotalIpPoints(attribElementNos::Vector{Tuple{Tuple{Int64, Int64}, In
 end
 
 function getSprPolysAroundNode(centerNodeNo::Int64, FeSpace::Dict, mesh::Mesh, meshExtra::MeshExtra, usedDims::StepRange; 
-    reduction::Int64 = 0)
+    reduction::Int64 = 0, polyToIpRatio::Float64 = 1.5)
     
     # get elements around centerNodeNo
     attribElementNos = meshExtra.nodeToElementMap[centerNodeNo]
@@ -155,13 +155,13 @@ function getSprPolysAroundNode(centerNodeNo::Int64, FeSpace::Dict, mesh::Mesh, m
     p = getPoly(firstElement, nodeCoord, orderUsed)
     #println("totalIpPoints: ", totalIpPoints, " length(p): ", length(p))
     
-    if ceil(Int64, 1.5*length(p)) >= totalIpPoints
+    if ceil(Int64, polyToIpRatio*length(p)) >= totalIpPoints
         attribElementNoCounter = 1
         nodeTagCounter = 1
         newAttribElementNos = deepcopy(attribElementNos)
         #println("SPR: Initial number of elements around node $(centerNodeNo): ", length(attribElementNos))        
         #add more neaby elements to attribElementNos
-        while ceil(Int64, 1.5*length(p)) >= totalIpPoints && attribElementNoCounter <= length(attribElementNos)
+        while ceil(Int64, polyToIpRatio*length(p)) >= totalIpPoints && attribElementNoCounter <= length(attribElementNos)
             attribElementNo = attribElementNos[attribElementNoCounter]
             element = mesh.Elements[attribElementNo[1]][attribElementNo[2]]
             nodeTags = element.nodeTags
@@ -236,7 +236,7 @@ end
 
 function SprLikeRecovery(ipDataDict::Dict, FeSpace::Dict{Tuple{DataType, Int64, Any, Int64}, Array{ShapeFunction}}, 
     mesh::Mesh,  attrib::Tuple{Int64, Int64}, problemDim::Int64, activeDimensions::Array{Int64,1}=[1, 1, 1]; 
-    reduction::Int64 = 0)
+    reduction::Int64 = 0, polyToIpRatio::Float64=1.5)
 
     meshExtra = MeshExtra(mesh, [attrib])
     dimRange = RapidFEM.createDimRange()
@@ -245,7 +245,8 @@ function SprLikeRecovery(ipDataDict::Dict, FeSpace::Dict{Tuple{DataType, Int64, 
     Threads.@threads for nodeNo ∈ collect(keys(mesh.Nodes))
         #println("nodeNo: ", nodeNo)
         if nodeNo ∈ keys(meshExtra.nodeToElementMap)
-            p, P, attribElementNos, totalIpPoints = getSprPolysAroundNode(nodeNo, FeSpace, mesh, meshExtra, usedDims, reduction = reduction)
+            p, P, attribElementNos, totalIpPoints = getSprPolysAroundNode(nodeNo, FeSpace, mesh, meshExtra, usedDims, 
+            reduction = reduction, polyToIpRatio = polyToIpRatio)
             sampleMatrix = getSprSampleMatrix(ipDataDict, problemDim, attribElementNos, totalIpPoints)
             #println("size of sampleMatrix: ", size(sampleMatrix))
             #display(sampleMatrix)
@@ -263,7 +264,7 @@ end
 function SprLikeRecovery(postProcessFunction::func, sol::AbstractVector{Float64},
     parameters::param,  FeSpace::Dict{Tuple{DataType, Int64, Any, Int64}, Array{ShapeFunction}},
     mesh::Mesh,  attrib::Tuple{Int64, Int64}, problemDim::Int64,
-    activeDimensions::Array{Int64,1}=[1, 1, 1]) where {func, param}
+    activeDimensions::Array{Int64,1}=[1, 1, 1]; reduction::Int64 = 0, polyToIpRatio::Float64=1.5) where {func, param}
 
     dimRange = RapidFEM.createDimRange()
     usedDims = dimRange[activeDimensions]
@@ -287,7 +288,8 @@ function SprLikeRecovery(postProcessFunction::func, sol::AbstractVector{Float64}
         end
         elementNo += 1
     end
-    recoveredData = SprLikeRecovery(ipDataDict, FeSpace, mesh, attrib, problemDim, activeDimensions)
+    recoveredData = SprLikeRecovery(ipDataDict, FeSpace, mesh, attrib, problemDim, activeDimensions; 
+        reduction = reduction, polyToIpRatio = polyToIpRatio)
     return recoveredData
 end
             
