@@ -117,8 +117,13 @@ function getSurfaceNormals(surfAttrib::Tuple{Int64, Int64}, mesh::Mesh, meshExtr
     dimRange = RapidFEM.createDimRange()
     usedDims = dimRange[activeDims]
     internalPoints = getInternalPoints(surfAttrib, mesh, meshExtra, FeSpace, activeDims, dimRange, u, problemDim, elementFunction = elementFunction, quadrature = quadrature)
-    normals = Dict{Int64, Array{Float64}}()
-    for (elementNo, element) ∈ enumerate(mesh.Elements[surfAttrib])
+    normalsThreads = Vector{Dict{Int64, Array{Float64}}}(undef, nthreads())
+    for i ∈ 1:length(normalsThreads)
+        normalsThreads[i] = Dict{Int64, Array{Float64}}()
+    end
+    #normals = Dict{Int64, Array{Float64}}()
+    Threads.@threads for elementNo ∈ eachindex(mesh.Elements[surfAttrib])
+        element = mesh.Elements[surfAttrib][elementNo]
         shapeFunction = feSpace!(FeSpace, element, mesh, reduction = reduction, elementFunction = elementFunction, quadrature = quadrature)
         coordArray = getCoordArray(mesh, element)[usedDims, :]
         if !isnothing(u)
@@ -126,9 +131,13 @@ function getSurfaceNormals(surfAttrib::Tuple{Int64, Int64}, mesh::Mesh, meshExtr
             u_Nodes = getSolAtElement(u, element, problemDim, activeDims)
             coordArray = getCurrentCoordArray(coordArray, u_Nodes)
         end
-        normals[elementNo] = getElementSurfaceNormal(element, elementNo, shapeFunction, coordArray, internalPoints[elementNo])
+        normalsThreads[Threads.threadid()][elementNo] = getElementSurfaceNormal(element, elementNo, shapeFunction, coordArray, internalPoints[elementNo])
     end
-    return normals
+    for normalsThreadNo ∈ 2:length(normalsThreads)
+        normalsThreads[1] = merge(normalsThreads[1], normalsThreads[normalsThreadNo])
+    end
+        
+    return normalsThreads[1]
 end
 
 
