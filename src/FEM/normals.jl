@@ -117,7 +117,7 @@ function getSurfaceNormals(surfAttrib::Tuple{Int64, Int64}, mesh::Mesh, meshExtr
     dimRange = RapidFEM.createDimRange()
     usedDims = dimRange[activeDims]
     internalPoints = getInternalPoints(surfAttrib, mesh, meshExtra, FeSpace, activeDims, dimRange, u, problemDim, elementFunction = elementFunction, quadrature = quadrature)
-    normalsThreads = Vector{Dict{Int64, Array{Float64}}}(undef, nthreads())
+    normalsThreads = Vector{Dict{Int64, Array{Float64}}}(undef, Threads.nthreads())
     for i ∈ 1:length(normalsThreads)
         normalsThreads[i] = Dict{Int64, Array{Float64}}()
     end
