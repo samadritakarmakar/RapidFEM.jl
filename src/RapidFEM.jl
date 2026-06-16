@@ -9,6 +9,7 @@
 __precompile__()
 module RapidFEM
 using FEMSparse, FastGaussQuadrature, SparseArrays, LinearAlgebra, Arpack, WriteVTK
+using VirtualThreads
 include("FEM/elements.jl")
 include("Mesh/mesh.jl")
 include("Mesh/aspectRatio.jl")

@@ -1,7 +1,7 @@
 name = "RapidFEM"
 uuid = "845bbcf8-0925-49a4-8eb3-5fd4eb0a75d5"
-authors = ["sam "]
 version = "0.4.0"
+authors = ["sam "]
 
 [deps]
 Arpack = "7d9fca2a-8960-54d3-9f78-7d1dccf2cb97"
@@ -11,4 +11,11 @@ FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+VirtualThreads = "b4a2f04e-f940-4974-ac0f-92484a824847"
 WriteVTK = "64499a7a-5c06-52f2-abe2-ccb03c286192"
+
+[sources]
+VirtualThreads = {rev = "master", url = "https://github.com/samadritakarmakar/VirtualThreads.jl"}
+
+[compat]
+VirtualThreads = "0.1.0"

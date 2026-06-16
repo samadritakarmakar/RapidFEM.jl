@@ -105,8 +105,7 @@ function assembleMatrix!(parameters::T, attribute::Tuple{Int64, Int64},
         FEMSparse.assemble_local_matrix!(K_COO[thread], vNodes2_1, vNodes2_2, K_local2)
     end
     ### Multi-Thread Assembly starts here
-    Threads.@threads for elementNo ∈ 1:length(meshTuple[2].Elements[attribute])
-        currentThread::Int64 = Threads.threadid()
+    VirtualThreads.@virtualthreads currentThread for elementNo ∈ 1:length(meshTuple[2].Elements[attribute])
         #Element Initializations
         element_1, element_2 = getElements(problemType, attribute, meshTuple, elementNo)
         #if the type of element changes then reallocate the local matrix else replace with zeros
@@ -228,8 +227,7 @@ function assembleVector!(parameters::T, attribute::Tuple{Int64, Int64},
     end
     RangeDict = createDimRange()
     dimRange::StepRange{Int64,Int64} = getRange(RangeDict, activeDimensions)
-    Threads.@threads for elementNo ∈ 1:length(mesh.Elements[attribute])
-        currentThread::Int64 = Threads.threadid()
+    VirtualThreads.@virtualthreads currentThread for elementNo ∈ 1:length(mesh.Elements[attribute])
         element::AbstractElement = mesh.Elements[attribute][elementNo]
         #if the type of element changes then reallocate the local vector else replace with zeros
         if length(f_localArray[currentThread]) != problemDim*element.noOfElementNodes
@@ -316,8 +314,7 @@ function assembleVectorMatrix!(parameters::T, attribute::Tuple{Int64, Int64},
         FEMSparse.assemble_local_matrix!(K_COO[thread], vNodes2, vNodes2, K_local2)
     end
     ### Multi-Thread Assembly starts here
-    Threads.@threads for elementNo ∈ 1:length(mesh.Elements[attribute])
-        currentThread::Int64 = Threads.threadid()
+    VirtualThreads.@virtualthreads currentThread for elementNo ∈ 1:length(mesh.Elements[attribute])
         element::AbstractElement = mesh.Elements[attribute][elementNo]
         #if the type of element changes then reallocate the local vector else replace with zeros
         if length(f_localArray[currentThread]) != problemDim*element.noOfElementNodes
@@ -386,8 +383,7 @@ function assembleScalar!(parameters::T, attribute::Tuple{Int64, Int64},
     end
     RangeDict = createDimRange()
     dimRange::StepRange{Int64,Int64} = getRange(RangeDict, activeDimensions)
-    Threads.@threads for elementNo ∈ 1:length(mesh.Elements[attribute])
-        currentThread::Int64 = Threads.threadid()
+    VirtualThreads.@virtualthreads currentThread for elementNo ∈ 1:length(mesh.Elements[attribute])
         element::AbstractElement = mesh.Elements[attribute][elementNo]
         if length(f_localArray[currentThread]) != problemDim
             f_localArray[currentThread] = zeros(problemDim)

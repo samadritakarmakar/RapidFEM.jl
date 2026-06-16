@@ -122,7 +122,7 @@ function getSurfaceNormals(surfAttrib::Tuple{Int64, Int64}, mesh::Mesh, meshExtr
         normalsThreads[i] = Dict{Int64, Array{Float64}}()
     end
     #normals = Dict{Int64, Array{Float64}}()
-    Threads.@threads for elementNo ∈ eachindex(mesh.Elements[surfAttrib])
+    VirtualThreads.@virtualthreads currentThread for elementNo ∈ eachindex(mesh.Elements[surfAttrib])
         element = mesh.Elements[surfAttrib][elementNo]
         shapeFunction = feSpace!(FeSpace, element, mesh, reduction = reduction, elementFunction = elementFunction, quadrature = quadrature)
         coordArray = getCoordArray(mesh, element)[usedDims, :]
@@ -131,7 +131,7 @@ function getSurfaceNormals(surfAttrib::Tuple{Int64, Int64}, mesh::Mesh, meshExtr
             u_Nodes = getSolAtElement(u, element, problemDim, activeDims)
             coordArray = getCurrentCoordArray(coordArray, u_Nodes)
         end
-        normalsThreads[Threads.threadid()][elementNo] = getElementSurfaceNormal(element, elementNo, shapeFunction, coordArray, internalPoints[elementNo])
+        normalsThreads[currentThread][elementNo] = getElementSurfaceNormal(element, elementNo, shapeFunction, coordArray, internalPoints[elementNo])
     end
     for normalsThreadNo ∈ 2:length(normalsThreads)
         normalsThreads[1] = merge(normalsThreads[1], normalsThreads[normalsThreadNo])
