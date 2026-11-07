@@ -67,12 +67,12 @@ assembler. This function is to be used if the Matrix shall be Mixed and Coupled.
 This function is useful if the local matrix makes changes to the parameters variable.
 
     K::SparseMatrixCSC = assembleMatrix!(parameters, attribute, FeSpace, (mesh1, mesh2), localMatrixFunc, (problemDim1, problemDim2),
-    activeDimensions, varArgs...; reduction = reduction, elementFunction=lagrange, quadrature= gauss)
+    activeDimensions; reduction = reduction, elementFunction=lagrange, quadrature= gauss)
 """
 function assembleMatrix!(parameters::T, attribute::Tuple{Int64, Int64},
     FeSpace::Dict{Tuple{DataType, Int64, Any, Int64}, Array{ShapeFunction}},
     meshTuple::Tuple{Mesh, Mesh}, localMatrixFunc::Function, problemDimTuple::Tuple{Int64, Int64},
-    activeDimensions::Array{Int64,1}=[1, 1, 1], varArgs...; 
+    activeDimensions::Array{Int64,1}=[1, 1, 1]; 
     reduction::Int64 = 0, elementFunction::Function=lagrange, quadrature::Function = gauss)::SparseMatrixCSC where T   
 
     numOfThreads::Int64 = Threads.nthreads()    #Total number of threads running
@@ -121,15 +121,50 @@ function assembleMatrix!(parameters::T, attribute::Tuple{Int64, Int64},
         coordArrayTemp2::Array{Float64,2} = getCoordArray(meshTuple[2], element_2)
         coordArray2::Array{Float64,2} = coordArrayTemp2[dimRange,:]
         if problemType == :General
-            localMatrixFunc(K_localArray[currentThread], parameters, problemDimTuple[2], element_2, elementNo, shapeFunction_2, coordArray2, varArgs...)
+            #Check if the localMatrixFunc is applicable to the given arguments and call it accordingly for General problem type. 
+            if applicable(localMatrixFunc, K_localArray[currentThread], parameters, problemDimTuple[2], element_2, elementNo,
+                shapeFunction_2, coordArray2)
+                localMatrixFunc(K_localArray[currentThread], parameters, problemDimTuple[2], element_2, elementNo, shapeFunction_2,
+                coordArray2)
+            
+            elseif applicable(localMatrixFunc, K_localArray[currentThread], parameters, problemDimTuple[2], element_2, elementNo, 
+                shapeFunction_2, coordArray2, currentThread)
+                localMatrixFunc(K_localArray[currentThread], parameters, problemDimTuple[2], element_2, elementNo, shapeFunction_2,
+                coordArray2, currentThread)
+            else
+                error("localMatrixFunc is not applicable to the given arguments")
+            end
         elseif problemType == :Coupled
-            localMatrixFunc(K_localArray[currentThread], parameters, problemDimTuple[1], problemDimTuple[2], element_2, elementNo, shapeFunction_2, coordArray2, varArgs...)
+            #Check if the localMatrixFunc is applicable to the given arguments and call it accordingly for Coupled problem type.
+            if applicable(localMatrixFunc, K_localArray[currentThread], parameters, problemDimTuple[1], problemDimTuple[2], element_2, 
+                elementNo, shapeFunction_2, coordArray2)
+                localMatrixFunc(K_localArray[currentThread], parameters, problemDimTuple[1], problemDimTuple[2], element_2, elementNo,
+                shapeFunction_2, coordArray2)
+            
+            elseif applicable(localMatrixFunc, K_localArray[currentThread], parameters, problemDimTuple[1], problemDimTuple[2], element_2, 
+                elementNo, shapeFunction_2, coordArray2, currentThread)
+                localMatrixFunc(K_localArray[currentThread], parameters, problemDimTuple[1], problemDimTuple[2], element_2, elementNo,
+                shapeFunction_2, coordArray2, currentThread)
+            else
+                error("localMatrixFunc is not applicable to the given arguments")
+            end
         elseif problemType == :Mixed
             shapeFunction_1::Array{ShapeFunction,1} = feSpace!(FeSpaceThreaded[currentThread], element_1, meshTuple[1], reduction = (reduction + reduction_fix_1), 
                 elementFunction = elementFunction, quadrature = quadrature)
             coordArrayTemp1::Array{Float64,2} = getCoordArray(meshTuple[1], element_1)
             coordArray1::Array{Float64,2} = coordArrayTemp1[dimRange,:]
-            localMatrixFunc(K_localArray[currentThread], parameters, problemDimTuple[1], problemDimTuple[2], element_1, element_2, elementNo, shapeFunction_1, shapeFunction_2, coordArray1, coordArray2, varArgs...)
+            if applicable(localMatrixFunc, K_localArray[currentThread], parameters, problemDimTuple[1], problemDimTuple[2], 
+                element_1, element_2, elementNo, shapeFunction_1, shapeFunction_2, coordArray1, coordArray2)
+                localMatrixFunc(K_localArray[currentThread], parameters, problemDimTuple[1], problemDimTuple[2], element_1, element_2, 
+                elementNo, shapeFunction_1, shapeFunction_2, coordArray1, coordArray2)
+            
+            elseif applicable(localMatrixFunc, K_localArray[currentThread], parameters, problemDimTuple[1], problemDimTuple[2], 
+                element_1, element_2, elementNo, shapeFunction_1, shapeFunction_2, coordArray1, coordArray2, currentThread)
+                localMatrixFunc(K_localArray[currentThread], parameters, problemDimTuple[1], problemDimTuple[2], element_1, element_2, 
+                elementNo, shapeFunction_1, shapeFunction_2, coordArray1, coordArray2, currentThread)
+            else
+                error("localMatrixFunc is not applicable to the given arguments")
+            end
         else
             error("Unknown Problem Type!")
         end
@@ -157,11 +192,11 @@ This function is useful if the local matrix makes changes to the parameters vari
 function assembleMatrix!(parameters::T, attribute::Tuple{Int64, Int64},
     FeSpace::Dict{Tuple{DataType, Int64, Any, Int64}, Array{ShapeFunction}},
     mesh::Mesh, localMatrixFunc::Function, problemDim::Int64,
-    activeDimensions::Array{Int64,1}=[1, 1, 1], varArgs...; 
+    activeDimensions::Array{Int64,1}=[1, 1, 1]; 
     reduction::Int64 = 0, elementFunction::Function=lagrange, quadrature::Function = gauss)::SparseMatrixCSC where T
 
     return assembleMatrix!(parameters, attribute, FeSpace, (mesh, mesh), localMatrixFunc, (problemDim, problemDim),
-    activeDimensions, varArgs...; reduction = reduction, elementFunction=elementFunction, quadrature= quadrature)
+    activeDimensions; reduction = reduction, elementFunction=elementFunction, quadrature= quadrature)
 end
 
 """Responsible for assembling of FEM Matrices. paramerterFunction could
@@ -174,8 +209,7 @@ This function is useful if the local matrix makes changes to the parameters vari
 function assembleMatrix(parameters::T, attribute::Tuple{Int64, Int64},
     FeSpace::Dict{Tuple{DataType, Int64, Any, Int64}, Array{ShapeFunction}},
     mesh::Mesh,  localMatrixFunc::Function, problemDim::Int64,
-    activeDimensions::Array{Int64,1}=[1, 1, 1], 
-    varArgs...; reduction::Int64 = 0, elementFunction::Function=lagrange, quadrature::Function = gauss)::SparseMatrixCSC where T
+    activeDimensions::Array{Int64,1}=[1, 1, 1]; reduction::Int64 = 0, elementFunction::Function=lagrange, quadrature::Function = gauss)::SparseMatrixCSC where T
 
     return assembleMatrix!(parameters, attribute, FeSpace, mesh,  localMatrixFunc, problemDim,
     activeDimensions, varArgs...; reduction = reduction, elementFunction = elementFunction, quadrature = quadrature)
@@ -191,11 +225,11 @@ This function is useful if the local matrix makes changes to the parameters vari
 function assembleMatrix!(parameters::T, attribute::Tuple{Int64, Int64},
     FeSpace::Dict{Tuple{DataType, Int64, Any, Int64}, Array{ShapeFunction}},
     mesh::Mesh, localMatrixFunc::Function, problemDimTuple::Tuple{Int64, Int64},
-    activeDimensions::Array{Int64,1}=[1, 1, 1], varArgs...; 
+    activeDimensions::Array{Int64,1}=[1, 1, 1]; 
     reduction::Int64 = 0, elementFunction::Function=lagrange, quadrature::Function = gauss)::SparseMatrixCSC where T
 
     return assembleMatrix!(parameters, attribute, FeSpace, (mesh, mesh), localMatrixFunc, problemDimTuple,
-    activeDimensions, varArgs...; reduction = reduction, elementFunction=elementFunction, quadrature= quadrature)
+    activeDimensions; reduction = reduction, elementFunction=elementFunction, quadrature= quadrature)
 end
 
 """Responsible for assembling of FEM Vectors. parameters could
@@ -208,7 +242,7 @@ This function is useful if the local matrix makes changes to the parameters vari
 function assembleVector!(parameters::T, attribute::Tuple{Int64, Int64},
     FeSpace::Dict{Tuple{DataType, Int64, Any, Int64}, Array{ShapeFunction}},
     mesh::Mesh, localVectorFunc::Function, problemDim::Int64,
-    activeDimensions::Array{Int64,1}=[1, 1, 1],varArgs...; 
+    activeDimensions::Array{Int64,1}=[1, 1, 1]; 
     reduction::Int64 = 0, elementFunction::Function=lagrange, quadrature::Function = gauss)::Vector where T
 
     numOfThreads::Int64 = Threads.nthreads()    #Total number of threads running
@@ -240,7 +274,17 @@ function assembleVector!(parameters::T, attribute::Tuple{Int64, Int64},
         shapeFunction::Array{ShapeFunction,1} = feSpace!(FeSpaceThreaded[currentThread], element, mesh, reduction = reduction, 
         elementFunction = elementFunction, quadrature = quadrature)
 
-        localVectorFunc(f_localArray[currentThread], parameters, problemDim, element, elementNo, shapeFunction, coordArray, varArgs...)
+        if applicable(localVectorFunc, f_localArray[currentThread], parameters, problemDim, element, elementNo, shapeFunction, 
+            coordArray)
+            localVectorFunc(f_localArray[currentThread], parameters, problemDim, element, elementNo, shapeFunction, coordArray)
+        
+        elseif applicable(localVectorFunc, f_localArray[currentThread], parameters, problemDim, element, elementNo, shapeFunction,
+            coordArray, currentThread)
+            localVectorFunc(f_localArray[currentThread], parameters, problemDim, element, elementNo, shapeFunction, coordArray, 
+            currentThread)
+        else
+            error("localVectorFunc is not applicable to the given arguments")
+        end
         vNodes::Array{Int64} = getVectorNodes(element, problemDim)
         f[currentThread][vNodes] += f_localArray[currentThread]
     end
@@ -260,11 +304,11 @@ assembler. The below example is similar to used in: src/Examples/poisson.jl
 function assembleVector(parameters::T, attribute::Tuple{Int64, Int64},
     FeSpace::Dict{Tuple{DataType, Int64, Any, Int64}, Array{ShapeFunction}},
     mesh::Mesh, localVectorFunc::Function, problemDim::Int64,
-    activeDimensions::Array{Int64,1}=[1, 1, 1],varArgs...; 
+    activeDimensions::Array{Int64,1}=[1, 1, 1]; 
     reduction::Int64 = 0, elementFunction::Function=lagrange, quadrature::Function = gauss)::Vector where T
 
     return assembleVector!(parameters, attribute, FeSpace, mesh,
-    localVectorFunc, problemDim, activeDimensions, varArgs...; 
+    localVectorFunc, problemDim, activeDimensions; 
     reduction = reduction, elementFunction = elementFunction, quadrature = quadrature)
 end
 
@@ -282,7 +326,7 @@ This function is useful if the local vector or matrix makes changes to the param
 function assembleVectorMatrix!(parameters::T, attribute::Tuple{Int64, Int64},
     FeSpace::Dict{Tuple{DataType, Int64, Any, Int64}, Array{ShapeFunction}},
     mesh::Mesh, localVectorFunc::Function, localMatrixFunc::Function, problemDim::Int64,
-    activeDimensions::Array{Int64,1}=[1, 1, 1], varArgs...;
+    activeDimensions::Array{Int64,1}=[1, 1, 1]; 
     reduction::Int64 = 0, elementFunction::Function=lagrange, quadrature::Function = gauss) where T
 
     numOfThreads::Int64 = Threads.nthreads()    #Total number of threads running
@@ -334,8 +378,8 @@ function assembleVectorMatrix!(parameters::T, attribute::Tuple{Int64, Int64},
         shapeFunction::Array{ShapeFunction,1} = feSpace!(FeSpaceThreaded[currentThread], element, mesh, reduction = reduction, 
         elementFunction = elementFunction, quadrature = quadrature)
 
-        localVectorFunc(f_localArray[currentThread], parameters, problemDim, element, elementNo, shapeFunction, coordArray, varArgs...)
-        localMatrixFunc(K_localArray[currentThread], parameters, problemDim, element, elementNo, shapeFunction, coordArray, varArgs...)
+        localVectorFunc(f_localArray[currentThread], parameters, problemDim, element, elementNo, shapeFunction, coordArray)
+        localMatrixFunc(K_localArray[currentThread], parameters, problemDim, element, elementNo, shapeFunction, coordArray)
         vNodes::Array{Int64} = getVectorNodes(element, problemDim)
         f[currentThread][vNodes] += f_localArray[currentThread]
         FEMSparse.assemble_local_matrix!(K_COO[currentThread], vNodes, vNodes, K_localArray[currentThread])
